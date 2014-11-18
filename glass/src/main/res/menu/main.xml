@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/find_android"
+        android:title="Show Current Speed" />
+    <item android:id="@+id/find_javascript"
+        android:title="Show Heart Rate" />
+    <item android:id="@+id/find_ios"
+        android:title="Show whatever" />
+</menu>
