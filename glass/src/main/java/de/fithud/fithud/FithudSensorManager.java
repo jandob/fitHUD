@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -64,9 +65,17 @@ public class FithudSensorManager {
             Log.d(TAG, gatt.getDevice().getName());
             Log.d(TAG, "discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
-                List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
-
                 Log.d(TAG, service.getUuid().toString());
+                List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+                for (BluetoothGattCharacteristic characteristic : characteristics) {
+                    for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
+                        //find descriptor UUID that matches Client Characteristic Configuration (0x2902)
+                        // and then call setValue on that descriptor
+
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        gatt.writeDescriptor(descriptor);
+                    }
+                }
             }
         }
     };

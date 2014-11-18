@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.SystemClock;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -163,14 +164,15 @@ public class FithudRenderer implements DirectRenderingCallback {
         public synchronized void quit() {
             mShouldRun = false;
         }
-
+        Time mTime = new Time();
         @Override
         public void run() {
             while (shouldRun()) {
                 long frameStart = SystemClock.elapsedRealtime();
                 repaint();
                 long frameLength = SystemClock.elapsedRealtime() - frameStart;
-
+                mTime.setToNow();
+                mTipsView.setText(mTime.toString());
                 long sleepTime = FRAME_TIME_MILLIS - frameLength;
                 if (sleepTime > 0) {
                     SystemClock.sleep(sleepTime);

@@ -30,7 +30,6 @@
         <activity
             android:name="de.fithud.fithud.FithudMenuActivity"
             android:theme="@style/MenuTheme">
-
         </activity>
     </application>
 
