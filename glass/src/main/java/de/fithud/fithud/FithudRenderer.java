@@ -161,7 +161,6 @@ public class FithudRenderer implements DirectRenderingCallback {
          * Requests that the rendering thread exit at the next opportunity.
          */
         public synchronized void quit() {
-            Log.d(TAG, "stopping rendering");
             mShouldRun = false;
         }
 

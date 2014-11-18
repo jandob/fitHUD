@@ -2,6 +2,8 @@ package de.fithud.fithud;
 
 import android.app.PendingIntent;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.SensorManager;
@@ -22,8 +24,7 @@ public class FithudService extends Service {
 
     public class FithudBinder extends Binder {
         public float getHeartRate() {
-            float rate = fithudSensorManager.getHeartrate();
-            return rate;
+            return 0;
         }
     }
     private FithudSensorManager fithudSensorManager;
@@ -32,12 +33,21 @@ public class FithudService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        BluetoothManager btManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
 
+        BluetoothAdapter btAdapter = btManager.getAdapter();
+        if (btAdapter != null && !btAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            //TODO
+            //startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
+        }
         SensorManager sensorManager =
                 (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         LocationManager locationManager =
                 (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        fithudSensorManager = new FithudSensorManager();
+
+        fithudSensorManager = new FithudSensorManager(getBaseContext(),
+                sensorManager, locationManager, btManager, btAdapter);
 
     }
 
@@ -74,7 +84,10 @@ public class FithudService extends Service {
     }
     @Override
     public void onDestroy() {
-
+        if (mLiveCard != null) {
+            mLiveCard.unpublish();
+            mLiveCard = null;
+        }
         super.onDestroy();
     }
 }
