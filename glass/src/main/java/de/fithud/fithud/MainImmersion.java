@@ -36,7 +36,7 @@ import java.util.Calendar;
  *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
  */
-public class Immersion extends Activity {
+public class MainImmersion extends Activity {
     /**
      * {@link com.google.android.glass.widget.CardScrollView} to use as the main content view.
      */
