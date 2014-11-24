@@ -27,7 +27,7 @@
             android:theme="@style/MenuTheme">
         </activity>
         <activity
-            android:name=".MainImmersion"
+            android:name="de.fithud.fithud.MainImmersion"
             android:icon="@drawable/ic_glass_logo"
             android:label="@string/app_name" >
             <intent-filter>
