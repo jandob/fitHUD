@@ -53,8 +53,8 @@ public class FHSensorManager {
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.d(TAG, "connected to device:");
-                Log.d(TAG, gatt.getDevice().getName());
+                Log.i(TAG, "connected to device:");
+                Log.i(TAG, gatt.getDevice().getName());
                 gatt.discoverServices();
             }
         }
@@ -63,10 +63,11 @@ public class FHSensorManager {
         public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
             // this will get called after the client initiates a BluetoothGatt.discoverServices() call
             List<BluetoothGattService> services = gatt.getServices();
-            Log.d(TAG, gatt.getDevice().getName());
-            Log.d(TAG, "discovered " + services.size() + " services:");
+            Log.i(TAG, gatt.getDevice().getName());
+            Log.i(TAG, "discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
-                Log.d(TAG, service.getUuid().toString());
+                Log.i(TAG, service.getUuid().toString());
+                Log.i(TAG, service.toString());
                 List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
                 for (BluetoothGattCharacteristic characteristic : characteristics) {
                     for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
@@ -100,10 +101,12 @@ public class FHSensorManager {
 
         mBtDevices = btAdapter.getBondedDevices();
         for (BluetoothDevice device : mBtDevices) {
+            //Log.i(TAG, device.toString();
             device.connectGatt(context, false, btleGattCallback);
         }
 
         btAdapter.startLeScan(leScanCallback);
+        Log.i(TAG, "initialized");
     }
 
 
