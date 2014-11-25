@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.util.Log;
@@ -79,7 +80,7 @@ public class FHSensorManager {
             }
         }
     };
-    public FithudSensorManager(Context context) {
+    public FHSensorManager(Context context) {
         this.context = context;
         // not yet used.
         SensorManager sensorManager =
