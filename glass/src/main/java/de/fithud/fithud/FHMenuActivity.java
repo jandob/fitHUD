@@ -9,7 +9,7 @@ import android.view.MenuItem;
 /**
  * Created by jandob on 11/18/14.
  */
-public class FithudMenuActivity extends Activity{
+public class FHMenuActivity extends Activity{
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -28,7 +28,7 @@ public class FithudMenuActivity extends Activity{
         // Handle item selection.
         switch (item.getItemId()) {
             case R.id.stop_this:
-                stopService(new Intent(this, FithudService.class));
+                stopService(new Intent(this, FHLiveCardService.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

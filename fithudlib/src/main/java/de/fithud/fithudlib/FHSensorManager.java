@@ -1,4 +1,4 @@
-package de.fithud.fithud;
+package de.fithud.fithudlib;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -14,21 +14,19 @@ import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.util.Log;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 /**
  * Created by jandob on 11/17/14.
  */
-public class FithudSensorManager {
+public class FHSensorManager {
     private Context context;
-    private static final String TAG = FithudService.class.getSimpleName();
+    private static final String TAG = FHSensorManager.class.getSimpleName();
     private Set<BluetoothDevice> mBtDevices;
     public interface OnChangedListener {
 
-        void oneartRateChanged(FithudSensorManager orientationManager);
+        void oneartRateChanged(FHSensorManager orientationManager);
 
 
     }
@@ -79,11 +77,11 @@ public class FithudSensorManager {
             }
         }
     };
-    public FithudSensorManager(Context context,
-                               SensorManager sensorManager,
-                               LocationManager locationManager,
-                               BluetoothManager mBtManager,
-                               BluetoothAdapter btAdapter) {
+    public FHSensorManager(Context context,
+                           SensorManager sensorManager,
+                           LocationManager locationManager,
+                           BluetoothManager mBtManager,
+                           BluetoothAdapter btAdapter) {
         this.context = context;
         mBtDevices = btAdapter.getBondedDevices();
         for (BluetoothDevice device : mBtDevices) {

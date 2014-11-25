@@ -1,27 +1,20 @@
 package de.fithud.fithud;
 
-import com.google.android.glass.app.Card;
-import com.google.android.glass.media.Sounds;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.gesture.Gesture;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 
 import java.util.Calendar;
@@ -74,7 +67,7 @@ public class MainImmersion extends Activity {
                     break;
                 case R.id.find_ios:
                     findDevelopers("Show whatever");
-                    startService(new Intent(this, FithudService.class));
+                    startService(new Intent(this, FHLiveCardService.class));
                     break;
             }
             return true;
