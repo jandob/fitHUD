@@ -33,22 +33,7 @@ public class FithudService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        BluetoothManager btManager = (BluetoothManager)getSystemService(Context.BLUETOOTH_SERVICE);
-
-        BluetoothAdapter btAdapter = btManager.getAdapter();
-        if (btAdapter != null && !btAdapter.isEnabled()) {
-            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            //TODO
-            //startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
-        }
-        SensorManager sensorManager =
-                (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        LocationManager locationManager =
-                (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        fithudSensorManager = new FithudSensorManager(getBaseContext(),
-                sensorManager, locationManager, btManager, btAdapter);
-
+        fithudSensorManager = new FithudSensorManager(getBaseContext());
     }
 
     private final FithudBinder binder = new FithudBinder();

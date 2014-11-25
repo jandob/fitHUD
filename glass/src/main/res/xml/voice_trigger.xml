@@ -1,5 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- For more information about voice trigger, check out: https://developers.google.com/glass/develop/gdk/starting-glassware -->
 <!--<trigger command="SHOW_ME_MY_SPEED" />-->
-<trigger keyword="@string/app_name" >
-<constraints network="false" />
-</trigger>
+
+<trigger keyword="@string/app_name" />
