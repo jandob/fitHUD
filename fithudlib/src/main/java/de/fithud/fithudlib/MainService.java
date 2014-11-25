@@ -18,7 +18,7 @@ public class MainService extends Service {
             return 0;
         }
     }
-    private FHSensorManager fithudSensorManager;
+    private FHSensorManager fhSensorManager;
 
     @Override
     public void onCreate() {
@@ -33,6 +33,7 @@ public class MainService extends Service {
     }
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        fhSensorManager = new FHSensorManager(getBaseContext());
         return 0;
     }
     @Override
