@@ -14,6 +14,8 @@ import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.util.Log;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -77,12 +79,24 @@ public class FHSensorManager {
             }
         }
     };
-    public FHSensorManager(Context context,
-                           SensorManager sensorManager,
-                           LocationManager locationManager,
-                           BluetoothManager mBtManager,
-                           BluetoothAdapter btAdapter) {
+    public FithudSensorManager(Context context) {
         this.context = context;
+        // not yet used.
+        SensorManager sensorManager =
+                (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        LocationManager locationManager =
+                (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        BluetoothManager btManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+
+        BluetoothAdapter btAdapter = btManager.getAdapter();
+        if (btAdapter != null && !btAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            //TODO
+            //startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
+        }
+
+
         mBtDevices = btAdapter.getBondedDevices();
         for (BluetoothDevice device : mBtDevices) {
             device.connectGatt(context, false, btleGattCallback);
