@@ -27,6 +27,7 @@ public class FHSensorManager {
     private Context context;
     private static final String TAG = FHSensorManager.class.getSimpleName();
     private Set<BluetoothDevice> mBtDevices;
+    BluetoothAdapter mBtAdapter;
     public interface OnChangedListener {
 
         void oneartRateChanged(FHSensorManager orientationManager);
@@ -37,9 +38,12 @@ public class FHSensorManager {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             Log.i(TAG, "found ble device:");
-            Log.i(TAG, device.toString());
-            device.connectGatt(context, false, btleGattCallback);
-            // TODO stop if found (battery draining)
+            Log.i(TAG, device.getName());
+            if (device.getName().contains("Polar")) {
+                device.connectGatt(context, false, btleGattCallback);
+                // TODO stop if found (battery draining)
+                mBtAdapter.stopLeScan(leScanCallback);
+            }
             //btAdapter.stopLeScan(leScanCallback);
         }
     };
@@ -53,6 +57,12 @@ public class FHSensorManager {
             for (byte data : characteristicData) {
                 Log.i(TAG, String.valueOf(data));
             }
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            Log.i(TAG, new Integer(status).toString());
+            super.onDescriptorWrite(gatt, descriptor, status);
         }
 
         @Override
@@ -71,14 +81,19 @@ public class FHSensorManager {
             Log.i(TAG, gatt.getDevice().getName());
             Log.i(TAG, "discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
+                if (!service.getUuid().toString().equals("0000180d-0000-1000-8000-00805f9b34fb")){
+                    continue;
+                }
                 Log.i(TAG, service.getUuid().toString());
+                //0000180d-0000-1000-8000-00805f9b34fb
                 Log.i(TAG, service.toString());
                 List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
                 for (BluetoothGattCharacteristic characteristic : characteristics) {
+                    gatt.setCharacteristicNotification(characteristic, true);
                     for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
                         //find descriptor UUID that matches Client Characteristic Configuration (0x2902)
                         // and then call setValue on that descriptor
-
+                        Log.i(TAG, "enabeling notification: " + descriptor.getUuid().toString());
                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         gatt.writeDescriptor(descriptor);
                     }
@@ -96,21 +111,22 @@ public class FHSensorManager {
 
         BluetoothManager btManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
 
-        BluetoothAdapter btAdapter = btManager.getAdapter();
-        if (btAdapter != null && !btAdapter.isEnabled()) {
+        mBtAdapter = btManager.getAdapter();
+        if (mBtAdapter != null && !mBtAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             //TODO
             //startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
         }
 
 
-        mBtDevices = btAdapter.getBondedDevices();
+        mBtDevices = mBtAdapter.getBondedDevices();
+        Log.i(TAG, "bonded devices");
         for (BluetoothDevice device : mBtDevices) {
-            //Log.i(TAG, device.toString();
+            Log.i(TAG, device.getName());
             device.connectGatt(context, false, btleGattCallback);
         }
 
-        btAdapter.startLeScan(leScanCallback);
+        mBtAdapter.startLeScan(leScanCallback);
         Log.i(TAG, "initialized");
     }
 
