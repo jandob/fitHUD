@@ -10,6 +10,8 @@ import android.util.Log;
 import com.google.android.glass.timeline.LiveCard;
 import com.google.android.glass.timeline.LiveCard.PublishMode;
 
+import de.fithud.fithudlib.FHSensorManager;
+
 /**
  * Created by jandob on 11/17/14.
  */
@@ -24,6 +26,9 @@ public class FHLiveCardService extends Service {
     }
     private LiveCard mLiveCard;
     private FHLiveCardRenderer mRenderer;
+    // T: Sensor Manager for test purposes.
+    private FHSensorManager fhSensorManager;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -42,6 +47,9 @@ public class FHLiveCardService extends Service {
             Log.d(TAG, "creating live card");
             mLiveCard = new LiveCard(this, LIVE_CARD_TAG);
             mRenderer = new FHLiveCardRenderer(this);
+            // T: Sensor Manager for test purposes.
+            fhSensorManager = new FHSensorManager(getBaseContext());
+
             mLiveCard.setDirectRenderingEnabled(true);
             mLiveCard.getSurfaceHolder().addCallback(mRenderer);
 

@@ -48,6 +48,11 @@ public class FHSensorManager {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             // this will get called anytime you perform a read or write characteristic operation
+            byte[] characteristicData = characteristic.getValue();
+            Log.i(TAG, "received data from characteristic:");
+            for (byte data : characteristicData) {
+                Log.i(TAG, String.valueOf(data));
+            }
         }
 
         @Override
