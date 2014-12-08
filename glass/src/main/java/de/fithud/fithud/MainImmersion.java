@@ -42,6 +42,9 @@ public class MainImmersion extends Activity {
 
     private GestureDetector mGestureDetector;
 
+    // T: Intent to start and stop service.
+    //private Intent intent = new Intent(this, FHLiveCardService.class);
+
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu){
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId ==  Window.FEATURE_OPTIONS_PANEL) {
@@ -121,7 +124,15 @@ public class MainImmersion extends Activity {
         });
 
         setContentView(mCardScroller);
+        // T: start Live Card directly for testing
+        //startService(LiveCardServiceIntent);
     }
+
+    // T: destroy liveCardService, when Activity is destroyed.
+   // @Override
+    //protected void onDestroy(){
+     //   stopService(LiveCardServiceIntent);
+    //}
 
     @Override
     protected void onResume() {

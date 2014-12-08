@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Created by jandob on 11/17/14.
@@ -30,7 +31,7 @@ public class FHSensorManager {
     BluetoothAdapter mBtAdapter;
     public interface OnChangedListener {
 
-        void oneartRateChanged(FHSensorManager orientationManager);
+        void onStartRateChanged(FHSensorManager orientationManager);
 
 
     }
@@ -41,7 +42,7 @@ public class FHSensorManager {
             Log.i(TAG, device.getName());
             if (device.getName().contains("Polar")) {
                 device.connectGatt(context, false, btleGattCallback);
-                // TODO stop if found (battery draining)
+                // stop if found (battery draining)
                 mBtAdapter.stopLeScan(leScanCallback);
             }
             //btAdapter.stopLeScan(leScanCallback);
@@ -54,6 +55,10 @@ public class FHSensorManager {
             // this will get called anytime you perform a read or write characteristic operation
             byte[] characteristicData = characteristic.getValue();
             Log.i(TAG, "received data from characteristic:");
+            //Log.i(TAG, "GattDesriptors:");
+            //for (BluetoothGattDescriptor gattD : characteristic.getDescriptors()) {
+             //   Log.i(TAG, gattD.getUuid().toString());
+           // }
             for (byte data : characteristicData) {
                 Log.i(TAG, String.valueOf(data));
             }
@@ -71,7 +76,11 @@ public class FHSensorManager {
                 Log.i(TAG, "connected to device:");
                 Log.i(TAG, gatt.getDevice().getName());
                 gatt.discoverServices();
-            }
+            } //else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                //T: close gatt, if device is out of range
+                //Log.i(TAG, "disconnected from device, closing gatt:");
+                //gatt.close();
+            //}
         }
 
         @Override
@@ -101,6 +110,7 @@ public class FHSensorManager {
             }
         }
     };
+
     public FHSensorManager(Context context) {
         this.context = context;
         // not yet used.
