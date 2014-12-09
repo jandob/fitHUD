@@ -48,7 +48,7 @@ public class FHLiveCardService extends Service {
             mLiveCard = new LiveCard(this, LIVE_CARD_TAG);
             mRenderer = new FHLiveCardRenderer(this);
             // T: Sensor Manager for test purposes.
-            fhSensorManager = new FHSensorManager(getBaseContext());
+            fhSensorManager = new FHSensorManager(this, getBaseContext());
 
             mLiveCard.setDirectRenderingEnabled(true);
             mLiveCard.getSurfaceHolder().addCallback(mRenderer);
@@ -67,14 +67,16 @@ public class FHLiveCardService extends Service {
         }
 
         //TODO check return value
-        return START_STICKY;
+        return Service.START_NOT_STICKY;
     }
     @Override
     public void onDestroy() {
+        Log.i(TAG, "onDestroy");
         if (mLiveCard != null) {
             mLiveCard.unpublish();
             mLiveCard = null;
         }
+        fhSensorManager.closeConnections();
         super.onDestroy();
     }
 }

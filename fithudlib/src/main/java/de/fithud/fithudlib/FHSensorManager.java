@@ -1,5 +1,6 @@
 package de.fithud.fithudlib;
 
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -15,6 +16,7 @@ import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -29,12 +31,23 @@ public class FHSensorManager {
     private static final String TAG = FHSensorManager.class.getSimpleName();
     private Set<BluetoothDevice> mBtDevices;
     BluetoothAdapter mBtAdapter;
-    public interface OnChangedListener {
 
-        void onStartRateChanged(FHSensorManager orientationManager);
-
-
+    public final ArrayList<UpdateListener> mListeners = new ArrayList<UpdateListener>();
+    public void registerListener(UpdateListener listener) {
+        mListeners.add(listener);
     }
+
+    public void unregisterListener(UpdateListener listener) {
+        mListeners.remove(listener);
+    }
+
+    private void sendUpdate(byte value) {
+        for (int i=mListeners.size()-1; i>=0; i--) {
+            mListeners.get(i).onUpdate(value);
+        }
+    }
+
+    // end listener interface
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
@@ -59,9 +72,10 @@ public class FHSensorManager {
             //for (BluetoothGattDescriptor gattD : characteristic.getDescriptors()) {
              //   Log.i(TAG, gattD.getUuid().toString());
            // }
-            for (byte data : characteristicData) {
-                Log.i(TAG, String.valueOf(data));
-            }
+            //for (byte data : characteristicData) {
+            //    Log.i(TAG, String.valueOf(data));
+            //}
+            sendUpdate( characteristicData[1]);
         }
 
         @Override
@@ -90,10 +104,11 @@ public class FHSensorManager {
             Log.i(TAG, gatt.getDevice().getName());
             Log.i(TAG, "discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
+                Log.i(TAG, service.getUuid().toString());
                 if (!service.getUuid().toString().equals("0000180d-0000-1000-8000-00805f9b34fb")){
                     continue;
                 }
-                Log.i(TAG, service.getUuid().toString());
+
                 //0000180d-0000-1000-8000-00805f9b34fb
                 Log.i(TAG, service.toString());
                 List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
@@ -110,8 +125,10 @@ public class FHSensorManager {
             }
         }
     };
-
-    public FHSensorManager(Context context) {
+    public void closeConnections() {
+        mBtAdapter.disable();
+    }
+    public FHSensorManager(Service mainService, Context context) {
         this.context = context;
         // not yet used.
         SensorManager sensorManager =

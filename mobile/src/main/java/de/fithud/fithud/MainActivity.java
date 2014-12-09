@@ -16,9 +16,10 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import de.fithud.fithudlib.MainService;
+import de.fithud.fithudlib.UpdateListener;
 
 
-public class MainActivity extends Activity implements MainService.UpdateListener {
+public class MainActivity extends Activity implements UpdateListener {
     Button btnStart, btnStop, btnBind, btnUnbind;
     TextView textStatus, textData;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -143,7 +144,15 @@ public class MainActivity extends Activity implements MainService.UpdateListener
     }
 
     @Override // updateListener interface from MainService
-    public void onUpdate(long value) {
-        textData.setText(Long.toString(value));
+    public void onUpdate(byte value2) {
+        final byte value = value2;
+        Log.i(TAG, "onUpdate()");
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textData.setText(Byte.toString(value));
+            }
+        });
+
     }
 }

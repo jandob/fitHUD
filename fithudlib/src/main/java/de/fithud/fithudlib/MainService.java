@@ -13,15 +13,16 @@ import java.util.ArrayList;
 /**
  * Created by jandob on 11/17/14.
  */
-public class MainService extends Service {
+public class MainService extends Service implements UpdateListener {
     private static final String TAG = MainService.class.getSimpleName();
     private boolean isRunning = false;
     public boolean isRunning() {return isRunning;}
 
-    // Listener interface
-    public interface UpdateListener {
-        public void onUpdate(long value);
+    @Override
+    public void onUpdate(byte value) {
+        sendUpdate(value);
     }
+
     public final ArrayList<UpdateListener> mListeners = new ArrayList<UpdateListener>();
     public void registerListener(UpdateListener listener) {
         mListeners.add(listener);
@@ -31,13 +32,14 @@ public class MainService extends Service {
         mListeners.remove(listener);
     }
 
-    private void sendUpdate(long value) {
+    private void sendUpdate(byte value) {
         Log.i(TAG, "sending update");
 
         for (int i=mListeners.size()-1; i>=0; i--) {
             mListeners.get(i).onUpdate(value);
         }
     }
+
     // generates ticks for debugging
     private long mTick = 0;
     private final Handler mHandler = new Handler();
@@ -45,7 +47,7 @@ public class MainService extends Service {
 
         public void run() {
             mTick++;
-            sendUpdate(mTick);
+            //sendUpdate(mTick);
             mHandler.postDelayed(mTickRunnable, 1000);
         }
     };
@@ -83,12 +85,14 @@ public class MainService extends Service {
         // but does not need to be synchronized since its called by android
         Log.i(TAG, "onStartCommand()");
         Log.i(TAG, "Received start id " + startId + ": " + intent);
-        fhSensorManager = new FHSensorManager(getBaseContext());
+        fhSensorManager = new FHSensorManager(this, getBaseContext());
+        fhSensorManager.registerListener(this);
         // Service is restarted if it gets terminated. Intent data passed to the onStartCommand
         // method is null. Used for services which manages their own state and do not depend on
         // the Intent data.
-        return Service.START_STICKY;
+        return Service.START_NOT_STICKY;
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
