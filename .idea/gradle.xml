@@ -8,6 +8,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/fithudlib" />
             <option value="$PROJECT_DIR$/glass" />
             <option value="$PROJECT_DIR$/mobile" />
           </set>

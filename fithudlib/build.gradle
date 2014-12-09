@@ -1,18 +1,9 @@
-apply plugin: 'com.android.application'
-
-repositories {
-    jcenter()
-    flatDir {
-        dirs 'prebuilt-libs'
-    }
-}
+apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion "Google Inc.:Glass Development Kit Preview:19"
-    buildToolsVersion "21.0.2"
-
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
     defaultConfig {
-        applicationId "de.fithud.fithud"
         minSdkVersion 19
         targetSdkVersion 21
         versionCode 1
@@ -24,9 +15,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    productFlavors {
+    }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile project(':fithudlib')
 }

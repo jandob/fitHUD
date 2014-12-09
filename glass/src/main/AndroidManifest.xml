@@ -18,13 +18,13 @@
         android:theme="@style/AppTheme" >
 
         <service
-            android:name="de.fithud.fithud.FithudService"
+            android:name=".FHLiveCardService"
             android:label="@string/app_name"
             android:icon="@drawable/ic_glass_logo"
             android:enabled="true" >
         </service>
         <activity
-            android:name="de.fithud.fithud.FithudMenuActivity"
+            android:name=".FHMenuActivity"
             android:theme="@style/MenuTheme">
         </activity>
         <activity

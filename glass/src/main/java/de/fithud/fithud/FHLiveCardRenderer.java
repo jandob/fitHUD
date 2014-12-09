@@ -3,7 +3,6 @@ package de.fithud.fithud;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.SystemClock;
 import android.text.format.Time;
 import android.util.Log;
@@ -16,14 +15,13 @@ import android.widget.TextView;
 
 import com.google.android.glass.timeline.DirectRenderingCallback;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by jandob on 11/17/14.
  */
-public class FithudRenderer implements DirectRenderingCallback {
-    private static final String TAG = FithudRenderer.class.getSimpleName();
+public class FHLiveCardRenderer implements DirectRenderingCallback {
+    private static final String TAG = FHLiveCardRenderer.class.getSimpleName();
 
     /** The refresh rate, in frames per second, of the compass. */
     private static final int REFRESH_RATE_FPS = 45;
@@ -33,7 +31,6 @@ public class FithudRenderer implements DirectRenderingCallback {
 
 
     private final TextView mTipsView;
-    FithudSensorManager sensorManager;
     private SurfaceHolder mHolder;
     private boolean mRenderingPaused;
 
@@ -45,8 +42,7 @@ public class FithudRenderer implements DirectRenderingCallback {
     private final RelativeLayout mTipsContainer;
 
 
-    public FithudRenderer(Context context, FithudSensorManager fHsensorManager){
-        sensorManager = fHsensorManager;
+    public FHLiveCardRenderer(Context context){
         LayoutInflater inflater = LayoutInflater.from(context);
         mLayout = (FrameLayout) inflater.inflate(R.layout.fithud, null);
         mLayout.setWillNotDraw(false);

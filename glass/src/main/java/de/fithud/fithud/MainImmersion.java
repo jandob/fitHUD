@@ -1,27 +1,20 @@
 package de.fithud.fithud;
 
-import com.google.android.glass.app.Card;
-import com.google.android.glass.media.Sounds;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.gesture.Gesture;
-import android.media.AudioManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 
 import java.util.Calendar;
@@ -49,6 +42,9 @@ public class MainImmersion extends Activity {
 
     private GestureDetector mGestureDetector;
 
+    // T: Intent to start and stop service.
+    //private Intent intent = new Intent(this, FHLiveCardService.class);
+
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu){
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId ==  Window.FEATURE_OPTIONS_PANEL) {
@@ -74,7 +70,7 @@ public class MainImmersion extends Activity {
                     break;
                 case R.id.find_ios:
                     findDevelopers("Show whatever");
-                    startService(new Intent(this, FithudService.class));
+                    startService(new Intent(this, FHLiveCardService.class));
                     break;
             }
             return true;
@@ -128,7 +124,15 @@ public class MainImmersion extends Activity {
         });
 
         setContentView(mCardScroller);
+        // T: start Live Card directly for testing
+        //startService(LiveCardServiceIntent);
     }
+
+    // T: destroy liveCardService, when Activity is destroyed.
+   // @Override
+    //protected void onDestroy(){
+     //   stopService(LiveCardServiceIntent);
+    //}
 
     @Override
     protected void onResume() {
