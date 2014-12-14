@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/find_android"
+    <item android:id="@+id/currentSpeed"
         android:title="Show Current Speed" />
-    <item android:id="@+id/find_javascript"
+    <item android:id="@+id/heartRate"
         android:title="Show Heart Rate" />
-    <item android:id="@+id/find_ios"
+    <item android:id="@+id/showHeight"
+        android:title="Show Height" />
+    <item android:id="@+id/showWhatever"
         android:title="Show whatever" />
 </menu>
