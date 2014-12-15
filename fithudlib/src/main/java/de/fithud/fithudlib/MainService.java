@@ -19,8 +19,8 @@ public class MainService extends Service implements UpdateListener {
     public boolean isRunning() {return isRunning;}
 
     @Override
-    public void onUpdate(byte value) {
-        sendUpdate(value);
+    public void onUpdate(String name, Float value) {
+        sendUpdate(name, value);
     }
 
     public final ArrayList<UpdateListener> mListeners = new ArrayList<UpdateListener>();
@@ -32,11 +32,11 @@ public class MainService extends Service implements UpdateListener {
         mListeners.remove(listener);
     }
 
-    private void sendUpdate(byte value) {
+    private void sendUpdate(String name, Float value) {
         Log.i(TAG, "sending update");
 
         for (int i=mListeners.size()-1; i>=0; i--) {
-            mListeners.get(i).onUpdate(value);
+            mListeners.get(i).onUpdate(name, value);
         }
     }
 

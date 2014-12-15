@@ -6,8 +6,12 @@ import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Menu;
@@ -19,6 +23,10 @@ import android.widget.AdapterView;
 
 import java.util.Calendar;
 
+import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.MainService;
+import de.fithud.fithudlib.UpdateListener;
+
 /**
  * An {@link android.app.Activity} showing a tuggable "Hello World!" card.
  * <p/>
@@ -29,7 +37,7 @@ import java.util.Calendar;
  *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
  */
-public class MainImmersion extends Activity {
+public class MainImmersion extends Activity implements UpdateListener {
     /**
      * {@link com.google.android.glass.widget.CardScrollView} to use as the main content view.
      */
@@ -40,7 +48,33 @@ public class MainImmersion extends Activity {
      */
     private View mView;
 
+    // T: Stuff to connect to MainService
+    private FHSensorManager fhSensorManager;
+    private MainService mService;
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            // We've bound to Service, cast the IBinder and get Service instance
+            MainService.FithudBinder fhBinder = (MainService.FithudBinder) binder;
+            mService = fhBinder.getService();
+            mService.registerListener(MainImmersion.this);
+            Log.i("FHSensorMngr", "onServiceConnected in MainImm");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mService = null;
+        }
+    };
+
     private GestureDetector mGestureDetector;
+
+    @Override
+    public void onUpdate(String name, Float value) {
+        Log.i("FHSensorMngr", name + ": " + value);
+    }
 
     // T: Intent to start and stop service.
     //private Intent intent = new Intent(this, FHLiveCardService.class);
@@ -80,10 +114,15 @@ public class MainImmersion extends Activity {
 
     @Override
     protected void onCreate(Bundle bundle) {
-        Log.i("immersion", "on start");
+        Log.i("MainImmersion", "on start");
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
         super.onCreate(bundle);
+
+        // T: Bind to MainService and add UpdateListener
+        Intent intent = new Intent(MainImmersion.this, MainService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        fhSensorManager = new FHSensorManager(mService, getBaseContext());
 
         mView = buildView();
 

@@ -144,13 +144,13 @@ public class MainActivity extends Activity implements UpdateListener {
     }
 
     @Override // updateListener interface from MainService
-    public void onUpdate(byte value2) {
-        final byte value = value2;
+    public void onUpdate(String name, Float value2) {
+        final float value = value2;
         Log.i(TAG, "onUpdate()");
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                textData.setText(Byte.toString(value));
+                textData.setText(Float.toString(value));
             }
         });
 

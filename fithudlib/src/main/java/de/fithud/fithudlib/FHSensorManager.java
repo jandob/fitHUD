@@ -41,9 +41,9 @@ public class FHSensorManager {
         mListeners.remove(listener);
     }
 
-    private void sendUpdate(byte value) {
+    private void sendUpdate(String name, Float value) {
         for (int i=mListeners.size()-1; i>=0; i--) {
-            mListeners.get(i).onUpdate(value);
+            mListeners.get(i).onUpdate(name, value);
         }
     }
 
@@ -70,12 +70,12 @@ public class FHSensorManager {
             Log.i(TAG, "received data from characteristic:");
             //Log.i(TAG, "GattDesriptors:");
             //for (BluetoothGattDescriptor gattD : characteristic.getDescriptors()) {
-             //   Log.i(TAG, gattD.getUuid().toString());
-           // }
-            //for (byte data : characteristicData) {
-            //    Log.i(TAG, String.valueOf(data));
+            //    Log.i(TAG, gattD.getUuid().toString());
             //}
-            sendUpdate( characteristicData[1]);
+            //for (byte data : characteristicData) {
+            //Log.i(TAG, characteristic.getDescriptor(characteristic.getUuid()).getCharacteristic().getStringValue(0));
+            //}
+            sendUpdate("name", (float)characteristicData[1]);
         }
 
         @Override
