@@ -92,7 +92,7 @@ public class FHSensorManager {
             for (byte data : characteristicData) {
               Log.i(TAG, Byte.toString(data));
             }
-            sendUpdate("name", (float)characteristicData[1]);
+            //sendUpdate("name", (float)characteristicData[1]);
         }
 
         @Override
