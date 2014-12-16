@@ -5,7 +5,7 @@ fitHUD
 ================
 
 Project Information
---------------
+----------------
 Projekt für das wearables Praktikum WS14/15.
 
 
@@ -13,13 +13,7 @@ Projekt für das wearables Praktikum WS14/15.
 
 Markdown reference
 ================
-H1
-========
-H2
------------
-# H1 alternative
-## H2 alternative
-### H3 alternative...
+
 ### cite (markdown in cite is parsed too)
 > Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aliquam hendrerit mi posuere
 > lectus.
@@ -44,3 +38,14 @@ Inline code block `echo "hans"` is inline.
 [link](http://http://developer.android.com/samples/)
 
 <http://example.com/>
+
+Headings
+================
+H1
+========
+H2
+-----------
+# H1 alternative
+## H2 alternative
+### H3 alternative...
+
