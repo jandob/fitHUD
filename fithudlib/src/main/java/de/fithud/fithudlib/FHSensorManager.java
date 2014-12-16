@@ -34,6 +34,11 @@ public class FHSensorManager {
     //private List<UUID> mConnectableBtDevices = new ArrayList<UUID>();
     private List<String> mConnectableBtDevices = new ArrayList<String>();
     private int stopScanCount = 2;
+    private final String H7 = "00:22:D0:3D:30:31";
+    private final String CAD = "C7:9E:DF:E6:F8:D5";
+    private final String SPD = "EB:03:59:83:C8:34";
+    private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
+    private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
 
     public final ArrayList<UpdateListener> mListeners = new ArrayList<UpdateListener>();
     public void registerListener(UpdateListener listener) {
@@ -79,7 +84,7 @@ public class FHSensorManager {
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             // this will get called anytime you perform a read or write characteristic operation
             byte[] characteristicData = characteristic.getValue();
-            Log.i(TAG, "received data from characteristic:");
+            Log.i(TAG, "received data from characteristic:" + characteristic.getUuid());
             //Log.i(TAG, "GattDesriptors:");
             //for (BluetoothGattDescriptor gattD : characteristic.getDescriptors()) {
             //    Log.i(TAG, gattD.getUuid().toString());
@@ -92,7 +97,7 @@ public class FHSensorManager {
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Log.i(TAG, new Integer(status).toString());
+            Log.i(TAG,"OnDescriptionWrite staus: " + new Integer(status).toString());
             super.onDescriptorWrite(gatt, descriptor, status);
         }
 
@@ -115,11 +120,11 @@ public class FHSensorManager {
             Log.i(TAG, gatt.getDevice().getName() + " discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
                 Log.i(TAG, service.getUuid().toString());
-                if (!service.getUuid().toString().equals("0000180d-0000-1000-8000-00805f9b34fb")){
+                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService))) {
                     continue;
                 }
 
-                //0000180d-0000-1000-8000-00805f9b34fb
+                //H7=0000180d-0000-1000-8000-00805f9b34fb
                 Log.i(TAG, service.toString());
                 List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
                 for (BluetoothGattCharacteristic characteristic : characteristics) {
@@ -135,6 +140,7 @@ public class FHSensorManager {
             }
         }
     };
+
     public void closeConnections() {
         mBtAdapter.disable();
     }
@@ -156,9 +162,9 @@ public class FHSensorManager {
         }
 
         // T: Insert device UUID's to connect to.
-        mConnectableBtDevices.add("00:22:D0:3D:30:31");
-        mConnectableBtDevices.add("EB:03:59:83:C8:34");
-        mConnectableBtDevices.add("C7:9E:DF:E6:F8:D5");
+        mConnectableBtDevices.add(H7);
+        mConnectableBtDevices.add(CAD);
+        mConnectableBtDevices.add(SPD);
 
 
         mBtDevices = mBtAdapter.getBondedDevices();
