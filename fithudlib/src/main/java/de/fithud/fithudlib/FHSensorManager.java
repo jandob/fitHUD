@@ -78,6 +78,7 @@ public class FHSensorManager {
             //btAdapter.stopLeScan(leScanCallback);
         }
     };
+
     private final BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
 
         @Override
@@ -92,7 +93,7 @@ public class FHSensorManager {
             for (byte data : characteristicData) {
               Log.i(TAG, Byte.toString(data));
             }
-            //sendUpdate("name", (float)characteristicData[1]);
+            sendUpdate("name", (float)characteristicData[1]);
         }
 
         @Override
