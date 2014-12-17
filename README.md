@@ -9,7 +9,7 @@ Project Information
 Projekt für das wearables Praktikum WS14/15.
 
 Developement Workflow
-================
+----------------
 - man macht sich einen branch um ein Feature zu entwickeln:
 `git branch featureX`
 - dann wechselt man in diesen branch
