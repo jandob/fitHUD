@@ -32,11 +32,11 @@ public class MainActivity extends MessengerServiceActivity {
     @Override
     public void handleMessage(Message msg) {
         switch(msg.what) {
-            case MainService.Messages.SENSOR_MESSAGE:
+            case TestService.Messages.SENSOR_MESSAGE:
                 float val = msg.getData().getFloat("HeartRate");
                 textData.setText(Float.toString(val));
                 break;
-            case MainService.Messages.CLIENT_RESPONSE_MESSAGE:
+            case TestService.Messages.CLIENT_RESPONSE_MESSAGE:
 
                 String answer = msg.getData().getString("answer");
                 Log.i(TAG, "answer:" + msg.getData().toString());
@@ -60,7 +60,7 @@ public class MainActivity extends MessengerServiceActivity {
             new View.OnClickListener() {
                 public void onClick(View v){
                     Message msg = Message.obtain(null,
-                            MainService.Messages.CLIENT_MESSAGE);
+                            TestService.Messages.CLIENT_MESSAGE);
                     msg.replyTo = mMessenger;
                     try {
                         mService.send(msg);
