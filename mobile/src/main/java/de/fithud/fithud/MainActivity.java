@@ -8,6 +8,8 @@ import android.content.ServiceConnection;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,14 +18,32 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import de.fithud.fithudlib.MainService;
-import de.fithud.fithudlib.UpdateListener;
+import de.fithud.fithudlib.MessengerService;
+import de.fithud.fithudlib.MessengerServiceActivity;
+import de.fithud.fithudlib.TestService;
 
 
-public class MainActivity extends Activity implements UpdateListener {
+public class MainActivity extends MessengerServiceActivity {
+
     Button btnStart, btnStop, btnBind, btnUnbind;
     TextView textStatus, textData;
     private static final String TAG = MainActivity.class.getSimpleName();
-    private MainService mService;
+
+    @Override
+    public void handleMessage(Message msg) {
+        switch(msg.what) {
+            case TestService.Messages.SENSOR_MESSAGE:
+                float val = msg.getData().getFloat("HeartRate");
+                textData.setText(Float.toString(val));
+                break;
+            case TestService.Messages.CLIENT_RESPONSE_MESSAGE:
+
+                String answer = msg.getData().getString("answer");
+                Log.i(TAG, "answer:" + msg.getData().toString());
+                textStatus.setText(answer);
+                break;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,14 +59,22 @@ public class MainActivity extends Activity implements UpdateListener {
         btnStart.setOnClickListener(
             new View.OnClickListener() {
                 public void onClick(View v){
-                    startService(new Intent(MainActivity.this, MainService.class));
+                    Message msg = Message.obtain(null,
+                            TestService.Messages.CLIENT_MESSAGE);
+                    msg.replyTo = mMessenger;
+                    try {
+                        mService.send(msg);
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    //startService(new Intent(MainActivity.this, MainService.class));
                 }
             }
         );
         btnStop.setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v){
-                        stopService(new Intent(MainActivity.this, MainService.class));
+                        stopService(new Intent(MainActivity.this, TestService.class));
                     }
                 }
         );
@@ -54,20 +82,15 @@ public class MainActivity extends Activity implements UpdateListener {
                 new View.OnClickListener() {
                     public void onClick(View v){
                         // Bind to Service
-                        Intent intent = new Intent(MainActivity.this, MainService.class);
-                        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+                       doBindService(TestService.class);
                     }
                 }
         );
         btnUnbind.setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v){
-                        if (mService != null) {
-                            mService.unregisterListener(MainActivity.this);
-                        }
-                        // unbind service
-                        unbindService(mConnection);
-                        textStatus.setText("service disconnected");
+
+                        doUnbindService();
                     }
                 }
         );
@@ -75,27 +98,6 @@ public class MainActivity extends Activity implements UpdateListener {
         //startService(new Intent(this, MainService.class));
     }
 
-
-    /** Defines callbacks for service binding, passed to bindService() */
-    private ServiceConnection mConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder binder) {
-            // We've bound to Service, cast the IBinder and get Service instance
-            MainService.FithudBinder fhBinder = (MainService.FithudBinder) binder;
-            mService = fhBinder.getService();
-            mService.registerListener(MainActivity.this);
-            textStatus.setText("service connected ");
-            Log.i(TAG, "onServiceConnected()");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mService = null;
-            textStatus.setText("service crashed?");
-        }
-    };
 
     @Override
     protected void onStart() {
@@ -143,16 +145,4 @@ public class MainActivity extends Activity implements UpdateListener {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override // updateListener interface from MainService
-    public void onUpdate(byte value2) {
-        final byte value = value2;
-        Log.i(TAG, "onUpdate()");
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textData.setText(Byte.toString(value));
-            }
-        });
-
-    }
 }

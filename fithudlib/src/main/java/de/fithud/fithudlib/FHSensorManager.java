@@ -31,6 +31,14 @@ public class FHSensorManager {
     private static final String TAG = FHSensorManager.class.getSimpleName();
     private Set<BluetoothDevice> mBtDevices;
     BluetoothAdapter mBtAdapter;
+    //private List<UUID> mConnectableBtDevices = new ArrayList<UUID>();
+    private List<String> mConnectableBtDevices = new ArrayList<String>();
+    private int stopScanCount = 2;
+    private final String H7 = "00:22:D0:3D:30:31";
+    private final String CAD = "C7:9E:DF:E6:F8:D5";
+    private final String SPD = "EB:03:59:83:C8:34";
+    private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
+    private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
 
     public final ArrayList<UpdateListener> mListeners = new ArrayList<UpdateListener>();
     public void registerListener(UpdateListener listener) {
@@ -41,9 +49,9 @@ public class FHSensorManager {
         mListeners.remove(listener);
     }
 
-    private void sendUpdate(byte value) {
+    private void sendUpdate(String name, Float value) {
         for (int i=mListeners.size()-1; i>=0; i--) {
-            mListeners.get(i).onUpdate(value);
+            mListeners.get(i).onUpdate(name, value);
         }
     }
 
@@ -51,11 +59,20 @@ public class FHSensorManager {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            Log.i(TAG, "found ble device:");
-            Log.i(TAG, device.getName());
-            if (device.getName().contains("Polar")) {
+            Log.i(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            if (mConnectableBtDevices.contains(device.getAddress())) {
+                mConnectableBtDevices.remove(device.getAddress());
                 device.connectGatt(context, false, btleGattCallback);
-                // stop if found (battery draining)
+                //mBtDevices.add(device);
+                Log.i(TAG, "Gattconnected to: " + device.getName());
+            } else {
+                if (!mBtDevices.contains(device)){
+                    Log.i(TAG , "stopcount: " + stopScanCount);
+                    stopScanCount--;
+                }
+            }
+            // stop if found (battery draining)
+            if (mConnectableBtDevices.isEmpty() || stopScanCount <= 0) {
                 mBtAdapter.stopLeScan(leScanCallback);
             }
             //btAdapter.stopLeScan(leScanCallback);
@@ -67,28 +84,27 @@ public class FHSensorManager {
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             // this will get called anytime you perform a read or write characteristic operation
             byte[] characteristicData = characteristic.getValue();
-            Log.i(TAG, "received data from characteristic:");
+            Log.i(TAG, "received data from characteristic:" + characteristic.getUuid());
             //Log.i(TAG, "GattDesriptors:");
             //for (BluetoothGattDescriptor gattD : characteristic.getDescriptors()) {
-             //   Log.i(TAG, gattD.getUuid().toString());
-           // }
-            //for (byte data : characteristicData) {
-            //    Log.i(TAG, String.valueOf(data));
+            //    Log.i(TAG, gattD.getUuid().toString());
             //}
-            sendUpdate( characteristicData[1]);
+            for (byte data : characteristicData) {
+              Log.i(TAG, Byte.toString(data));
+            }
+            sendUpdate("name", (float)characteristicData[1]);
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Log.i(TAG, new Integer(status).toString());
+            Log.i(TAG,"OnDescriptionWrite staus: " + new Integer(status).toString());
             super.onDescriptorWrite(gatt, descriptor, status);
         }
 
         @Override
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "connected to device:");
-                Log.i(TAG, gatt.getDevice().getName());
+                Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
                 gatt.discoverServices();
             } //else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 //T: close gatt, if device is out of range
@@ -101,15 +117,14 @@ public class FHSensorManager {
         public void onServicesDiscovered(final BluetoothGatt gatt, final int status) {
             // this will get called after the client initiates a BluetoothGatt.discoverServices() call
             List<BluetoothGattService> services = gatt.getServices();
-            Log.i(TAG, gatt.getDevice().getName());
-            Log.i(TAG, "discovered " + services.size() + " services:");
+            Log.i(TAG, gatt.getDevice().getName() + " discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
                 Log.i(TAG, service.getUuid().toString());
-                if (!service.getUuid().toString().equals("0000180d-0000-1000-8000-00805f9b34fb")){
+                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService))) {
                     continue;
                 }
 
-                //0000180d-0000-1000-8000-00805f9b34fb
+                //H7=0000180d-0000-1000-8000-00805f9b34fb
                 Log.i(TAG, service.toString());
                 List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
                 for (BluetoothGattCharacteristic characteristic : characteristics) {
@@ -125,6 +140,7 @@ public class FHSensorManager {
             }
         }
     };
+
     public void closeConnections() {
         mBtAdapter.disable();
     }
@@ -145,6 +161,11 @@ public class FHSensorManager {
             //startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
         }
 
+        // T: Insert device UUID's to connect to.
+        mConnectableBtDevices.add(H7);
+        mConnectableBtDevices.add(CAD);
+        mConnectableBtDevices.add(SPD);
+
 
         mBtDevices = mBtAdapter.getBondedDevices();
         Log.i(TAG, "bonded devices");
@@ -152,7 +173,8 @@ public class FHSensorManager {
             Log.i(TAG, device.getName());
             device.connectGatt(context, false, btleGattCallback);
         }
-
+        //UUID[] toArray = new UUID[mConnectableBtDevices.size()];
+        //mConnectableBtDevices.toArray(toArray);
         mBtAdapter.startLeScan(leScanCallback);
         Log.i(TAG, "initialized");
     }
