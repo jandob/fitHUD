@@ -14,6 +14,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -26,34 +29,46 @@ import java.util.UUID;
 /**
  * Created by jandob on 11/17/14.
  */
-public class FHSensorManager {
+public class FHSensorManager extends MessengerService {
+
+    public final class Messages extends MessengerService.Messages {
+        public static final int SENSOR_MESSAGE = 1;
+    }
+
+    @Override
+    void handleMessage(Message msg) {
+
+    }
+    void sendMsg(String sensorName, float val) {
+        for (int i=mClients.size()-1; i>=0; i--) {
+            Message msg = Message.obtain(null, Messages.SENSOR_MESSAGE);
+            Bundle bundle = new Bundle();
+            bundle.putFloat(sensorName, val);
+            msg.setData(bundle);
+            try {
+                mClients.get(i).send(msg);
+            } catch (RemoteException e) {
+                // The client is dead.  Remove it from the list;
+                // we are going through the list from back to front
+                // so this is safe to do inside the loop.
+                mClients.remove(i);
+            }
+        }
+    }
+
     private Context context;
     private static final String TAG = FHSensorManager.class.getSimpleName();
     private Set<BluetoothDevice> mBtDevices;
     BluetoothAdapter mBtAdapter;
     //private List<UUID> mConnectableBtDevices = new ArrayList<UUID>();
     private List<String> mConnectableBtDevices = new ArrayList<String>();
-    private int stopScanCount = 2;
+    private int stopScanCount = 20;
     private final String H7 = "00:22:D0:3D:30:31";
     private final String CAD = "C7:9E:DF:E6:F8:D5";
     private final String SPD = "EB:03:59:83:C8:34";
     private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
     private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
 
-    public final ArrayList<UpdateListener> mListeners = new ArrayList<UpdateListener>();
-    public void registerListener(UpdateListener listener) {
-        mListeners.add(listener);
-    }
-
-    public void unregisterListener(UpdateListener listener) {
-        mListeners.remove(listener);
-    }
-
-    private void sendUpdate(String name, Float value) {
-        for (int i=mListeners.size()-1; i>=0; i--) {
-            mListeners.get(i).onUpdate(name, value);
-        }
-    }
 
     // end listener interface
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
@@ -92,7 +107,8 @@ public class FHSensorManager {
             for (byte data : characteristicData) {
               Log.i(TAG, Byte.toString(data));
             }
-            sendUpdate("name", (float)characteristicData[1]);
+            sendMsg("HeartRate", (float)characteristicData[1]);
+            Log.i(TAG, "sending sendMsg");
         }
 
         @Override
@@ -144,8 +160,8 @@ public class FHSensorManager {
     public void closeConnections() {
         mBtAdapter.disable();
     }
-    public FHSensorManager(Service mainService, Context context) {
-        this.context = context;
+    public void onCreate() {
+        context = getBaseContext();
         // not yet used.
         SensorManager sensorManager =
                 (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);

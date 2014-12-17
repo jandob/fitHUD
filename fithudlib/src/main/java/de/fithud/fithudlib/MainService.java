@@ -85,8 +85,8 @@ public class MainService extends Service implements UpdateListener {
         // but does not need to be synchronized since its called by android
         Log.i(TAG, "onStartCommand()");
         Log.i(TAG, "Received start id " + startId + ": " + intent);
-        fhSensorManager = new FHSensorManager(this, getBaseContext());
-        fhSensorManager.registerListener(this);
+        //fhSensorManager = new FHSensorManager(this, getBaseContext());
+        //fhSensorManager.registerListener(this);
         // Service is restarted if it gets terminated. Intent data passed to the onStartCommand
         // method is null. Used for services which manages their own state and do not depend on
         // the Intent data.
