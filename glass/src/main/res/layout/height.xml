@@ -7,14 +7,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Your current heartrate: 0 bpm"
-        android:id="@+id/heartRateText"
+        android:text="Your current height: 0 m"
+        android:id="@+id/heightText"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="0px" />
 
     <com.androidplot.xy.XYPlot
-        android:id="@+id/heartRatePlot"
+        android:id="@+id/heightPlot"
         android:layout_width="400px"
         android:layout_height="250px"
         android:layout_marginTop="100px"

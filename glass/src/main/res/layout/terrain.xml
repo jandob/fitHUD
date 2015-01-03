@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ff000000">
+
+
+    <TextView
+        android:layout_width="200px"
+        android:layout_height="300px"
+        android:layout_marginTop="50px"
+        android:layout_marginLeft="20px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Your \n driving \n style"
+        android:id="@+id/terrainText"
+        android:textSize="25dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="60px"
+        android:layout_marginLeft="400px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Offroad: 10%"
+        android:textSize="18dp"
+        android:id="@+id/terrainOffroadText"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="100px"
+        android:layout_marginLeft="400px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Road: 10%"
+        android:textSize="18dp"
+        android:id="@+id/terrainRoadText"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="140px"
+        android:layout_marginLeft="400px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Asphalt: 10%"
+        android:textSize="18dp"
+        android:id="@+id/terrainAsphaltText"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <com.androidplot.pie.PieChart
+        android:id="@+id/terrainPie"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_weight="1"
+        androidPlot.title=""
+        androidPlot.titleWidget.labelPaint.textSize="5dp" />
+
+</RelativeLayout>

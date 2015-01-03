@@ -1,8 +1,10 @@
 package de.fithud.fithud;
 
 import com.androidplot.Plot;
-import com.androidplot.ui.AnchorPosition;
-import com.androidplot.ui.LayoutManager;
+import com.androidplot.pie.PieChart;
+import com.androidplot.pie.PieRenderer;
+import com.androidplot.pie.Segment;
+import com.androidplot.pie.SegmentFormatter;
 import com.androidplot.ui.SizeLayoutType;
 import com.androidplot.ui.SizeMetrics;
 import com.androidplot.ui.XLayoutStyle;
@@ -32,13 +34,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,22 +48,43 @@ public class MainImmersion extends Activity {
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
-    private TextView speedText;
+
+    // Timer variables
+
     Timer timer;
     TimerTask timerTask;
-    private SimpleXYSeries speedSeries = null;
-
     final Handler handler = new Handler();
-    private XYPlot mySimpleXYPlot = null;
+
+    // Plotting Variables
+    private SimpleXYSeries speedSeries = null;
+    private SimpleXYSeries heartSeries = null;
+    private SimpleXYSeries heightSeries = null;
+    private TextView speedText;
+    private TextView heartText;
+    private TextView heightText;
+    private TextView terrainRoadText;
+    private TextView terrainOffroadText;
+    private TextView terrainAsphaltText;
+    private XYPlot speedPlot = null;
+    private XYPlot heartPlot = null;
+    private XYPlot heightPlot = null;
     private static final int HISTORY_SIZE = 50;
     private static double sin_counter = 0.0;
     private static boolean plot_speed = false;
     private static boolean plot_heart = false;
     private static boolean plot_height = false;
+    private static boolean plot_terrain = false;
+    private ImageView imageview = null;
+
+    private PieChart terrainPie;
+
+    private Segment s1;
+    private Segment s2;
+    private Segment s3;
 
     @Override
-    public boolean onCreatePanelMenu(int featureId, Menu menu){
-        if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId ==  Window.FEATURE_OPTIONS_PANEL) {
+    public boolean onCreatePanelMenu(int featureId, Menu menu) {
+        if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId == Window.FEATURE_OPTIONS_PANEL) {
             getMenuInflater().inflate(R.menu.main, menu);
             return true;
         }
@@ -72,7 +93,7 @@ public class MainImmersion extends Activity {
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
-        if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId ==  Window.FEATURE_OPTIONS_PANEL) {
+        if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId == Window.FEATURE_OPTIONS_PANEL) {
             switch (item.getItemId()) {
                 case R.id.currentSpeed:
                     mCardScrollView.setSelection(0);
@@ -93,13 +114,108 @@ public class MainImmersion extends Activity {
         return super.onMenuItemSelected(featureId, item);
     }
 
+    public void initializePlot(XYPlot plot, String choice) {
+        Widget gw = plot.getGraphWidget();
+
+        // FILL mode with values of 0 means fill 100% of container:
+        SizeMetrics sm = new SizeMetrics(0, SizeLayoutType.FILL, 0, SizeLayoutType.FILL);
+        gw.setSize(sm);
+
+        gw.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0, YLayoutStyle.ABSOLUTE_FROM_TOP);
+
+        plot.setBorderStyle(Plot.BorderStyle.NONE, null, null);
+        plot.setPlotMargins(0, 0, 0, 0);
+        plot.setPlotPadding(0, 0, 0, 0);
+        plot.setGridPadding(0, 0, 0, 0);
+
+        plot.setBackgroundColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getBackgroundPaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getGridBackgroundPaint().setColor(Color.TRANSPARENT);
+
+        plot.getGraphWidget().getDomainLabelPaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getRangeLabelPaint().setColor(Color.TRANSPARENT);
+
+        // ACHSEN
+
+        plot.getGraphWidget().getDomainOriginLabelPaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getDomainOriginLinePaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getRangeOriginLinePaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getRangeSubGridLinePaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getDomainSubGridLinePaint().setColor(Color.TRANSPARENT);
+
+        // GRIDLINE
+        plot.getGraphWidget().getDomainGridLinePaint().setColor(Color.TRANSPARENT);
+        plot.getGraphWidget().getRangeGridLinePaint().setColor(Color.TRANSPARENT);
+
+        // Remove legend
+        plot.getLayoutManager().remove(plot.getLegendWidget());
+        plot.getLayoutManager().remove(plot.getDomainLabelWidget());
+        plot.getLayoutManager().remove(plot.getRangeLabelWidget());
+        plot.getLayoutManager().remove(plot.getTitleWidget());
+
+        plot.setMarkupEnabled(false);
+
+        if (choice.equalsIgnoreCase("speed")) {
+            speedSeries = new SimpleXYSeries("Speed");
+            speedSeries.useImplicitXVals();
+            plot.addSeries(speedSeries,
+                    new LineAndPointFormatter(
+                            Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+        }
+
+        if (choice.equalsIgnoreCase("heart")) {
+            heartSeries = new SimpleXYSeries("heart");
+            heartSeries.useImplicitXVals();
+            plot.addSeries(heartSeries,
+                    new LineAndPointFormatter(
+                            Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+        }
+
+        if (choice.equalsIgnoreCase("height")) {
+            heightSeries = new SimpleXYSeries("height");
+            heightSeries.useImplicitXVals();
+            plot.addSeries(heightSeries,
+                    new LineAndPointFormatter(
+                            Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+        }
+
+        plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
+        plot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
+
+
+        plot.setDomainStepMode(XYStepMode.INCREMENT_BY_VAL);
+        plot.setDomainStepValue(1);
+        plot.setTicksPerRangeLabel(1);
+
+        if (choice.equalsIgnoreCase("speed")) {
+            plot.setDomainLabel("Time [s]");
+            plot.setRangeLabel("Speed [m/s]");
+            final PlotStatistics histStatsSpeed = new PlotStatistics(1000, false);
+            plot.addListener(histStatsSpeed);
+        } else if (choice.equalsIgnoreCase("heart")) {
+            plot.setDomainLabel("Time [s]");
+            plot.setRangeLabel("Heartrate [bpm]");
+            final PlotStatistics histStatsHeart = new PlotStatistics(1000, false);
+            plot.addListener(histStatsHeart);
+        } else if (choice.equalsIgnoreCase("height")) {
+            plot.setDomainLabel("Time [s]");
+            plot.setRangeLabel("Height [m]");
+            final PlotStatistics histStatsHeight = new PlotStatistics(1000, false);
+            plot.addListener(histStatsHeight);
+        }
+
+        plot.getDomainLabelWidget().pack();
+        plot.getRangeLabelWidget().pack();
+        plot.setRangeValueFormat(new DecimalFormat("#"));
+        plot.setDomainValueFormat(new DecimalFormat("#"));
+    }
+
     @Override
     protected void onCreate(Bundle bundle) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
         super.onCreate(bundle);
-
         createCards();
 
         mCardScrollView = new CardScrollView(this);
@@ -117,86 +233,100 @@ public class MainImmersion extends Activity {
         mCardScrollView.activate();
         setContentView(mCardScrollView);
 
-        mySimpleXYPlot = (XYPlot) findViewById(R.id.dynamicXYPlot);
+
+        speedPlot = (XYPlot) findViewById(R.id.dynamicXYPlot);
         speedText = (TextView) findViewById(R.id.textView2);
 
-        Widget gw = mySimpleXYPlot.getGraphWidget();
+        heartPlot = (XYPlot) findViewById(R.id.heartRatePlot);
+        heartText = (TextView) findViewById(R.id.heartRateText);
 
-        // FILL mode with values of 0 means fill 100% of container:
-        SizeMetrics sm = new SizeMetrics(0, SizeLayoutType.FILL, 0,SizeLayoutType.FILL);
-        gw.setSize(sm);
+        heightPlot = (XYPlot) findViewById(R.id.heightPlot);
+        heightText = (TextView) findViewById(R.id.heightText);
 
-        gw.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0, YLayoutStyle.ABSOLUTE_FROM_TOP);
-
-        mySimpleXYPlot.setBorderStyle(Plot.BorderStyle.NONE, null, null);
-        mySimpleXYPlot.setPlotMargins(0, 0, 0, 0);
-        mySimpleXYPlot.setPlotPadding(0, 0, 0, 0);
-        mySimpleXYPlot.setGridPadding(0, 0, 0, 0);
-
-        mySimpleXYPlot.setBackgroundColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getBackgroundPaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getGridBackgroundPaint().setColor(Color.TRANSPARENT);
-
-        mySimpleXYPlot.getGraphWidget().getDomainLabelPaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getRangeLabelPaint().setColor(Color.TRANSPARENT);
-
-        // ACHSEN
-        mySimpleXYPlot.getGraphWidget().getDomainOriginLabelPaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getDomainOriginLinePaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getRangeOriginLinePaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getRangeSubGridLinePaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getDomainSubGridLinePaint().setColor(Color.TRANSPARENT);
-
-        // GRIDLINE
-        mySimpleXYPlot.getGraphWidget().getDomainGridLinePaint().setColor(Color.TRANSPARENT);
-        mySimpleXYPlot.getGraphWidget().getRangeGridLinePaint().setColor(Color.TRANSPARENT);
-
-        // Remove legend
-        mySimpleXYPlot.getLayoutManager().remove(mySimpleXYPlot.getLegendWidget());
-        mySimpleXYPlot.getLayoutManager().remove(mySimpleXYPlot.getDomainLabelWidget());
-        mySimpleXYPlot.getLayoutManager().remove(mySimpleXYPlot.getRangeLabelWidget());
-        mySimpleXYPlot.getLayoutManager().remove(mySimpleXYPlot.getTitleWidget());
-
-        mySimpleXYPlot.setMarkupEnabled(false);
-
-        speedSeries = new SimpleXYSeries("Speed");
-        speedSeries.useImplicitXVals();
-
-        mySimpleXYPlot.setRangeBoundaries(10,30, BoundaryMode.FIXED);
-        mySimpleXYPlot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
-
-        mySimpleXYPlot.addSeries(speedSeries,
-                new LineAndPointFormatter(
-                        Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
-
-        mySimpleXYPlot.setDomainStepMode(XYStepMode.INCREMENT_BY_VAL);
-        mySimpleXYPlot.setDomainStepValue(1);
-        mySimpleXYPlot.setTicksPerRangeLabel(1);
-
-        mySimpleXYPlot.setDomainLabel("Time [s]");
-        mySimpleXYPlot.getDomainLabelWidget().pack();
-        mySimpleXYPlot.setRangeLabel("Speed [m/s]");
-        mySimpleXYPlot.getRangeLabelWidget().pack();
-
-        mySimpleXYPlot.setRangeValueFormat(new DecimalFormat("#"));
-        mySimpleXYPlot.setDomainValueFormat(new DecimalFormat("#"));
-
-        final PlotStatistics histStats = new PlotStatistics(1000, false);
-
-        mySimpleXYPlot.addListener(histStats);
-
+        initializePlot(speedPlot, "speed");
+        initializePlot(heartPlot, "heart");
+        initializePlot(heightPlot, "height");
     }
 
-    public void plotSpeedData(int speed){
+    public void plotSpeedData(int speed) {
+        Log.d("FitHUD", "plot speed now");
         if (speedSeries.size() > HISTORY_SIZE) {
             speedSeries.removeFirst();
         }
         speedSeries.addLast(null, speed);
-        mySimpleXYPlot.redraw();
-        speedText.setText("Your current speed: "+speed+" km/h");
-        mAdapter.notifyDataSetChanged();
+        speedPlot.redraw();
+        speedText.setText("Your current speed: " + speed + " km/h");
+
     }
 
+    public void plotHeartData(int heartrate) {
+        Log.d("FitHUD", "plot heartrate now");
+        if (heartSeries.size() > HISTORY_SIZE) {
+            heartSeries.removeFirst();
+        }
+        heartSeries.addLast(null, heartrate);
+        heartPlot.redraw();
+        heartText.setText("Your current heartrate: " + heartrate + " bpm");
+    }
+
+    public void plotHeightData(int height) {
+        Log.d("FitHUD", "plot height now");
+        if (heightSeries.size() > HISTORY_SIZE) {
+            heightSeries.removeFirst();
+        }
+        heightSeries.addLast(null, height);
+        heightPlot.redraw();
+        heightText.setText("Your current height: " + height + " m");
+    }
+
+    public void plotTerrainPie(int s1_val, int s2_val, int s3_val, PieChart work_pie)
+    {
+        Log.d("FitHUD", "test2 "+work_pie);
+        s1 = new Segment("offroad", s1_val);
+        s2 = new Segment("road", s2_val);
+        s3 = new Segment("asphalt", s3_val);
+
+        terrainOffroadText.setText("Offroad: "+s1_val+"%");
+        terrainRoadText.setText("Road: "+s2_val+"%");
+        terrainAsphaltText.setText("Asphalt: "+s3_val+"%");
+
+        work_pie.clear();
+
+        SegmentFormatter sf1 =  new SegmentFormatter(Color.rgb(106, 168, 79), Color.BLACK,Color.BLACK, Color.BLACK);
+        SegmentFormatter sf2 =  new SegmentFormatter(Color.rgb(255, 0, 0), Color.BLACK,Color.BLACK, Color.BLACK);
+        SegmentFormatter sf3 =  new SegmentFormatter(Color.rgb(255, 153, 0), Color.BLACK,Color.BLACK, Color.BLACK);
+
+        work_pie.addSeries(s1, sf1);
+        work_pie.addSeries(s2, sf2);
+        work_pie.addSeries(s3, sf3);
+
+        work_pie.getRenderer(PieRenderer.class).setDonutSize(0/100f,
+                PieRenderer.DonutMode.PERCENT);
+        work_pie.redraw();
+    }
+
+
+    public void initializeTerrainPie(PieChart init_pie){
+        init_pie.clear();
+
+        Widget gw = init_pie.getPieWidget();
+
+        // FILL mode with values of 0 means fill 100% of container:
+        SizeMetrics sm = new SizeMetrics(0, SizeLayoutType.FILL, 0, SizeLayoutType.FILL);
+        gw.setSize(sm);
+
+        gw.position(0, XLayoutStyle.ABSOLUTE_FROM_LEFT, 0, YLayoutStyle.ABSOLUTE_FROM_TOP);
+
+        init_pie.setBorderStyle(Plot.BorderStyle.NONE, null, null);
+        init_pie.setPlotMargins(0, 0, 0, 0);
+        init_pie.setPlotPadding(0, 0, 0, 0);
+        init_pie.setPadding(0,0,0,0);
+
+        init_pie.getBorderPaint().setColor(Color.TRANSPARENT);
+        init_pie.getBackgroundPaint().setColor(Color.TRANSPARENT);
+
+
+    }
     public void stoptimertask() {
         //stop the timer, if it's not already null
         if (timer != null) {
@@ -212,7 +342,7 @@ public class MainImmersion extends Activity {
         //initialize the TimerTask's job
         initializeTimerTask();
 
-        //schedule the timer, after the first 5000ms the TimerTask will run every 10000ms
+        //schedule the timer, after the first 5000ms the TimerTask will run every 500ms
         timer.schedule(timerTask, 5000, 500); //
     }
 
@@ -221,33 +351,90 @@ public class MainImmersion extends Activity {
         timerTask = new TimerTask() {
             public void run() {
 
-                //use a handler to run a toast that shows the current timestamp
+                //use a handler to run the plots
                 handler.post(new Runnable() {
                     public void run() {
-                        sin_counter = sin_counter + Math.PI/10;
-                        double speed = Math.sin(sin_counter)*10+20.0;
+                        sin_counter = sin_counter + Math.PI / 10;
+                        double speed = Math.sin(sin_counter) * 10 + 20.0;
+                        Log.d("FitHUD", "test "+mCardScrollView.getSelectedItemPosition());
 
                         switch (mCardScrollView.getSelectedItemPosition()) {
-                            case 0: plot_speed = true;
-                                    plot_heart = false;
-                                    plot_height = false;
+
+                            case 0:
+                                plot_speed = true;
+                                plot_heart = false;
+                                plot_height = false;
+                                plot_terrain = false;
+                                while (heartSeries.size() > 0) {
+                                    heartSeries.removeLast();
+                                }
+                                while (heightSeries.size() > 0) {
+                                    heightSeries.removeLast();
+                                }
                                 break;
-                            case 1: plot_speed = false;
+                            case 1:
+                                plot_speed = false;
                                 plot_heart = true;
                                 plot_height = false;
-                                while(speedSeries.size()>0){
+                                plot_terrain = false;
+                                while (speedSeries.size() > 0) {
                                     speedSeries.removeLast();
                                 }
+                                while (heightSeries.size() > 0) {
+                                    heightSeries.removeLast();
+                                }
+                                break;
 
-                            case 2: plot_speed = false;
+                            case 2:
+                                plot_speed = false;
                                 plot_heart = false;
                                 plot_height = true;
-                                while(speedSeries.size()>0){
+                                plot_terrain = false;
+                                while (speedSeries.size() > 0) {
                                     speedSeries.removeLast();
                                 }
+                                while (heartSeries.size() > 0) {
+                                    heartSeries.removeLast();
+                                }
+                                break;
+
+                            case 3:
+                                plot_speed = false;
+                                plot_heart = false;
+                                plot_height = false;
+                                plot_terrain = true;
+                                while (speedSeries.size() > 0) {
+                                    speedSeries.removeLast();
+                                }
+                                while (heartSeries.size() > 0) {
+                                    heartSeries.removeLast();
+                                }
+                                while (heightSeries.size() > 0) {
+                                    heightSeries.removeLast();
+                                }
+
+                                terrainPie = (PieChart) mCardScrollView.getSelectedView().findViewById(R.id.terrainPie);
+                                terrainRoadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainRoadText);
+                                terrainAsphaltText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainAsphaltText);
+                                terrainOffroadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainOffroadText);
+                                break;
                         }
-                        if(plot_speed) {
+
+                        if (plot_speed) {
                             plotSpeedData((int) speed);
+                        }
+
+                        if (plot_heart) {
+                            plotHeartData((int) speed);
+                        }
+
+                        if (plot_height){
+                            plotHeightData((int) speed);
+                        }
+
+                        if (plot_terrain){
+                            initializeTerrainPie(terrainPie);
+                            plotTerrainPie(33,33,33,terrainPie);
                         }
                     }
                 });
@@ -277,12 +464,18 @@ public class MainImmersion extends Activity {
                 .setFootnote("Slower than a turtle")
                 .setTimestamp("right now"));
 
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
-                .setText("Current heart rate: 0bpm")
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+                .setEmbeddedLayout(R.layout.heartrate)
                 .setFootnote("You are dead"));
 
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.TEXT)
-                .setText("Hate: 100m pure"));
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+                .setEmbeddedLayout(R.layout.height)
+                .setFootnote("Very low"));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+                .setEmbeddedLayout(R.layout.terrain)
+                .setFootnote("Equally weighted"));
+
     }
 
     private class ExampleCardScrollAdapter extends CardScrollAdapter {
@@ -308,7 +501,7 @@ public class MainImmersion extends Activity {
         }
 
         @Override
-        public int getItemViewType(int position){
+        public int getItemViewType(int position) {
             return mCards.get(position).getItemViewType();
         }
 
