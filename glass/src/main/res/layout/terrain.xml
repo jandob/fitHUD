@@ -58,6 +58,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1"
+        android:visibility="invisible"
         androidPlot.title=""
         androidPlot.titleWidget.labelPaint.textSize="5dp" />
 

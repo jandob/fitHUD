@@ -5,4 +5,8 @@
          android:title="@string/stop_this"
          android:icon="@drawable/ic_stop"/>
 
+    <item
+        android:id="@+id/showMainMenu"
+        android:title="Show Main Menu"/>
+
 </menu>

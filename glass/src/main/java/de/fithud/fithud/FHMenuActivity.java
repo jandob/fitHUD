@@ -30,6 +30,11 @@ public class FHMenuActivity extends Activity{
             case R.id.stop_this:
                 stopService(new Intent(this, FHLiveCardService.class));
                 return true;
+
+            case R.id.showMainMenu:
+                startActivity(new Intent(FHMenuActivity.this, MainImmersion.class ));
+                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }

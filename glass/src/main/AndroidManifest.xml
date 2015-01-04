@@ -38,6 +38,12 @@
                 android:name="com.google.android.glass.VoiceTrigger"
                 android:resource="@xml/voice_trigger" />
         </activity>
+
+        <activity android:name=".WorkoutMenu" />
+
+        <activity android:name=".Achivements" />
+
+        <activity android:name=".GuideSettings" />
     </application>
 
 </manifest>

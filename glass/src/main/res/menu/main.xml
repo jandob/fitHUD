@@ -8,4 +8,10 @@
         android:title="Show Height" />
     <item android:id="@+id/showWhatever"
         android:title="Show whatever" />
+    <item android:id="@+id/showTerrain"
+        android:title="Show Style" />
+    <item android:id="@+id/makeWorkout"
+        android:title="Start Workout" />
+    <item android:id="@+id/showAchivements"
+        android:title="Show Achivements" />
 </menu>

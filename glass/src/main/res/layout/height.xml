@@ -19,6 +19,8 @@
         android:layout_height="250px"
         android:layout_marginTop="100px"
         android:layout_marginLeft="70px"
+        android:visibility="invisible"
+
 
         androidPlot.graphWidget.marginTop="0dp"
         androidPlot.graphWidget.marginLeft="0dp"
