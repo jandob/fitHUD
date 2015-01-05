@@ -22,11 +22,17 @@ import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,12 +49,45 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainImmersion extends Activity {
+import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.MessengerServiceActivity;
+import de.fithud.fithudlib.TestService;
+import de.fithud.fithudlib.UpdateListener;
 
+/**
+ * An {@link android.app.Activity} showing a tuggable "Hello World!" card.
+ * <p/>
+ * The main content view is composed of a one-card {@link com.google.android.glass.widget.CardScrollView} that provides tugging
+ * feedback to the user when swipe gestures are detected.
+ * If your Glassware intends to intercept swipe gestures, you should set the content view directly
+ * and use a {@link com.google.android.glass.touchpad.GestureDetector}.
+ *
+ * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
+ */
+public class MainImmersion extends MessengerServiceActivity {
+    //CardBuilder mCard;
+    private final String TAG = "MainImmersion";
     private CardScrollView mCardScrollView;
+    //private View mView;
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
 
+    @Override
+    public void handleMessage(Message msg) {
+        Log.i(TAG, "handling Msg");
+        switch(msg.what) {
+            case TestService.Messages.SENSOR_MESSAGE:
+                Log.i(TAG, "handling Msg: case");
+                float val = msg.getData().getFloat("HeartRate");
+                //mCard.setText(Float.toString(val));
+                //setContentView(mCard.getView());
+                //mCardScroller.getAdapter().notifyDataSetChanged();
+                Log.i(TAG, "handling Msg:text set to " + val);
+                break;
+        }
+    }
+
+    //private GestureDetector mGestureDetector;
     // Timer variables
 
     Timer timer;
@@ -227,6 +266,8 @@ public class MainImmersion extends Activity {
 
     @Override
     protected void onCreate(Bundle bundle) {
+        doBindService(FHSensorManager.class);
+        Log.i("MainImmersion", "on start");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
@@ -546,6 +587,10 @@ public class MainImmersion extends Activity {
                 .setEmbeddedLayout(R.layout.terrain)
                 .setFootnote("Equally weighted"));
 
+    }
+    @Override
+    protected void onDestroy() {
+        doUnbindService();
     }
 
     private class ExampleCardScrollAdapter extends CardScrollAdapter {
