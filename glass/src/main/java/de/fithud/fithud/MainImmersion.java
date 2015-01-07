@@ -413,8 +413,6 @@ public class MainImmersion extends MessengerServiceActivity {
                     public void run() {
                         sin_counter = sin_counter + Math.PI / 10;
                         double speed = Math.sin(sin_counter) * 10 + 20.0;
-                        Log.d("FitHUD", "test " + mCardScrollView.getSelectedItemPosition());
-
                         switch (mCardScrollView.getSelectedItemPosition()) {
 
                             case 2:

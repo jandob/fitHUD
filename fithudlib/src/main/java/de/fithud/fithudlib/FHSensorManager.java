@@ -68,6 +68,7 @@ public class FHSensorManager extends MessengerService {
     private final String SPD = "EB:03:59:83:C8:34";
     private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
     private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
+    private boolean connectionInProgress = false;
 
 
     // end listener interface
@@ -75,7 +76,8 @@ public class FHSensorManager extends MessengerService {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
             Log.i(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
-            if (mConnectableBtDevices.contains(device.getAddress())) {
+            if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
+                connectionInProgress = true;
                 mConnectableBtDevices.remove(device.getAddress());
                 device.connectGatt(context, false, btleGattCallback);
                 //mBtDevices.add(device);
@@ -99,16 +101,19 @@ public class FHSensorManager extends MessengerService {
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             // this will get called anytime you perform a read or write characteristic operation
             byte[] characteristicData = characteristic.getValue();
-            Log.i(TAG, "received data from characteristic:" + characteristic.getUuid());
-            //Log.i(TAG, "GattDesriptors:");
-            //for (BluetoothGattDescriptor gattD : characteristic.getDescriptors()) {
-            //    Log.i(TAG, gattD.getUuid().toString());
-            //}
-            for (byte data : characteristicData) {
-              Log.i(TAG, Byte.toString(data));
+            //Log.i(TAG, "received data from characteristic:" + characteristic.getService().getUuid().toString());
+
+            if (characteristic.getService().getUuid().toString().equals(SPDCADService)) {
+                Log.i(TAG, "CAD Characteristic");
             }
+            if (characteristic.getService().getUuid().toString().equals(HRService)) {
+                Log.i(TAG, "HR Characteristic");
+            }
+            //for (byte data : characteristicData) {
+              //Log.i(TAG, Byte.toString(data));
+            //}
             sendMsg("HeartRate", (float)characteristicData[1]);
-            Log.i(TAG, "sending sendMsg");
+            //Log.i(TAG, "sending sendMsg");
         }
 
         @Override
@@ -121,6 +126,7 @@ public class FHSensorManager extends MessengerService {
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
+                connectionInProgress = false;
                 gatt.discoverServices();
             } //else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 //T: close gatt, if device is out of range
