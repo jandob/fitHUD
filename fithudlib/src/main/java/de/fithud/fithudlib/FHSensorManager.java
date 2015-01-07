@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
@@ -24,6 +25,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 /**
@@ -32,18 +35,21 @@ import java.util.UUID;
 public class FHSensorManager extends MessengerService {
 
     public final class Messages extends MessengerService.Messages {
-        public static final int SENSOR_MESSAGE = 1;
+        public static final int HEARTRATE_MESSAGE = 1;
+        public static final int CADENCE_MESSAGE = 2;
+
     }
 
     @Override
     void handleMessage(Message msg) {
 
     }
-    void sendMsg(String sensorName, float val) {
+
+    void sendMsg(int messageType, float val) {
         for (int i=mClients.size()-1; i>=0; i--) {
-            Message msg = Message.obtain(null, Messages.SENSOR_MESSAGE);
+            Message msg = Message.obtain(null, messageType);
             Bundle bundle = new Bundle();
-            bundle.putFloat(sensorName, val);
+            bundle.putFloat("value", val);
             msg.setData(bundle);
             try {
                 mClients.get(i).send(msg);
@@ -69,30 +75,28 @@ public class FHSensorManager extends MessengerService {
     private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
     private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
     private boolean connectionInProgress = false;
+    private int nrOfconnectedDevices = 0;
 
+    Timer timer;
+    TimerTask timerTask;
+    final Handler handler = new Handler();
 
     // end listener interface
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            Log.i(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            stopScan();
+            Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            //Log.i(TAG, mConnectableBtDevices.toString());
             if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
+                Log.i(TAG, "connecting to: " + device.getName());
                 connectionInProgress = true;
                 mConnectableBtDevices.remove(device.getAddress());
+                nrOfconnectedDevices += 1;
                 device.connectGatt(context, false, btleGattCallback);
-                //mBtDevices.add(device);
-                Log.i(TAG, "Gattconnected to: " + device.getName());
-            } else {
-                if (!mBtDevices.contains(device)){
-                    Log.i(TAG , "stopcount: " + stopScanCount);
-                    stopScanCount--;
-                }
+
             }
-            // stop if found (battery draining)
-            if (mConnectableBtDevices.isEmpty() || stopScanCount <= 0) {
-                mBtAdapter.stopLeScan(leScanCallback);
-            }
-            //btAdapter.stopLeScan(leScanCallback);
+
         }
     };
     private final BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
@@ -104,21 +108,21 @@ public class FHSensorManager extends MessengerService {
             //Log.i(TAG, "received data from characteristic:" + characteristic.getService().getUuid().toString());
 
             if (characteristic.getService().getUuid().toString().equals(SPDCADService)) {
-                Log.i(TAG, "CAD Characteristic");
+                int val = characteristicData[1];
+                val = val | characteristicData[2] << 8;
+                sendMsg(Messages.CADENCE_MESSAGE, (float)val);
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
-                Log.i(TAG, "HR Characteristic");
+                sendMsg(Messages.HEARTRATE_MESSAGE, (float)characteristicData[1]);
             }
-            //for (byte data : characteristicData) {
-              //Log.i(TAG, Byte.toString(data));
-            //}
-            sendMsg("HeartRate", (float)characteristicData[1]);
+
+
             //Log.i(TAG, "sending sendMsg");
         }
 
         @Override
         public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-            Log.i(TAG,"OnDescriptionWrite staus: " + new Integer(status).toString());
+            Log.i(TAG, "OnDescriptionWrite staus: " + new Integer(status).toString());
             super.onDescriptorWrite(gatt, descriptor, status);
         }
 
@@ -126,8 +130,13 @@ public class FHSensorManager extends MessengerService {
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
+                Log.i(TAG, "nrOfconnectedDevices: " + nrOfconnectedDevices);
                 connectionInProgress = false;
-                gatt.discoverServices();
+                if (nrOfconnectedDevices < 2) {
+                    gatt.discoverServices();
+                    startScan();
+                }
+
             } //else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 //T: close gatt, if device is out of range
                 //Log.i(TAG, "disconnected from device, closing gatt:");
@@ -154,18 +163,29 @@ public class FHSensorManager extends MessengerService {
                     for (BluetoothGattDescriptor descriptor : characteristic.getDescriptors()) {
                         //find descriptor UUID that matches Client Characteristic Configuration (0x2902)
                         // and then call setValue on that descriptor
-                        Log.i(TAG, "enabeling notification: " + descriptor.getUuid().toString());
+                        Log.i(TAG, "enabling notification: " + descriptor.getUuid().toString());
                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         gatt.writeDescriptor(descriptor);
                     }
                 }
+
             }
+
         }
     };
+    public void startScan() {
+        Log.i(TAG, "start scanning");
+        mBtAdapter.startLeScan(leScanCallback);
+    }
+    public void stopScan() {
+        Log.i(TAG, "stop scanning");
+        mBtAdapter.stopLeScan(leScanCallback);
+    }
 
     public void closeConnections() {
         mBtAdapter.disable();
     }
+
     public void onCreate() {
         context = getBaseContext();
         // not yet used.
@@ -189,17 +209,44 @@ public class FHSensorManager extends MessengerService {
         mConnectableBtDevices.add(SPD);
 
 
-        mBtDevices = mBtAdapter.getBondedDevices();
-        Log.i(TAG, "bonded devices");
-        for (BluetoothDevice device : mBtDevices) {
-            Log.i(TAG, device.getName());
-            device.connectGatt(context, false, btleGattCallback);
-        }
+        //mBtDevices = mBtAdapter.getBondedDevices();
+        //Log.i(TAG, "bonded devices");
+        //for (BluetoothDevice device : mBtDevices) {
+        //    Log.i(TAG, device.getName());
+        //    device.connectGatt(context, false, btleGattCallback);
+        //}
         //UUID[] toArray = new UUID[mConnectableBtDevices.size()];
         //mConnectableBtDevices.toArray(toArray);
-        mBtAdapter.startLeScan(leScanCallback);
+        startScan();
         Log.i(TAG, "initialized");
+
+        //debug, to be removed
+        mHandler.removeCallbacks(mTickRunnable);
+        mHandler.post(mTickRunnable);
+
     }
+    // generates ticks for stopping the scan
+    private long mTick = 0;
+    private final Handler mHandler = new Handler();
+    private final Runnable mTickRunnable = new Runnable() {
 
+        public void run() {
+            mTick++;
+            Log.i(TAG, "scanning since " + Long.valueOf(mTick) + "s");
+            if (mTick < 20) {
+                mHandler.postDelayed(mTickRunnable, 1000);
 
+            } else {
+                Log.i(TAG, "scanning stopped");
+                //stopScan();
+                //mBtAdapter.cancelDiscovery();
+            }
+        }
+    };
+    @Override
+    public void onDestroy() {
+        Log.i(TAG, "onDestroy()");
+        closeConnections();
+        super.onDestroy();
+    }
 }

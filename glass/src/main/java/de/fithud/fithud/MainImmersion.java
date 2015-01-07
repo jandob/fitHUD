@@ -21,18 +21,12 @@ import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -51,8 +45,6 @@ import java.util.TimerTask;
 
 import de.fithud.fithudlib.FHSensorManager;
 import de.fithud.fithudlib.MessengerServiceActivity;
-import de.fithud.fithudlib.TestService;
-import de.fithud.fithudlib.UpdateListener;
 
 /**
  * An {@link android.app.Activity} showing a tuggable "Hello World!" card.
@@ -76,13 +68,16 @@ public class MainImmersion extends MessengerServiceActivity {
     public void handleMessage(Message msg) {
         Log.i(TAG, "handling Msg");
         switch(msg.what) {
-            case TestService.Messages.SENSOR_MESSAGE:
-                Log.i(TAG, "handling Msg: case");
-                float val = msg.getData().getFloat("HeartRate");
+            case FHSensorManager.Messages.HEARTRATE_MESSAGE:
+                float heartRate = msg.getData().getFloat("value");
                 //mCard.setText(Float.toString(val));
                 //setContentView(mCard.getView());
                 //mCardScroller.getAdapter().notifyDataSetChanged();
-                Log.i(TAG, "handling Msg:text set to " + val);
+                Log.i(TAG, "Heartrate " + heartRate);
+                break;
+            case FHSensorManager.Messages.CADENCE_MESSAGE:
+                float cadence = msg.getData().getFloat("value");
+                Log.i(TAG, "Cadence " + cadence);
                 break;
         }
     }
@@ -145,7 +140,7 @@ public class MainImmersion extends MessengerServiceActivity {
                     break;
                 case R.id.showAchivements:
                     //mCardScrollView.setSelection(1);
-                    startActivity(new Intent(MainImmersion.this, Achivements.class));
+                    startActivity(new Intent(MainImmersion.this, Achievements.class));
                     break;
                 case R.id.currentSpeed:
                     mCardScrollView.setSelection(2);
@@ -287,7 +282,7 @@ public class MainImmersion extends MessengerServiceActivity {
                         break;
 
                     case 1:
-                        startActivity(new Intent(MainImmersion.this, Achivements.class));
+                        startActivity(new Intent(MainImmersion.this, Achievements.class));
                         break;
                 }
             }

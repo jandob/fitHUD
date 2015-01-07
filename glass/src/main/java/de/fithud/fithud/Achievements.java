@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class Achivements extends Activity {
+public class Achievements extends Activity {
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;

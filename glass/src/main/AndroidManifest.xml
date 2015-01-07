@@ -47,7 +47,7 @@
 
         <activity android:name=".WorkoutMenu" />
 
-        <activity android:name=".Achivements" />
+        <activity android:name=".Achievements" />
 
         <activity android:name=".GuideSettings" />
     </application>
