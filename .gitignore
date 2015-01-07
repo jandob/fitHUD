@@ -4,9 +4,7 @@
 /.idea/libraries
 .DS_Store
 /build
-<<<<<<< HEAD
 FitHud_Source.iml
-=======
 /.idea
->>>>>>> origin/master
 glass/src/main/java/de/fithud/fithud/MainImmersion.java.orig
+*.iml
