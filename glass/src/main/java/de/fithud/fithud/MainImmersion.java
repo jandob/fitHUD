@@ -36,6 +36,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -64,6 +65,8 @@ public class MainImmersion extends MessengerServiceActivity {
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
     public static float last_speed = 0;
+    public static int last_revolutions = 0;
+    private static final double wheel_type = 4.4686;
 
     @Override
     public void handleMessage(Message msg) {
@@ -75,24 +78,33 @@ public class MainImmersion extends MessengerServiceActivity {
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 int[] cadence = msg.getData().getIntArray("value");
-                Log.i(TAG, "Cadence_rev: " + cadence[0]+ " Cadence_time: "+cadence[1]);
+                Log.i(TAG, "Cadence_rev: " + cadence[0] + " Cadence_time: " + cadence[1]);
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                int speed[] = msg.getData().getIntArray("value");
+                int speed_dataset[] = msg.getData().getIntArray("value");
                 float time_difference = 0;
-                if(speed[1] < last_speed)
-                {
-                    time_difference= (float)speed[1] + 65536 - last_speed;
+                int revolutions_difference = speed_dataset[0] - last_revolutions;
+                if (speed_dataset[1] < last_speed) {
+                    time_difference = (float) speed_dataset[1] + 65536 - last_speed;
+                } else {
+                    time_difference = (float) speed_dataset[1] - last_speed;
                 }
-                else {
-                    time_difference = (float)speed[1] - last_speed;
+                last_speed = (float) speed_dataset[1];
+                last_revolutions = speed_dataset[0];
+
+                time_difference = time_difference / 1024;
+                double speed = 0;
+                if (time_difference > 0) {
+                    speed = ((revolutions_difference*wheel_type) / time_difference) * 3.6;
+                } else {
+                    speed = 0;
                 }
-                last_speed = (float)speed[1];
 
-                time_difference = time_difference/1024;
+                Log.i(TAG, "Speed_rev: " + speed_dataset[0] + " speed_time: " + speed_dataset[1]);
+                Log.i(TAG, "Speed: " + speed);
 
-                Log.i(TAG, "Speed_rev: " + speed[0]+ " speed_time: "+speed[1]);
-                Log.i(TAG,"Time difference: "+time_difference);
+                speed_sensor = (int)speed;
+                addSpeedData(speed_sensor);
                 break;
         }
     }
@@ -135,6 +147,8 @@ public class MainImmersion extends MessengerServiceActivity {
     private Segment s1;
     private Segment s2;
     private Segment s3;
+
+    private int speed_sensor = 0;
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -220,24 +234,21 @@ public class MainImmersion extends MessengerServiceActivity {
         plot.setMarkupEnabled(false);
 
         if (choice.equalsIgnoreCase("speed")) {
-            speedSeries = new SimpleXYSeries("Speed");
-            speedSeries.useImplicitXVals();
+
             plot.addSeries(speedSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
         }
 
         if (choice.equalsIgnoreCase("heart")) {
-            heartSeries = new SimpleXYSeries("heart");
-            heartSeries.useImplicitXVals();
+
             plot.addSeries(heartSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
         }
 
         if (choice.equalsIgnoreCase("height")) {
-            heightSeries = new SimpleXYSeries("height");
-            heightSeries.useImplicitXVals();
+
             plot.addSeries(heightSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
@@ -274,10 +285,24 @@ public class MainImmersion extends MessengerServiceActivity {
         plot.setDomainValueFormat(new DecimalFormat("#"));
     }
 
+    public void initSeries(){
+        speedSeries = new SimpleXYSeries("Speed");
+        speedSeries.useImplicitXVals();
+
+        heartSeries = new SimpleXYSeries("heart");
+        heartSeries.useImplicitXVals();
+
+        heightSeries = new SimpleXYSeries("height");
+        heightSeries.useImplicitXVals();
+    }
     @Override
     protected void onCreate(Bundle bundle) {
         doBindService(FHSensorManager.class);
+
+
         Log.i("MainImmersion", "on start");
+        initSeries();
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
@@ -293,10 +318,18 @@ public class MainImmersion extends MessengerServiceActivity {
                 //openOptionsMenu();
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
-                        startActivity(new Intent(MainImmersion.this, WorkoutMenu.class));
+                        Toast.makeText(getApplicationContext(), "Searching....", Toast.LENGTH_SHORT).show();
+                        int[] test = new int[2];
+                        test[0] = 1;
+                        test[1] = 2;
+                        sendDataToSensormanager(test);
                         break;
 
                     case 1:
+                        startActivity(new Intent(MainImmersion.this, WorkoutMenu.class));
+                        break;
+
+                    case 2:
                         startActivity(new Intent(MainImmersion.this, Achievements.class));
                         break;
                 }
@@ -307,16 +340,17 @@ public class MainImmersion extends MessengerServiceActivity {
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
+        mCardScrollView.setSelection(1);
     }
 
     public void addSpeedData(int speed) {
-        if (init_speed) {
+        //if (init_speed) {
             Log.d("FitHUD", "add speed now");
             if (speedSeries.size() > HISTORY_SIZE) {
                 speedSeries.removeFirst();
             }
             speedSeries.addLast(null, speed);
-        }
+        //}
     }
 
     public void plotSpeedData(int speed) {
@@ -360,7 +394,7 @@ public class MainImmersion extends MessengerServiceActivity {
     }
 
     public void plotHeightData(int height) {
-        if(init_height) {
+        if (init_height) {
             if (plot_height) {
                 Log.d("FitHUD", "Plot height now");
                 heightPlot.redraw();
@@ -442,15 +476,16 @@ public class MainImmersion extends MessengerServiceActivity {
                 //use a handler to run the plots
                 handler.post(new Runnable() {
                     public void run() {
+
                         sin_counter = sin_counter + Math.PI / 10;
                         double speed = Math.sin(sin_counter) * 10 + 20.0;
                         switch (mCardScrollView.getSelectedItemPosition()) {
 
-                            case 2:
+                            case 3:
                                 speedPlot = (XYPlot) (mCardScrollView.getSelectedView().findViewById(R.id.dynamicXYPlot));
                                 speedText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.textView2);
 
-                                Log.d("FitHUD", "speedPlot " + speedText);
+                                //Log.d("FitHUD", "speedPlot " + speedText);
 
                                 if (!init_speed) {
                                     initializePlot(speedPlot, "speed");
@@ -474,7 +509,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 }
                                 */
                                 break;
-                            case 3:
+                            case 4:
                                 heartPlot = (XYPlot) (mCardScrollView.getSelectedView().findViewById(R.id.heartRatePlot));
                                 heartText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.heartRateText);
                                 if (!init_heart) {
@@ -500,7 +535,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 */
                                 break;
 
-                            case 4:
+                            case 5:
                                 heightPlot = (XYPlot) (mCardScrollView.findViewById(R.id.heightPlot));
                                 heightText = (TextView) mCardScrollView.findViewById(R.id.heightText);
                                 if (!init_height) {
@@ -526,7 +561,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 */
                                 break;
 
-                            case 5:
+                            case 6:
                                 plot_speed = false;
                                 plot_heart = false;
                                 plot_height = false;
@@ -557,7 +592,7 @@ public class MainImmersion extends MessengerServiceActivity {
                         }
 
                         if (plot_speed) {
-                            plotSpeedData((int) speed);
+                            plotSpeedData((int) speed_sensor);
                         }
 
                         if (plot_heart) {
@@ -598,6 +633,9 @@ public class MainImmersion extends MessengerServiceActivity {
     private void createCards() {
         mCards = new ArrayList<CardBuilder>();
 
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Sensors")
+                .setFootnote("Click to search"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Workout!")
@@ -631,36 +669,36 @@ public class MainImmersion extends MessengerServiceActivity {
         doUnbindService();
     }
 
-private class ExampleCardScrollAdapter extends CardScrollAdapter {
+    private class ExampleCardScrollAdapter extends CardScrollAdapter {
 
-    @Override
-    public int getPosition(Object item) {
-        return mCards.indexOf(item);
-    }
+        @Override
+        public int getPosition(Object item) {
+            return mCards.indexOf(item);
+        }
 
-    @Override
-    public int getCount() {
-        return mCards.size();
-    }
+        @Override
+        public int getCount() {
+            return mCards.size();
+        }
 
-    @Override
-    public Object getItem(int position) {
-        return mCards.get(position);
-    }
+        @Override
+        public Object getItem(int position) {
+            return mCards.get(position);
+        }
 
-    @Override
-    public int getViewTypeCount() {
-        return CardBuilder.getViewTypeCount();
-    }
+        @Override
+        public int getViewTypeCount() {
+            return CardBuilder.getViewTypeCount();
+        }
 
-    @Override
-    public int getItemViewType(int position) {
-        return mCards.get(position).getItemViewType();
-    }
+        @Override
+        public int getItemViewType(int position) {
+            return mCards.get(position).getItemViewType();
+        }
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        return mCards.get(position).getView(convertView, parent);
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            return mCards.get(position).getView(convertView, parent);
+        }
     }
-}
 }

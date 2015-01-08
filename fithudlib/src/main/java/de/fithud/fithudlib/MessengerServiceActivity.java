@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -86,6 +87,21 @@ public abstract class MessengerServiceActivity extends Activity {
         bindService(new Intent(this,
                         serviceClass), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
+    }
+
+    public void sendDataToSensormanager(int[] data){
+        if(mIsBound) {
+            Message msg = Message.obtain(null, 4);
+            Bundle bundle = new Bundle();
+            // bundle.putFloat("value", val);
+            bundle.putIntArray("command", data);
+            msg.setData(bundle);
+            try {
+                mService.send(msg);
+            } catch (RemoteException e) {
+
+            }
+        }
     }
 
     public void doUnbindService() {

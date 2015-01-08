@@ -1,6 +1,5 @@
 package de.fithud.fithudlib;
 
-import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -14,7 +13,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
-import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -22,13 +20,10 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 /**
  * Created by jandob on 11/17/14.
@@ -44,17 +39,21 @@ public class FHSensorManager extends MessengerService {
 
     @Override
     void handleMessage(Message msg) {
-
+        //Log.i(TAG,"Got Message: "+msg.toString());
+        int [] test = msg.getData().getIntArray("command");
+        if(test[0] ==1){
+            startScan();
+        }
     }
 
     void sendMsg(int messageType, int[] val) {
         for (int i = mClients.size() - 1; i >= 0; i--) {
-            Message msg = Message.obtain(null, messageType);
-            Bundle bundle = new Bundle();
-            // bundle.putFloat("value", val);
-            bundle.putIntArray("value", val);
-            msg.setData(bundle);
-            try {
+
+            try {Message msg = Message.obtain(null, messageType);
+                Bundle bundle = new Bundle();
+                // bundle.putFloat("value", val);
+                bundle.putIntArray("value", val);
+                msg.setData(bundle);
                 mClients.get(i).send(msg);
             } catch (RemoteException e) {
                 // The client is dead.  Remove it from the list;
@@ -79,7 +78,7 @@ public class FHSensorManager extends MessengerService {
     private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
     private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
     private boolean connectionInProgress = false;
-    private int nrOfconnectedDevices = 0;
+    private int nrOfremainingDevices = 0;
 
     Timer timer;
     TimerTask timerTask;
@@ -96,25 +95,27 @@ public class FHSensorManager extends MessengerService {
                     mBtDevicesReadyToConnect.add(device);
                     Log.i(TAG, "Added " + device.getAddress() + "to the connectable list");
                 }
-
-                if (mTick >= 20) {
-                    stopScan();
-                }
             }
         }
     };
 
     public void connectToAvailableDevices() {
+
         for (BluetoothDevice device : mBtDevicesReadyToConnect) {
             if (!mConnectedBtDevices.contains(device.getAddress())) {
                 mConnectedBtDevices.add(device.getAddress());
                 connectionInProgress = true;
-                nrOfconnectedDevices += 1;
+                nrOfremainingDevices -= 1;
+                Log.i(TAG,"Remaining: "+nrOfremainingDevices);
                 Log.i(TAG, "connect to: " + device.getAddress());
                 device.connectGatt(context, false, btleGattCallback);
+                break;
             }
         }
-        mBtDevicesReadyToConnect.clear();
+        if ((nrOfremainingDevices == 0) && (connectionInProgress == false)){
+            Log.i(TAG,"All devices connected");
+            mBtDevicesReadyToConnect.clear();
+        }
     }
 
     private final BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
@@ -176,7 +177,7 @@ public class FHSensorManager extends MessengerService {
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
-                Log.i(TAG, "nrOfconnectedDevices: " + nrOfconnectedDevices);
+                Log.i(TAG, "nrOfremainingDevices: " + nrOfremainingDevices);
                 gatt.discoverServices();
             }
 
@@ -214,10 +215,12 @@ public class FHSensorManager extends MessengerService {
 
             }
             connectionInProgress = false;
+            connectToAvailableDevices();
         }
     };
 
     public void startScan() {
+        mTick = 0;
         Log.i(TAG, "start scanning");
         mBtAdapter.startLeScan(leScanCallback);
     }
@@ -225,6 +228,7 @@ public class FHSensorManager extends MessengerService {
     public void stopScan() {
         Log.i(TAG, "stop scanning");
         mBtAdapter.stopLeScan(leScanCallback);
+        nrOfremainingDevices = mBtDevicesReadyToConnect.size();
         connectToAvailableDevices();
     }
 
@@ -269,14 +273,16 @@ public class FHSensorManager extends MessengerService {
     private final Runnable mTickRunnable = new Runnable() {
 
         public void run() {
-            mTick++;
-            Log.i(TAG, "scanning since " + Long.valueOf(mTick) + "s");
-            if (mTick < 20) {
-                mHandler.postDelayed(mTickRunnable, 1000);
-
-            } else {
-                Log.i(TAG, "scanning stopped");
+            if(mTick<20) {
+                mTick++;
+                Log.i(TAG, "scanning since " + Long.valueOf(mTick) + "s");
+                if(mTick==20)
+                {
+                    stopScan();
+                    Log.i(TAG, "scanning stopped");
+                }
             }
+            mHandler.postDelayed(mTickRunnable, 1000);
         }
     };
 
