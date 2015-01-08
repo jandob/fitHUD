@@ -63,21 +63,36 @@ public class MainImmersion extends MessengerServiceActivity {
     //private View mView;
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
+    public static float last_speed = 0;
 
     @Override
     public void handleMessage(Message msg) {
         Log.i(TAG, "handling Msg");
-        switch(msg.what) {
+        switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
-                float heartRate = msg.getData().getFloat("value");
-                //mCard.setText(Float.toString(val));
-                //setContentView(mCard.getView());
-                //mCardScroller.getAdapter().notifyDataSetChanged();
-                Log.i(TAG, "Heartrate " + heartRate);
+                int heartRate[] = msg.getData().getIntArray("value");
+                Log.i(TAG, "Heartrate " + heartRate[0]);
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
-                float cadence = msg.getData().getFloat("value");
-                Log.i(TAG, "Cadence " + cadence);
+                int[] cadence = msg.getData().getIntArray("value");
+                Log.i(TAG, "Cadence_rev: " + cadence[0]+ " Cadence_time: "+cadence[1]);
+                break;
+            case FHSensorManager.Messages.SPEED_MESSAGE:
+                int speed[] = msg.getData().getIntArray("value");
+                float time_difference = 0;
+                if(speed[1] < last_speed)
+                {
+                    time_difference= (float)speed[1] + 65536 - last_speed;
+                }
+                else {
+                    time_difference = (float)speed[1] - last_speed;
+                }
+                last_speed = (float)speed[1];
+
+                time_difference = time_difference/1024;
+
+                Log.i(TAG, "Speed_rev: " + speed[0]+ " speed_time: "+speed[1]);
+                Log.i(TAG,"Time difference: "+time_difference);
                 break;
         }
     }
@@ -294,40 +309,63 @@ public class MainImmersion extends MessengerServiceActivity {
         setContentView(mCardScrollView);
     }
 
-    public void plotSpeedData(int speed) {
+    public void addSpeedData(int speed) {
         if (init_speed) {
-            Log.d("FitHUD", "plot speed now");
+            Log.d("FitHUD", "add speed now");
             if (speedSeries.size() > HISTORY_SIZE) {
                 speedSeries.removeFirst();
             }
             speedSeries.addLast(null, speed);
-            speedPlot.redraw();
-            speedText.setText("Your current speed: " + speed + " km/h");
         }
-
     }
 
-    public void plotHeartData(int heartrate) {
+    public void plotSpeedData(int speed) {
+        if (init_speed) {
+            Log.d("FitHUD", "plot speed now");
+            if (plot_speed) {
+                speedPlot.redraw();
+                speedText.setText("Your current speed: " + speed + " km/h");
+            }
+        }
+    }
+
+    public void addHeartData(int heartrate) {
         if (init_heart) {
-            Log.d("FitHUD", "plot heartrate now");
+            Log.d("FitHUD", "add heartrate now");
             if (heartSeries.size() > HISTORY_SIZE) {
                 heartSeries.removeFirst();
             }
             heartSeries.addLast(null, heartrate);
-            heartPlot.redraw();
-            heartText.setText("Your current heartrate: " + heartrate + " bpm");
+        }
+    }
+
+    public void plotHeartData(int heartrate) {
+        if (init_heart) {
+            if (plot_heart) {
+                Log.d("FitHUD", "plot heartrate now");
+                heartPlot.redraw();
+                heartText.setText("Your current heartrate: " + heartrate + " bpm");
+            }
+        }
+    }
+
+    public void addHeightData(int height) {
+        if (init_height) {
+            Log.d("FitHUD", "add height now");
+            if (heightSeries.size() > HISTORY_SIZE) {
+                heightSeries.removeFirst();
+            }
+            heightSeries.addLast(null, height);
         }
     }
 
     public void plotHeightData(int height) {
         if(init_height) {
-            Log.d("FitHUD", "plot height now");
-            if (heightSeries.size() > HISTORY_SIZE) {
-                heightSeries.removeFirst();
+            if (plot_height) {
+                Log.d("FitHUD", "Plot height now");
+                heightPlot.redraw();
+                heightText.setText("Your current height: " + height + " m");
             }
-            heightSeries.addLast(null, height);
-            heightPlot.redraw();
-            heightText.setText("Your current height: " + height + " m");
         }
     }
 
@@ -375,8 +413,6 @@ public class MainImmersion extends MessengerServiceActivity {
 
         init_pie.getBorderPaint().setColor(Color.TRANSPARENT);
         init_pie.getBackgroundPaint().setColor(Color.TRANSPARENT);
-
-
     }
 
     public void stoptimertask() {
@@ -425,6 +461,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 plot_heart = false;
                                 plot_height = false;
                                 plot_terrain = false;
+                                /*
                                 if (init_heart) {
                                     while (heartSeries.size() > 0) {
                                         heartSeries.removeLast();
@@ -435,6 +472,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                         heightSeries.removeLast();
                                     }
                                 }
+                                */
                                 break;
                             case 3:
                                 heartPlot = (XYPlot) (mCardScrollView.getSelectedView().findViewById(R.id.heartRatePlot));
@@ -448,6 +486,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 plot_heart = true;
                                 plot_height = false;
                                 plot_terrain = false;
+                                /*
                                 if (init_speed) {
                                     while (speedSeries.size() > 0) {
                                         speedSeries.removeLast();
@@ -458,6 +497,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                         heightSeries.removeLast();
                                     }
                                 }
+                                */
                                 break;
 
                             case 4:
@@ -472,6 +512,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 plot_heart = false;
                                 plot_height = true;
                                 plot_terrain = false;
+                                /*
                                 if (init_speed) {
                                     while (speedSeries.size() > 0) {
                                         speedSeries.removeLast();
@@ -482,6 +523,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                         heartSeries.removeLast();
                                     }
                                 }
+                                */
                                 break;
 
                             case 5:
@@ -489,6 +531,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                 plot_heart = false;
                                 plot_height = false;
                                 plot_terrain = true;
+                                /*
                                 if (init_speed) {
                                     while (speedSeries.size() > 0) {
                                         speedSeries.removeLast();
@@ -504,6 +547,7 @@ public class MainImmersion extends MessengerServiceActivity {
                                         heightSeries.removeLast();
                                     }
                                 }
+                                */
 
                                 terrainPie = (PieChart) mCardScrollView.getSelectedView().findViewById(R.id.terrainPie);
                                 terrainRoadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainRoadText);
@@ -581,41 +625,42 @@ public class MainImmersion extends MessengerServiceActivity {
                 .setFootnote("Equally weighted"));
 
     }
+
     @Override
     protected void onDestroy() {
         doUnbindService();
     }
 
-    private class ExampleCardScrollAdapter extends CardScrollAdapter {
+private class ExampleCardScrollAdapter extends CardScrollAdapter {
 
-        @Override
-        public int getPosition(Object item) {
-            return mCards.indexOf(item);
-        }
-
-        @Override
-        public int getCount() {
-            return mCards.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return mCards.get(position);
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            return CardBuilder.getViewTypeCount();
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            return mCards.get(position).getItemViewType();
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            return mCards.get(position).getView(convertView, parent);
-        }
+    @Override
+    public int getPosition(Object item) {
+        return mCards.indexOf(item);
     }
+
+    @Override
+    public int getCount() {
+        return mCards.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return mCards.get(position);
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return CardBuilder.getViewTypeCount();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return mCards.get(position).getItemViewType();
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        return mCards.get(position).getView(convertView, parent);
+    }
+}
 }

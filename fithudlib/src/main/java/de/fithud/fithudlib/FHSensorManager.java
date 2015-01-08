@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -37,6 +38,7 @@ public class FHSensorManager extends MessengerService {
     public final class Messages extends MessengerService.Messages {
         public static final int HEARTRATE_MESSAGE = 1;
         public static final int CADENCE_MESSAGE = 2;
+        public static final int SPEED_MESSAGE = 3;
 
     }
 
@@ -45,11 +47,12 @@ public class FHSensorManager extends MessengerService {
 
     }
 
-    void sendMsg(int messageType, float val) {
-        for (int i=mClients.size()-1; i>=0; i--) {
+    void sendMsg(int messageType, int[] val) {
+        for (int i = mClients.size() - 1; i >= 0; i--) {
             Message msg = Message.obtain(null, messageType);
             Bundle bundle = new Bundle();
-            bundle.putFloat("value", val);
+            // bundle.putFloat("value", val);
+            bundle.putIntArray("value", val);
             msg.setData(bundle);
             try {
                 mClients.get(i).send(msg);
@@ -66,8 +69,9 @@ public class FHSensorManager extends MessengerService {
     private static final String TAG = FHSensorManager.class.getSimpleName();
     private Set<BluetoothDevice> mBtDevices;
     BluetoothAdapter mBtAdapter;
-    //private List<UUID> mConnectableBtDevices = new ArrayList<UUID>();
+    private List<BluetoothDevice> mBtDevicesReadyToConnect = new ArrayList<BluetoothDevice>();
     private List<String> mConnectableBtDevices = new ArrayList<String>();
+    private List<String> mConnectedBtDevices = new ArrayList<String>();
     private int stopScanCount = 20;
     private final String H7 = "00:22:D0:3D:30:31";
     private final String CAD = "C7:9E:DF:E6:F8:D5";
@@ -85,20 +89,34 @@ public class FHSensorManager extends MessengerService {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            stopScan();
-            Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            //Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
             //Log.i(TAG, mConnectableBtDevices.toString());
             if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
-                Log.i(TAG, "connecting to: " + device.getName());
-                connectionInProgress = true;
-                mConnectableBtDevices.remove(device.getAddress());
-                nrOfconnectedDevices += 1;
-                device.connectGatt(context, false, btleGattCallback);
+                if (!mBtDevicesReadyToConnect.contains(device)) {
+                    mBtDevicesReadyToConnect.add(device);
+                    Log.i(TAG, "Added " + device.getAddress() + "to the connectable list");
+                }
 
+                if (mTick >= 20) {
+                    stopScan();
+                }
             }
-
         }
     };
+
+    public void connectToAvailableDevices() {
+        for (BluetoothDevice device : mBtDevicesReadyToConnect) {
+            if (!mConnectedBtDevices.contains(device.getAddress())) {
+                mConnectedBtDevices.add(device.getAddress());
+                connectionInProgress = true;
+                nrOfconnectedDevices += 1;
+                Log.i(TAG, "connect to: " + device.getAddress());
+                device.connectGatt(context, false, btleGattCallback);
+            }
+        }
+        mBtDevicesReadyToConnect.clear();
+    }
+
     private final BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
 
         @Override
@@ -108,16 +126,44 @@ public class FHSensorManager extends MessengerService {
             //Log.i(TAG, "received data from characteristic:" + characteristic.getService().getUuid().toString());
 
             if (characteristic.getService().getUuid().toString().equals(SPDCADService)) {
-                int val = characteristicData[1];
-                val = val | characteristicData[2] << 8;
-                sendMsg(Messages.CADENCE_MESSAGE, (float)val);
+
+                if ((characteristicData[0] & (1L << 1)) != 0) {
+                    //Log.i(TAG, "Got message");
+                    int high_crank = ((int)characteristicData[2]) & 0xff;
+                    int low_crank = ((int)characteristicData[1]) & 0xff;
+                    int crank_revolutions = (high_crank << 8) | low_crank;
+
+                    int high_time = ((int)characteristicData[4]) & 0xff;
+                    int low_time = ((int)characteristicData[3]) & 0xff;
+                    int time_cadence = (high_time << 8) | low_time;
+
+                    int cadence_dataset[] = new int[2];
+                    cadence_dataset[0] = crank_revolutions;
+                    cadence_dataset[1] = time_cadence;
+                    //Log.i(TAG, "Cadence wheel: " + crank_revolutions);
+                    sendMsg(Messages.CADENCE_MESSAGE, cadence_dataset);
+                } else if ((characteristicData[0] & (1L << 0)) != 0) {
+                    int fourth_wheel = ((int)characteristicData[4]) & 0xff;
+                    int third_wheel = ((int)characteristicData[3]) & 0xff;
+                    int second_wheel = ((int)characteristicData[2]) & 0xff;
+                    int first_wheel = ((int)characteristicData[1]) & 0xff;
+                    int wheel_revolutions = (fourth_wheel << 24) | (third_wheel << 16) | (second_wheel << 8) | (first_wheel);
+
+                    int high_time = ((int)characteristicData[6]) & 0xff;
+                    int low_time = ((int)characteristicData[5]) & 0xff;
+                    int time_speed = (high_time << 8) | low_time;
+
+                    int speed_dataset[] = new int[2];
+                    speed_dataset[0] = wheel_revolutions;
+                    speed_dataset[1] = time_speed;
+                    sendMsg(Messages.SPEED_MESSAGE, speed_dataset);
+                }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
-                sendMsg(Messages.HEARTRATE_MESSAGE, (float)characteristicData[1]);
+                int speed_dataset[] = new int[1];
+                speed_dataset[0] = (int) characteristicData[1];
+                sendMsg(Messages.HEARTRATE_MESSAGE, speed_dataset);
             }
-
-
-            //Log.i(TAG, "sending sendMsg");
         }
 
         @Override
@@ -131,17 +177,14 @@ public class FHSensorManager extends MessengerService {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
                 Log.i(TAG, "nrOfconnectedDevices: " + nrOfconnectedDevices);
-                connectionInProgress = false;
-                if (nrOfconnectedDevices < 2) {
-                    gatt.discoverServices();
-                    startScan();
-                }
+                gatt.discoverServices();
+            }
 
-            } //else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                //T: close gatt, if device is out of range
-                //Log.i(TAG, "disconnected from device, closing gatt:");
-                //gatt.close();
-            //}
+            if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                mConnectedBtDevices.remove(gatt.getDevice().getAddress());
+                gatt.close();
+                Log.i(TAG, "disconnected from " + gatt.getDevice().getAddress());
+            }
         }
 
         @Override
@@ -170,16 +213,19 @@ public class FHSensorManager extends MessengerService {
                 }
 
             }
-
+            connectionInProgress = false;
         }
     };
+
     public void startScan() {
         Log.i(TAG, "start scanning");
         mBtAdapter.startLeScan(leScanCallback);
     }
+
     public void stopScan() {
         Log.i(TAG, "stop scanning");
         mBtAdapter.stopLeScan(leScanCallback);
+        connectToAvailableDevices();
     }
 
     public void closeConnections() {
@@ -208,15 +254,6 @@ public class FHSensorManager extends MessengerService {
         mConnectableBtDevices.add(CAD);
         mConnectableBtDevices.add(SPD);
 
-
-        //mBtDevices = mBtAdapter.getBondedDevices();
-        //Log.i(TAG, "bonded devices");
-        //for (BluetoothDevice device : mBtDevices) {
-        //    Log.i(TAG, device.getName());
-        //    device.connectGatt(context, false, btleGattCallback);
-        //}
-        //UUID[] toArray = new UUID[mConnectableBtDevices.size()];
-        //mConnectableBtDevices.toArray(toArray);
         startScan();
         Log.i(TAG, "initialized");
 
@@ -225,6 +262,7 @@ public class FHSensorManager extends MessengerService {
         mHandler.post(mTickRunnable);
 
     }
+
     // generates ticks for stopping the scan
     private long mTick = 0;
     private final Handler mHandler = new Handler();
@@ -238,11 +276,10 @@ public class FHSensorManager extends MessengerService {
 
             } else {
                 Log.i(TAG, "scanning stopped");
-                //stopScan();
-                //mBtAdapter.cancelDiscovery();
             }
         }
     };
+
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy()");
