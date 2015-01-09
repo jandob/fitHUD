@@ -87,10 +87,7 @@ public class MessengerConnection {
     };
 
     public void connect(Class serviceClass) {
-        // Establish a connection with the service.  We use an explicit
-        // class name because there is no reason to be able to let other
-        // applications replace our component.
-        //bindService(new Intent(MessengerServiceActivity.this,
+        // Establish a connection with the service.
         mContext.bindService(new Intent(mContext,
                 serviceClass), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
@@ -117,7 +114,7 @@ public class MessengerConnection {
             mIsBound = false;
         }
     }
-    
+
     public void send(Message msg) throws RemoteException {
         mService.send(msg);
     }
