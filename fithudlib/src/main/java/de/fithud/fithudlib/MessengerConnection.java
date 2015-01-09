@@ -15,7 +15,7 @@ import android.util.Log;
 /**
  * Use this class to connect to a MessengerService.
  * e.g.:
- * MessengerConnection conn = MessengerConnection(this, this.context)
+ * MessengerConnection conn = MessengerConnection(this)
  * conn.connect()
  *
  * Note: You need to implement the MessengerClient interface.

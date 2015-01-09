@@ -20,7 +20,7 @@ import android.util.Log;
 
 /**
  * @deprecated use {@link MessengerConnection} and {@link MessengerClient} instead.
- * Instead of do bindService use MessengerConnection(this, this.context) and implement
+ * Instead of do bindService use MessengerConnection(this) and implement
  * MessengerClient for handleMsg()
  */
 @Deprecated
