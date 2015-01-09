@@ -34,6 +34,7 @@ public class FHSensorManager extends MessengerService {
         public static final int HEARTRATE_MESSAGE = 1;
         public static final int CADENCE_MESSAGE = 2;
         public static final int SPEED_MESSAGE = 3;
+        public static final int SENSOR_STATUS_MESSAGE = 4;
 
     }
 
@@ -80,6 +81,11 @@ public class FHSensorManager extends MessengerService {
     private boolean connectionInProgress = false;
     private int nrOfremainingDevices = 0;
 
+    public int speedometer_connected = 0;
+    public int heartrate_connected = 0;
+    public int cadence_connected = 0;
+
+
     Timer timer;
     TimerTask timerTask;
     final Handler handler = new Handler();
@@ -100,7 +106,6 @@ public class FHSensorManager extends MessengerService {
     };
 
     public void connectToAvailableDevices() {
-
         for (BluetoothDevice device : mBtDevicesReadyToConnect) {
             if (!mConnectedBtDevices.contains(device.getAddress())) {
                 mConnectedBtDevices.add(device.getAddress());
@@ -116,6 +121,14 @@ public class FHSensorManager extends MessengerService {
             Log.i(TAG,"All devices connected");
             mBtDevicesReadyToConnect.clear();
         }
+    }
+
+    public void sendSensorStatus(){
+        int sensorStatus_dataset[] = new int[3];
+        sensorStatus_dataset[0] = heartrate_connected;
+        sensorStatus_dataset[1] = speedometer_connected;
+        sensorStatus_dataset[2] = cadence_connected;
+        sendMsg(Messages.SENSOR_STATUS_MESSAGE, sensorStatus_dataset);
     }
 
     private final BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
@@ -177,6 +190,11 @@ public class FHSensorManager extends MessengerService {
         public void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
+
+                if(gatt.getDevice().getAddress().equals(H7)){heartrate_connected = 1; };
+                if(gatt.getDevice().getAddress().equals(SPD)){speedometer_connected = 1; };
+                if(gatt.getDevice().getAddress().equals(CAD)){cadence_connected = 1; };
+
                 Log.i(TAG, "nrOfremainingDevices: " + nrOfremainingDevices);
                 gatt.discoverServices();
             }
@@ -185,6 +203,9 @@ public class FHSensorManager extends MessengerService {
                 mConnectedBtDevices.remove(gatt.getDevice().getAddress());
                 gatt.close();
                 Log.i(TAG, "disconnected from " + gatt.getDevice().getAddress());
+                if(gatt.getDevice().getAddress().equals(H7)){ heartrate_connected = 0;};
+                if(gatt.getDevice().getAddress().equals(SPD)){speedometer_connected = 0; };
+                if(gatt.getDevice().getAddress().equals(CAD)){cadence_connected = 0; };
             }
         }
 
@@ -282,6 +303,7 @@ public class FHSensorManager extends MessengerService {
                     Log.i(TAG, "scanning stopped");
                 }
             }
+            sendSensorStatus();
             mHandler.postDelayed(mTickRunnable, 1000);
         }
     };

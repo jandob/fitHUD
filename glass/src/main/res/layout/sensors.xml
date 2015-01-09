@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ff000000">
+
+    <CheckBox
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="60px"
+        android:layout_marginLeft="100px"
+        android:text="Heartrate"
+        android:id="@+id/heartrateCheckBox"
+        android:layout_alignBottom="@+id/terrainText"
+        android:layout_centerHorizontal="true" />
+
+    <CheckBox
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="100px"
+        android:layout_marginLeft="100px"
+        android:text="Cadence"
+        android:id="@+id/cadenceCheckBox"
+        android:layout_alignBottom="@+id/terrainText"
+        android:layout_centerHorizontal="true" />
+
+    <CheckBox
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="140px"
+        android:layout_marginLeft="100px"
+        android:text="Speedometer"
+        android:id="@+id/speedometerCheckBox"
+        android:layout_alignBottom="@+id/terrainText"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

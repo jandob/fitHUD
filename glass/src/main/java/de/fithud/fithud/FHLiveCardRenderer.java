@@ -3,6 +3,7 @@ package de.fithud.fithud;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.os.Message;
 import android.os.SystemClock;
 import android.text.format.Time;
 import android.util.Log;
@@ -16,6 +17,8 @@ import android.widget.TextView;
 import com.google.android.glass.timeline.DirectRenderingCallback;
 
 import java.util.concurrent.TimeUnit;
+
+import de.fithud.fithudlib.MessengerServiceActivity;
 
 /**
  * Created by jandob on 11/17/14.

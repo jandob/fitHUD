@@ -89,20 +89,8 @@ public abstract class MessengerServiceActivity extends Activity {
         mIsBound = true;
     }
 
-    public void sendDataToSensormanager(int[] data){
-        if(mIsBound) {
-            Message msg = Message.obtain(null, 4);
-            Bundle bundle = new Bundle();
-            // bundle.putFloat("value", val);
-            bundle.putIntArray("command", data);
-            msg.setData(bundle);
-            try {
-                mService.send(msg);
-            } catch (RemoteException e) {
 
-            }
-        }
-    }
+
 
     public void doUnbindService() {
         if (mIsBound) {

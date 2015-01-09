@@ -50,6 +50,8 @@
         <activity android:name=".Achievements" />
 
         <activity android:name=".GuideSettings" />
+
+        <activity android:name=".SensorMenu" />
     </application>
 
 </manifest>
