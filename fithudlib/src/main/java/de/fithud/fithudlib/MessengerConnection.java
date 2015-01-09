@@ -22,17 +22,15 @@ import android.util.Log;
  */
 
 public class MessengerConnection {
-    private MessengerClient mClient;
-    private Context mContext;
+    private Context mClient; // TODO how to define mClient implements MessengerClient(see constructor)
     private static final String TAG = FHSensorManager.class.getSimpleName();
     /** Messenger for communicating with service. */
     public  Messenger mService;
     /** Flag indicating whether we have called bind on the service. */
     boolean mIsBound;
 
-    public MessengerConnection(MessengerClient client, Context context) {
+    public <T extends Context & MessengerClient> MessengerConnection(T client) {
         mClient = client;
-        mContext = context;
     }
 
     /**
@@ -41,7 +39,7 @@ public class MessengerConnection {
     class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            mClient.handleMessage(msg);
+            ((MessengerClient)mClient).handleMessage(msg);
         }
     }
 
@@ -88,7 +86,7 @@ public class MessengerConnection {
 
     public void connect(Class serviceClass) {
         // Establish a connection with the service.
-        mContext.bindService(new Intent(mContext,
+        mClient.bindService(new Intent(mClient,
                 serviceClass), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
@@ -110,7 +108,7 @@ public class MessengerConnection {
             }
 
             // Detach our existing connection.
-            mContext.unbindService(mConnection);
+            mClient.unbindService(mConnection);
             mIsBound = false;
         }
     }
