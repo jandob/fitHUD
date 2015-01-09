@@ -48,12 +48,12 @@ public class MessengerConnection {
     /**
      * Target we publish for clients to send messages to IncomingHandler.
      */
-    public final Messenger mMessenger = new Messenger(new IncomingHandler());
+    private final Messenger mMessenger = new Messenger(new IncomingHandler());
 
     /**
      * Class for interacting with the main interface of the service.
      */
-    public ServiceConnection mConnection = new ServiceConnection() {
+    private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.i(TAG, "onServiceConnected()");
             // This is called when the connection with the service has been
@@ -96,9 +96,6 @@ public class MessengerConnection {
         mIsBound = true;
     }
 
-
-
-
     public void disconnect() {
         if (mIsBound) {
             // If we have received the service, and hence registered with
@@ -120,6 +117,9 @@ public class MessengerConnection {
             mIsBound = false;
         }
     }
-
+    
+    public void send(Message msg) throws RemoteException {
+        mService.send(msg);
+    }
 }
 
