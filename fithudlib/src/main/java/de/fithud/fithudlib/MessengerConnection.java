@@ -1,15 +1,9 @@
 package de.fithud.fithudlib;
 
-/**
- * Created by jandob on 12/16/14.
- */
-import android.app.Activity;
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -19,20 +13,27 @@ import android.util.Log;
 
 
 /**
- * @deprecated use {@link MessengerConnection} and {@link MessengerClient} instead.
- * Instead of do bindService use MessengerConnection(this, this.context) and implement
- * MessengerClient for handleMsg()
+ * Use this class to connect to a MessengerService.
+ * e.g.:
+ * MessengerConnection conn = MessengerConnection(this, this.context)
+ * conn.connect()
+ *
+ * Note: You need to implement the MessengerClient interface.
  */
-@Deprecated
-public abstract class MessengerServiceActivity extends Activity {
+
+public class MessengerConnection {
+    private MessengerClient mClient;
+    private Context mContext;
+    private static final String TAG = FHSensorManager.class.getSimpleName();
     /** Messenger for communicating with service. */
     public  Messenger mService;
     /** Flag indicating whether we have called bind on the service. */
     boolean mIsBound;
-    /**
-     * To be overridden.
-     */
-    abstract public void handleMessage(Message msg);
+
+    public MessengerConnection(MessengerClient client, Context context) {
+        mClient = client;
+        mContext = context;
+    }
 
     /**
      * Handler of incoming messages from service.
@@ -40,7 +41,7 @@ public abstract class MessengerServiceActivity extends Activity {
     class IncomingHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
-            MessengerServiceActivity.this.handleMessage(msg);
+            mClient.handleMessage(msg);
         }
     }
 
@@ -54,7 +55,7 @@ public abstract class MessengerServiceActivity extends Activity {
      */
     public ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.i("Messenger Service abstract", "onServiceConnected()");
+            Log.i(TAG, "onServiceConnected()");
             // This is called when the connection with the service has been
             // established, giving us the service object we can use to
             // interact with the service.  We are communicating with our
@@ -85,20 +86,20 @@ public abstract class MessengerServiceActivity extends Activity {
         }
     };
 
-    public void doBindService(Class serviceClass) {
+    public void connect(Class serviceClass) {
         // Establish a connection with the service.  We use an explicit
         // class name because there is no reason to be able to let other
         // applications replace our component.
         //bindService(new Intent(MessengerServiceActivity.this,
-        bindService(new Intent(this,
-                        serviceClass), mConnection, Context.BIND_AUTO_CREATE);
+        mContext.bindService(new Intent(mContext,
+                serviceClass), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
 
 
 
 
-    public void doUnbindService() {
+    public void disconnect() {
         if (mIsBound) {
             // If we have received the service, and hence registered with
             // it, then now is the time to unregister.
@@ -115,7 +116,7 @@ public abstract class MessengerServiceActivity extends Activity {
             }
 
             // Detach our existing connection.
-            unbindService(mConnection);
+            mContext.unbindService(mConnection);
             mIsBound = false;
         }
     }
