@@ -669,7 +669,7 @@ public class MainImmersion extends Activity implements MessengerClient {
 
     @Override
     protected void onDestroy() {
-        //doUnbindService();
+        super.onDestroy();
         conn.disconnect();
     }
 

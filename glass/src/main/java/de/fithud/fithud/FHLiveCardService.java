@@ -64,7 +64,6 @@ public class FHLiveCardService extends Service {
             Log.d(TAG, "live card  already published; just showing it!");
             mLiveCard.navigate();
         }
-
         //TODO check return value
         return Service.START_NOT_STICKY;
     }
