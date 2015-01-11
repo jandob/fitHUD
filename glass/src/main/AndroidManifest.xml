@@ -52,6 +52,8 @@
         <activity android:name=".GuideSettings" />
 
         <activity android:name=".SensorMenu" />
+
+        <activity android:name=".SummaryView" />
     </application>
 
 </manifest>

@@ -210,7 +210,8 @@ public class MainImmersion extends Activity implements MessengerClient {
                     mCardScrollView.setSelection(5);
                     break;
                 case R.id.showWhatever:
-                    startService(new Intent(this, FHLiveCardService.class));
+                    startActivity(new Intent(MainImmersion.this, SummaryView.class));
+                    //startService(new Intent(this, FHLiveCardService.class));
                     break;
             }
             return true;
