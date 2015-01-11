@@ -27,7 +27,7 @@
 
         <TextView
             android:id="@+id/liveCardBikeText"
-            android:layout_width="wrap_content"
+            android:layout_width="250px"
             android:layout_height="wrap_content"
             android:layout_marginTop="35px"
             android:layout_marginLeft="110px"
@@ -43,7 +43,7 @@
 
         <TextView
             android:id="@+id/liveCardHeartText"
-            android:layout_width="wrap_content"
+            android:layout_width="250px"
             android:layout_height="wrap_content"
             android:layout_marginTop="130px"
             android:layout_marginLeft="110px"
@@ -59,7 +59,7 @@
 
         <TextView
             android:id="@+id/liveCardHeightText"
-            android:layout_width="wrap_content"
+            android:layout_width="250px"
             android:layout_height="wrap_content"
             android:layout_marginTop="210px"
             android:layout_marginLeft="110px"

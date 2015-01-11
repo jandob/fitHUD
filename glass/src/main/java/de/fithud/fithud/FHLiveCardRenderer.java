@@ -1,14 +1,10 @@
 package de.fithud.fithud;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.SystemClock;
-import android.os.UserHandle;
-import android.text.format.Time;
+// import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -19,20 +15,9 @@ import android.widget.TextView;
 
 import com.google.android.glass.timeline.DirectRenderingCallback;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.util.concurrent.TimeUnit;
 
-import de.fithud.fithudlib.FHSensorManager;
-import de.fithud.fithudlib.MessengerClient;
-import de.fithud.fithudlib.MessengerConnection;
-import de.fithud.fithudlib.MessengerServiceActivity;
-
-/**
- * Created by jandob on 11/17/14.
- */
 public class FHLiveCardRenderer implements DirectRenderingCallback {
-    //MessengerConnection conn = new MessengerConnection(this);
     private static final String TAG = FHLiveCardRenderer.class.getSimpleName();
 
     /** The refresh rate, in frames per second, of the compass. */
@@ -41,9 +26,11 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
     /** The duration, in milliseconds, of one frame. */
     private static final long FRAME_TIME_MILLIS = TimeUnit.SECONDS.toMillis(1) / REFRESH_RATE_FPS;
 
+
     private final TextView liveCardBikeText;
     private final TextView liveCardHeartText;
     private final TextView liveCardHeightText;
+    private final TextView liveCardStatus;
     private SurfaceHolder mHolder;
     private boolean mRenderingPaused;
 
@@ -54,17 +41,7 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
     // private final FithudView fithudView;
     // private final RelativeLayout mTipsContainer;
 
-    /*
-    @Override
-    public void handleMessage(Message msg) {
-        switch(msg.what){
-            case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
-                int[] sensor_status = msg.getData().getIntArray("value");
-                Log.i(TAG,"Got Message: "+sensor_status[0]+" "+sensor_status[1]);
-                break;
-        }
-    }
-*/
+
     public FHLiveCardRenderer(Context context){
         LayoutInflater inflater = LayoutInflater.from(context);
         mLayout = (FrameLayout) inflater.inflate(R.layout.fithud, null);
@@ -74,6 +51,7 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
         liveCardBikeText = (TextView) mLayout.findViewById(R.id.liveCardBikeText);
         liveCardHeartText = (TextView) mLayout.findViewById(R.id.liveCardHeartText);
         liveCardHeightText = (TextView) mLayout.findViewById(R.id.liveCardHeightText);
+        liveCardStatus = (TextView) mLayout.findViewById(R.id.liveCardStatus);
 //        mTipsView.setText("hans");
         Log.d(TAG, "Renderer init");
     }
@@ -86,16 +64,15 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         // The creation of a new Surface implicitly resumes the rendering.
-        //conn.connect(FHSensorManager.class);
         mRenderingPaused = false;
         mHolder = holder;
         updateRenderingState();
         Log.d(TAG, "surface created!");
+
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        //conn.disconnect();
         mHolder = null;
         updateRenderingState();
         Log.d(TAG, "surface destroyed!");
@@ -106,6 +83,7 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
         mRenderingPaused = paused;
         updateRenderingState();
         Log.d(TAG, "rendering paused, state: " + paused);
+
     }
     /**
      * Starts or stops rendering according to the livecard's state.
@@ -204,6 +182,7 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
                 liveCardBikeText.setText(speed + " km/h");
                 liveCardHeartText.setText(heartrate + " bpm");
                 liveCardHeightText.setText(height + " m");
+                liveCardStatus.setBackgroundColor(Color.RED);
 
                 if(speed < 1000) {
                     speed++;
