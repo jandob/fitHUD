@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.os.Message;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.text.format.Time;
@@ -15,7 +14,7 @@ import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
+// import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.glass.timeline.DirectRenderingCallback;
@@ -42,7 +41,9 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
     /** The duration, in milliseconds, of one frame. */
     private static final long FRAME_TIME_MILLIS = TimeUnit.SECONDS.toMillis(1) / REFRESH_RATE_FPS;
 
-    private final TextView mTipsView;
+    private final TextView liveCardBikeText;
+    private final TextView liveCardHeartText;
+    private final TextView liveCardHeightText;
     private SurfaceHolder mHolder;
     private boolean mRenderingPaused;
 
@@ -50,8 +51,8 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
     private int mSurfaceWidth;
     private int mSurfaceHeight;
     private final FrameLayout mLayout;
-    //private final FithudView fithudView;
-    private final RelativeLayout mTipsContainer;
+    // private final FithudView fithudView;
+    // private final RelativeLayout mTipsContainer;
 
     /*
     @Override
@@ -69,9 +70,11 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
         mLayout = (FrameLayout) inflater.inflate(R.layout.fithud, null);
         mLayout.setWillNotDraw(false);
 
-        mTipsContainer = (RelativeLayout) mLayout.findViewById(R.id.text_container);
-        mTipsView = (TextView) mLayout.findViewById(R.id.textView);
-        mTipsView.setText("hans");
+        // mTipsContainer = (RelativeLayout) mLayout.findViewById(R.id.text_container);
+        liveCardBikeText = (TextView) mLayout.findViewById(R.id.liveCardBikeText);
+        liveCardHeartText = (TextView) mLayout.findViewById(R.id.liveCardHeartText);
+        liveCardHeightText = (TextView) mLayout.findViewById(R.id.liveCardHeightText);
+//        mTipsView.setText("hans");
         Log.d(TAG, "Renderer init");
     }
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -182,18 +185,35 @@ public class FHLiveCardRenderer implements DirectRenderingCallback {
         public synchronized void quit() {
             mShouldRun = false;
         }
-        Time mTime = new Time();
+
+        int speed = 0;
+        int heartrate = 0;
+        int height = 0;
+
+        // Time mTime = new Time();
         @Override
         public void run() {
             while (shouldRun()) {
                 long frameStart = SystemClock.elapsedRealtime();
                 repaint();
                 long frameLength = SystemClock.elapsedRealtime() - frameStart;
-                mTime.setToNow();
-                mTipsView.setText(mTime.toString());
+
+                // mTime.setToNow();
+                // mTipsView.setText(mTime.toString());
+
+                liveCardBikeText.setText(speed + " km/h");
+                liveCardHeartText.setText(heartrate + " bpm");
+                liveCardHeightText.setText(height + " m");
+
+                if(speed < 1000) {
+                    speed++;
+                    heartrate++;
+                    height++;
+                }
+
                 long sleepTime = FRAME_TIME_MILLIS - frameLength;
                 if (sleepTime > 0) {
-                    SystemClock.sleep(sleepTime);
+                    SystemClock.sleep(sleepTime*100);
                 }
             }
         }

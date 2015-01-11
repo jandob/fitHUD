@@ -5,76 +5,65 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_gravity="center_horizontal|bottom"
+        android:layout_gravity="center_horizontal"
+        android:gravity="top"
         android:id="@+id/text_container">
 
-        <!--        <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="New Text"
-                    android:id="@+id/textView"
-                    android:layout_alignParentTop="true"
-                    android:layout_alignParentStart="true" />-->
-
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="17px"
-            android:layout_marginLeft="110px"
-            android:text="0 km/h"
-            android:id="@+id/textView"
+            android:id="@+id/liveCardStatus"
+            android:layout_width="match_parent"
+            android:layout_height="2px"
+            android:background="#00FF00"
             android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true" />
+            android:layout_centerHorizontal="true"/>
 
         <ImageView
+            android:id="@+id/liveCardBike"
             android:layout_width="80px"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="-72px"
+            android:layout_height="80px"
+            android:layout_marginTop="20px"
             android:layout_marginLeft="0px"
-            android:src="@drawable/bike"
-            android:id="@+id/imageView"
-            android:layout_below="@+id/textView"
-            android:layout_alignParentStart="true" />
+            android:src="@drawable/bike"/>
 
         <TextView
+            android:id="@+id/liveCardBikeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="35px"
             android:layout_marginLeft="110px"
-            android:text="0 km/h"
-            android:id="@+id/textView"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true" />
+            android:text="0 km/h"/>
 
         <ImageView
+            android:id="@+id/liveCardHeart"
             android:layout_width="80px"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10px"
+            android:layout_height="80px"
+            android:layout_marginTop="120px"
             android:layout_marginLeft="0px"
-            android:src="@drawable/heart"
-            android:id="@+id/heart"
-            android:layout_below="@+id/textView"
-            android:layout_alignParentStart="true" />
+            android:src="@drawable/heart"/>
 
         <TextView
+            android:id="@+id/liveCardHeartText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="48px"
+            android:layout_marginTop="130px"
             android:layout_marginLeft="110px"
-            android:text="0 km/h"
-            android:id="@+id/textView"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true" />
+            android:text="0 bpm"/>
 
         <ImageView
+            android:id="@+id/liveCardHeight"
             android:layout_width="80px"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30px"
+            android:layout_height="80px"
+            android:layout_marginTop="210px"
             android:layout_marginLeft="0px"
-            android:src="@drawable/height"
-            android:id="@+id/heart"
-            android:layout_below="@+id/textView"
-            android:layout_alignParentStart="true" />
+            android:src="@drawable/height"/>
+
+        <TextView
+            android:id="@+id/liveCardHeightText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="210px"
+            android:layout_marginLeft="110px"
+            android:text="0 m"/>
 
     </RelativeLayout>
 
