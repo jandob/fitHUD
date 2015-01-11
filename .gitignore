@@ -5,6 +5,5 @@
 .DS_Store
 /build
 FitHud_Source.iml
-/.idea
 glass/src/main/java/de/fithud/fithud/MainImmersion.java.orig
 *.iml
