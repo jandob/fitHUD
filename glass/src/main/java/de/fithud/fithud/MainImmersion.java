@@ -21,6 +21,7 @@ import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -47,6 +48,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.MessengerClient;
+import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.MessengerServiceActivity;
 
 /**
@@ -59,8 +62,9 @@ import de.fithud.fithudlib.MessengerServiceActivity;
  *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
  */
-public class MainImmersion extends MessengerServiceActivity {
+public class MainImmersion extends Activity implements MessengerClient {
     //CardBuilder mCard;
+    MessengerConnection conn = new MessengerConnection(this);
     private final String TAG = "MainImmersion";
     private CardScrollView mCardScrollView;
     //private View mView;
@@ -319,8 +323,8 @@ public class MainImmersion extends MessengerServiceActivity {
     }
     @Override
     protected void onCreate(Bundle bundle) {
-        doBindService(FHSensorManager.class);
-
+        //doBindService(FHSensorManager.class);
+        conn.connect(FHSensorManager.class);
 
         Log.i("MainImmersion", "on start");
         initSeries();
@@ -665,7 +669,8 @@ public class MainImmersion extends MessengerServiceActivity {
 
     @Override
     protected void onDestroy() {
-        doUnbindService();
+        //doUnbindService();
+        conn.disconnect();
     }
 
     private class ExampleCardScrollAdapter extends CardScrollAdapter {

@@ -27,14 +27,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.MessengerClient;
+import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.MessengerServiceActivity;
 
 
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class SensorMenu extends MessengerServiceActivity {
+public class SensorMenu extends Activity implements MessengerClient {
 
+    MessengerConnection conn = new MessengerConnection(this);
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
@@ -48,7 +51,7 @@ public class SensorMenu extends MessengerServiceActivity {
     private CheckBox heartrateCheckbox = null;
     private CheckBox cadenceCheckbox = null;
 
-    private final String TAG = this.getClass().getSimpleName();
+    private String TAG;
 
     @Override
     public void handleMessage(Message msg) {
@@ -86,9 +89,16 @@ public class SensorMenu extends MessengerServiceActivity {
         // bundle.putFloat("value", val);
         bundle.putIntArray("command", data);
         msg.setData(bundle);
+        /*
         try {
             mService.send(msg);
         } catch (RemoteException e) {
+
+        }*/
+        try {
+            conn.send(msg);
+        }
+        catch (RemoteException e){
 
         }
     }
@@ -105,15 +115,18 @@ public class SensorMenu extends MessengerServiceActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        doUnbindService();
+        //doUnbindService();
+        conn.disconnect();
+
     }
 
     @Override
     protected void onCreate(Bundle bundle) {
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        doBindService(FHSensorManager.class);
+        TAG = SensorMenu.class.getSimpleName();
+        //doBindService(FHSensorManager.class);
+        conn.connect(FHSensorManager.class);
         super.onCreate(bundle);
         createCards();
 
