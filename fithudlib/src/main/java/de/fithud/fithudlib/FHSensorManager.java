@@ -92,7 +92,7 @@ public class FHSensorManager extends MessengerService {
     private List<String> mConnectedBtDevices = new ArrayList<String>();
     private BluetoothGattCharacteristic wakeupCharacteristic;
     private BluetoothGatt   wakeupGATT;
-    private int stopScanCount = 20;
+    //private int stopScanCount = 20;
 
     // Devices:
     private final String H7 = "00:22:D0:3D:30:31";
@@ -107,7 +107,7 @@ public class FHSensorManager extends MessengerService {
     private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
     private final String ACCService =    "02366e80-cf3a-11e1-9ab4-0002a5d5c51b";
     private final String WakeupService = "42821a40-e477-11e2-82d0-0002a5d5c51b";
-    //private final String BarometerService = "";
+    private final String BarometerService = "00001110-0000-1000-8000-00805f9b34fb";
 
     // Characteristics
     private final String WakeupCharacteristicUUID = "a32e5520-e477-11e2-a9e3-0002a5d5c51b";
@@ -119,6 +119,11 @@ public class FHSensorManager extends MessengerService {
     public int heartrate_connected = 0;
     public int cadence_connected = 0;
     public int spdAccWake_connected = 0;
+    public int barometer_connected = 0;
+
+    private boolean barometer_calibrated = false;
+    private int barometer_offset = 0;
+
 
 
     Timer timer;
@@ -168,11 +173,12 @@ public class FHSensorManager extends MessengerService {
     }
 
     public void sendSensorStatus(){
-        int sensorStatus_dataset[] = new int[4];
+        int sensorStatus_dataset[] = new int[5];
         sensorStatus_dataset[0] = heartrate_connected;
         sensorStatus_dataset[1] = speedometer_connected;
         sensorStatus_dataset[2] = cadence_connected;
         sensorStatus_dataset[3] = spdAccWake_connected;
+        sensorStatus_dataset[4] = barometer_connected;
         sendMsg(Messages.SENSOR_STATUS_MESSAGE, sensorStatus_dataset);
     }
 
@@ -251,6 +257,26 @@ public class FHSensorManager extends MessengerService {
                 acc_dataset[2] = acc_z;
                 sendMsg(Messages.ACC_RAW_MESSAGE, acc_dataset);
             }
+
+            if(characteristic.getService().getUuid().toString().equals(BarometerService)){
+                Log.i(TAG,"GOT Pressure");
+
+
+                int high_baro = ((int)characteristicData[0]) & 0xff;
+                int low_baro = ((int)characteristicData[1]) & 0xff;
+                int barometer_value = (high_baro << 8) | low_baro;
+
+                if(!barometer_calibrated){
+                    barometer_offset = barometer_value;
+                    barometer_calibrated = true;
+                }
+
+                barometer_value = barometer_value - barometer_offset;
+
+                int baro_dataset[] = new int[1];
+                baro_dataset[0] = barometer_value;
+                sendMsg(Messages.HEIGTH_MESSAGE,baro_dataset);
+            }
         }
 
         @Override
@@ -269,6 +295,7 @@ public class FHSensorManager extends MessengerService {
                 };
                 if(gatt.getDevice().getAddress().equals(SPD)){speedometer_connected = 1; };
                 if(gatt.getDevice().getAddress().equals(CAD)){cadence_connected = 1; };
+                if(gatt.getDevice().getAddress().equals(BAROMETER)){barometer_connected = 1; };
                 if(gatt.getDevice().getAddress().equals(SPD_ACC_WAKE)){
                     spdAccWake_connected = 1;
                     Log.i(TAG,"ACC connected");
@@ -283,6 +310,9 @@ public class FHSensorManager extends MessengerService {
                 gatt.close();
                 Log.i(TAG, "disconnected from " + gatt.getDevice().getAddress());
                 if(gatt.getDevice().getAddress().equals(H7)){ heartrate_connected = 0;};
+                if(gatt.getDevice().getAddress().equals(BAROMETER)){
+                    barometer_connected = 0;
+                    barometer_calibrated = false;};
                 if(gatt.getDevice().getAddress().equals(SPD)){speedometer_connected = 0; };
                 if(gatt.getDevice().getAddress().equals(CAD)){cadence_connected = 0; };
                 if(gatt.getDevice().getAddress().equals(SPD_ACC_WAKE)){spdAccWake_connected = 0; };
@@ -296,7 +326,7 @@ public class FHSensorManager extends MessengerService {
             Log.i(TAG, gatt.getDevice().getName() + " discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
                 Log.i(TAG, service.getUuid().toString());
-                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService) || service.getUuid().toString().equals(ACCService) || service.getUuid().toString().equals(WakeupService) )) {
+                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService) || service.getUuid().toString().equals(ACCService) || service.getUuid().toString().equals(WakeupService) ||service.getUuid().toString().equals(BarometerService))) {
                     continue;
                 }
 
@@ -368,7 +398,8 @@ public class FHSensorManager extends MessengerService {
         mConnectableBtDevices.add(H7);
         mConnectableBtDevices.add(CAD);
         mConnectableBtDevices.add(SPD);
-        //mConnectableBtDevices.add(SPD_ACC_WAKE);
+        mConnectableBtDevices.add(BAROMETER);
+        mConnectableBtDevices.add(SPD_ACC_WAKE);
         startScan();
         Log.i(TAG, "initialized");
 

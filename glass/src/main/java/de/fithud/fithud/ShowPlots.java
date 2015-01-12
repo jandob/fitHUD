@@ -142,6 +142,12 @@ public class ShowPlots extends Activity implements MessengerClient {
                     heartrate_conected = false;
                 }
                 break;
+
+            case FHSensorManager.Messages.HEIGTH_MESSAGE:
+                int[] barometer_value = msg.getData().getIntArray("value");
+                barometer_sensor = barometer_value[0];
+                addHeightData((int) barometer_sensor);
+                break;
         }
     }
 
@@ -197,6 +203,7 @@ public class ShowPlots extends Activity implements MessengerClient {
 
     private int speed_sensor = 0;
     private int heart_sensor = 0;
+    private int barometer_sensor = 0;
 
 
     @Override
@@ -295,10 +302,10 @@ public class ShowPlots extends Activity implements MessengerClient {
 
             plot.addSeries(heightSeries,
                     new LineAndPointFormatter(
-                            Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
-            plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
-            heightTopLabel.setText("30");
-            heightBottomLabel.setText("10");
+                            Color.rgb(100, 100, 200), Color.BLUE, Color.TRANSPARENT, null));
+            plot.setRangeBoundaries(-50, 50, BoundaryMode.FIXED);
+            heightTopLabel.setText("50");
+            heightBottomLabel.setText("-50");
         }
 
 
@@ -614,8 +621,8 @@ public class ShowPlots extends Activity implements MessengerClient {
                         }
 
                         if (plot_height) {
-                            addHeightData((int) speed);
-                            plotHeightData((int) speed);
+
+                            plotHeightData((int) barometer_sensor);
                         }
 
                         if (plot_terrain) {

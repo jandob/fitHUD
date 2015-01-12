@@ -77,6 +77,7 @@ public class SensorMenu extends Activity implements MessengerClient {
                 speedCheckbox.setChecked(speedometer_connected);
                 heartrateCheckbox.setChecked(heartrate_conected);
                 cadenceCheckbox.setChecked(cadence_connected);
+                mAdapter.notifyDataSetChanged();
                 Log.i(TAG, "Status: " + sensor_status[0] + " " + sensor_status[1] + " " + sensor_status[2]);
 
                 break;
