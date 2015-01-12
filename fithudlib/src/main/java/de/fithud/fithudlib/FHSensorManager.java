@@ -95,12 +95,14 @@ public class FHSensorManager extends MessengerService {
     private final String SPD = "EB:03:59:83:C8:34";
     // Not added yet
     private final String SPD_ACC_WAKE = "02:80:E1:00:00:AA";
+    private final String BAROMETER = "D4:BD:70:0E:E9:EE";
 
     // Services
     private final String HRService = "0000180d-0000-1000-8000-00805f9b34fb";
     private final String SPDCADService = "00001816-0000-1000-8000-00805f9b34fb";
     private final String ACCService =    "02366e80-cf3a-11e1-9ab4-0002a5d5c51b";
     private final String WakeupService = "42821a40-e477-11e2-82d0-0002a5d5c51b";
+    //private final String BarometerService = "";
 
     // Characteristics
     private final String WakeupCharacteristicUUID = "a32e5520-e477-11e2-a9e3-0002a5d5c51b";
