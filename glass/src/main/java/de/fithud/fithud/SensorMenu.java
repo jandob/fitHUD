@@ -89,12 +89,6 @@ public class SensorMenu extends Activity implements MessengerClient {
         // bundle.putFloat("value", val);
         bundle.putIntArray("command", data);
         msg.setData(bundle);
-        /*
-        try {
-            mService.send(msg);
-        } catch (RemoteException e) {
-
-        }*/
         try {
             conn.send(msg);
         }

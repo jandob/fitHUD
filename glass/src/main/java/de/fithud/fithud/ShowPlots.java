@@ -90,6 +90,8 @@ public class ShowPlots extends Activity implements MessengerClient {
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 int heartRate[] = msg.getData().getIntArray("value");
+                addHeartData((int) heartRate[0]);
+                heart_sensor = (int) heartRate[0];
                 Log.i(TAG, "Heartrate " + heartRate[0]);
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
@@ -194,6 +196,8 @@ public class ShowPlots extends Activity implements MessengerClient {
     private Segment s3;
 
     private int speed_sensor = 0;
+    private int heart_sensor = 0;
+
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -282,9 +286,9 @@ public class ShowPlots extends Activity implements MessengerClient {
             plot.addSeries(heartSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
-            plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
-            heartTopLabel.setText("30");
-            heartBottomLabel.setText("10");
+            plot.setRangeBoundaries(50, 130, BoundaryMode.FIXED);
+            heartTopLabel.setText("130");
+            heartBottomLabel.setText("50");
         }
 
         if (choice.equalsIgnoreCase("height")) {
@@ -605,8 +609,8 @@ public class ShowPlots extends Activity implements MessengerClient {
                         }
 
                         if (plot_heart) {
-                            addHeartData((int) speed);
-                            plotHeartData((int) speed);
+
+                            plotHeartData((int) heart_sensor );
                         }
 
                         if (plot_height) {

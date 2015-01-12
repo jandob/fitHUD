@@ -10,4 +10,7 @@
         android:title="Start Workout" />
     <item android:id="@+id/showAchivements"
         android:title="Show Achivements" />
+
+    <item android:id="@+id/whereIsMyBike"
+        android:title="Where is my bike" />
 </menu>

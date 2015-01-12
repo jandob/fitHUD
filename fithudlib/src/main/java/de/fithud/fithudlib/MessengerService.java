@@ -41,7 +41,9 @@ public abstract class MessengerService extends Service {
         public static final int MSG_UNREGISTER_CLIENT = 999;
     }
 
+    public class Commands{
 
+    }
 
     /**
      * Handler of incoming messages from clients.

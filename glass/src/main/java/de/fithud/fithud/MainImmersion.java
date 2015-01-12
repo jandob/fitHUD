@@ -27,6 +27,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -199,6 +200,10 @@ public class MainImmersion extends Activity implements MessengerClient {
                     break;
                 case R.id.showPlots:
                     startActivity(new Intent(MainImmersion.this, ShowPlots.class));
+                    break;
+
+                case R.id.whereIsMyBike:
+                    sendWakeup();
                     break;
                 /*
                 case R.id.currentSpeed:
@@ -492,6 +497,27 @@ public class MainImmersion extends Activity implements MessengerClient {
             timer.cancel();
             timer = null;
         }
+    }
+
+    public void sendDataToSensormanager(int[] data) {
+        Message msg = Message.obtain(null, 4);
+        Bundle bundle = new Bundle();
+        // bundle.putFloat("value", val);
+        bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        try {
+            conn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
+    }
+
+    public void sendWakeup() {
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.WAKEUP_COMMAND;
+        command[1] = 0;
+        sendDataToSensormanager(command);
     }
 
     public void startTimer() {
