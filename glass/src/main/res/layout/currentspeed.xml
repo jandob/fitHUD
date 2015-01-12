@@ -13,6 +13,30 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="0px" />
 
+    <TextView
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_marginTop="100px"
+        android:layout_marginLeft="100px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="10"
+        android:id="@+id/labelTopSpeed"
+        android:textSize="18dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_marginTop="190px"
+        android:layout_marginLeft="100px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="10"
+        android:id="@+id/labelBottomSpeed"
+        android:textSize="18dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
     <com.androidplot.xy.XYPlot
         android:id="@+id/dynamicXYPlot"
         android:layout_width="400px"

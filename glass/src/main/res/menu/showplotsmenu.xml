@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/currentSpeedPlotMenu"
+        android:title="Show Current Speed" />
+    <item android:id="@+id/heartRatePlotMenu"
+        android:title="Show Heart Rate" />
+    <item android:id="@+id/showHeightPlotMenu"
+        android:title="Show Height" />
+    <item android:id="@+id/showTerrainPlotMenu"
+        android:title="Show Style" />
+</menu>

@@ -5,9 +5,9 @@
     <dimen name="activity_vertical_margin">0dp</dimen>
     <dimen name="pie_segment_label_font_size">0dp</dimen>
     <dimen name="title_font_size">0dp</dimen>
-    <dimen name="domain_label_font_size">0dp</dimen>
-    <dimen name="range_label_font_size">0dp</dimen>
-    <dimen name="range_tick_label_font_size">0dp</dimen>
-    <dimen name="domain_tick_label_font_size">0dp</dimen>
+    <dimen name="domain_label_font_size">16dp</dimen>
+    <dimen name="range_label_font_size">16dp</dimen>
+    <dimen name="range_tick_label_font_size">16dp</dimen>
+    <dimen name="domain_tick_label_font_size">16dp</dimen>
     <dimen name="legend_text_font_size">0dp</dimen>
 </resources>

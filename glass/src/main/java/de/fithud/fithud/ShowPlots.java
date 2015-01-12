@@ -62,10 +62,10 @@ import de.fithud.fithudlib.MessengerServiceActivity;
  *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
  */
-public class MainImmersion extends Activity implements MessengerClient {
+public class ShowPlots extends Activity implements MessengerClient {
     //CardBuilder mCard;
     MessengerConnection conn = new MessengerConnection(this);
-    private final String TAG = "MainImmersion";
+    private final String TAG = "ShowPlots";
     private CardScrollView mCardScrollView;
     //private View mView;
     private List<CardBuilder> mCards;
@@ -111,7 +111,7 @@ public class MainImmersion extends Activity implements MessengerClient {
                 time_difference = time_difference / 1024;
                 double speed = 0;
                 if (time_difference > 0) {
-                    speed = ((revolutions_difference*wheel_type) / time_difference) * 3.6;
+                    speed = ((revolutions_difference * wheel_type) / time_difference) * 3.6;
                 } else {
                     speed = 0;
                 }
@@ -119,17 +119,26 @@ public class MainImmersion extends Activity implements MessengerClient {
                 Log.i(TAG, "Speed_rev: " + speed_dataset[0] + " speed_time: " + speed_dataset[1]);
                 Log.i(TAG, "Speed: " + speed);
 
-                speed_sensor = (int)speed;
-                //addSpeedData(speed_sensor);
+                speed_sensor = (int) speed;
+                addSpeedData(speed_sensor);
                 break;
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
                 int[] sensor_status = msg.getData().getIntArray("value");
-                if(sensor_status[0] == 1){ heartrate_conected = true;}
-                else {heartrate_conected =false;}
-                if(sensor_status[1] == 1){ speedometer_connected = true;}
-                else {heartrate_conected =false;}
-                if(sensor_status[2] == 1){ cadence_connected = true;}
-                else {heartrate_conected =false;}
+                if (sensor_status[0] == 1) {
+                    heartrate_conected = true;
+                } else {
+                    heartrate_conected = false;
+                }
+                if (sensor_status[1] == 1) {
+                    speedometer_connected = true;
+                } else {
+                    heartrate_conected = false;
+                }
+                if (sensor_status[2] == 1) {
+                    cadence_connected = true;
+                } else {
+                    heartrate_conected = false;
+                }
                 break;
         }
     }
@@ -155,6 +164,16 @@ public class MainImmersion extends Activity implements MessengerClient {
     private XYPlot heartPlot = null;
     private XYPlot heightPlot = null;
 
+
+    private TextView heightTopLabel;
+    private TextView heightBottomLabel;
+
+    private TextView speedTopLabel;
+    private TextView speedBottomLabel;
+
+    private TextView heartTopLabel;
+    private TextView heartBottomLabel;
+
     private static final int HISTORY_SIZE = 50;
     private static double sin_counter = 0.0;
     private static boolean plot_speed = false;
@@ -179,7 +198,7 @@ public class MainImmersion extends Activity implements MessengerClient {
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId == Window.FEATURE_OPTIONS_PANEL) {
-            getMenuInflater().inflate(R.menu.main, menu);
+            getMenuInflater().inflate(R.menu.showplotsmenu, menu);
             return true;
         }
         return super.onCreatePanelMenu(featureId, menu);
@@ -189,38 +208,18 @@ public class MainImmersion extends Activity implements MessengerClient {
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         if (featureId == WindowUtils.FEATURE_VOICE_COMMANDS || featureId == Window.FEATURE_OPTIONS_PANEL) {
             switch (item.getItemId()) {
-                case R.id.makeWorkout:
-                    //mCardScrollView.setSelection(0);
-                    startActivity(new Intent(MainImmersion.this, WorkoutMenu.class));
+                case R.id.currentSpeedPlotMenu:
+                    mCardScrollView.setSelection(0);
                     break;
-                case R.id.showAchivements:
-                    //mCardScrollView.setSelection(1);
-                    startActivity(new Intent(MainImmersion.this, Achievements.class));
+                case R.id.heartRatePlotMenu:
+                    mCardScrollView.setSelection(1);
                     break;
-                case R.id.showPlots:
-                    startActivity(new Intent(MainImmersion.this, ShowPlots.class));
-                    break;
-                /*
-                case R.id.currentSpeed:
+                case R.id.showHeightPlotMenu:
                     mCardScrollView.setSelection(2);
                     break;
-                case R.id.heartRate:
+                case R.id.showTerrainPlotMenu:
                     mCardScrollView.setSelection(3);
                     break;
-                case R.id.showHeight:
-                    mCardScrollView.setSelection(4);
-                    break;
-                case R.id.showTerrain:
-                    mCardScrollView.setSelection(5);
-                    break;
-                    */
-                case R.id.showSummary:
-                    startActivity(new Intent(MainImmersion.this, SummaryView.class));
-                    //startService(new Intent(this, FHLiveCardService.class));
-                    break;
-
-
-
             }
             return true;
         }
@@ -273,6 +272,9 @@ public class MainImmersion extends Activity implements MessengerClient {
             plot.addSeries(speedSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+            plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
+            speedTopLabel.setText("30");
+            speedBottomLabel.setText("10");
         }
 
         if (choice.equalsIgnoreCase("heart")) {
@@ -280,6 +282,9 @@ public class MainImmersion extends Activity implements MessengerClient {
             plot.addSeries(heartSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+            plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
+            heartTopLabel.setText("30");
+            heartBottomLabel.setText("10");
         }
 
         if (choice.equalsIgnoreCase("height")) {
@@ -287,9 +292,12 @@ public class MainImmersion extends Activity implements MessengerClient {
             plot.addSeries(heightSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+            plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
+            heightTopLabel.setText("30");
+            heightBottomLabel.setText("10");
         }
 
-        plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
+
         plot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
 
 
@@ -320,7 +328,7 @@ public class MainImmersion extends Activity implements MessengerClient {
         plot.setDomainValueFormat(new DecimalFormat("#"));
     }
 
-    public void initSeries(){
+    public void initSeries() {
         speedSeries = new SimpleXYSeries("Speed");
         speedSeries.useImplicitXVals();
 
@@ -330,13 +338,15 @@ public class MainImmersion extends Activity implements MessengerClient {
         heightSeries = new SimpleXYSeries("height");
         heightSeries.useImplicitXVals();
     }
+
     @Override
     protected void onCreate(Bundle bundle) {
-        //doBindService(FHSensorManager.class);
         conn.connect(FHSensorManager.class);
 
-        Log.i("MainImmersion", "on start");
-        //initSeries();
+        init_heart = false;
+        init_height = false;
+        init_speed = false;
+        init_terrain = false;
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
@@ -352,23 +362,7 @@ public class MainImmersion extends Activity implements MessengerClient {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //openOptionsMenu();
                 switch (mCardScrollView.getSelectedItemPosition()) {
-                    case 0:
-                        //Toast.makeText(getApplicationContext(), "Searching....", Toast.LENGTH_SHORT).show();
 
-                        startActivity(new Intent(MainImmersion.this, SensorMenu.class));
-                        break;
-
-                    case 1:
-                        startActivity(new Intent(MainImmersion.this, WorkoutMenu.class));
-                        break;
-
-                    case 2:
-                        startActivity(new Intent(MainImmersion.this, Achievements.class));
-                        break;
-
-                    case 3:
-                        startActivity(new Intent(MainImmersion.this, ShowPlots.class));
-                        break;
                 }
             }
         });
@@ -377,16 +371,17 @@ public class MainImmersion extends Activity implements MessengerClient {
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
-        mCardScrollView.setSelection(1);
+        initSeries();
+        //mCardScrollView.setSelection(1);
     }
 
     public void addSpeedData(int speed) {
         //if (init_speed) {
-            Log.d("FitHUD", "add speed now");
-            if (speedSeries.size() > HISTORY_SIZE) {
-                speedSeries.removeFirst();
-            }
-            speedSeries.addLast(null, speed);
+        Log.d("FitHUD", "add speed now");
+        if (speedSeries.size() > HISTORY_SIZE) {
+            speedSeries.removeFirst();
+        }
+        speedSeries.addLast(null, speed);
         //}
     }
 
@@ -502,7 +497,7 @@ public class MainImmersion extends Activity implements MessengerClient {
         initializeTimerTask();
 
         //schedule the timer, after the first 5000ms the TimerTask will run every 500ms
-        timer.schedule(timerTask, 5000, 1000); //
+        timer.schedule(timerTask, 2000, 1000); //
     }
 
     public void initializeTimerTask() {
@@ -519,18 +514,18 @@ public class MainImmersion extends Activity implements MessengerClient {
                         switch (mCardScrollView.getSelectedItemPosition()) {
 
                             case 0:
-
-                                break;
-
-                            case 3:
                                 speedPlot = (XYPlot) (mCardScrollView.getSelectedView().findViewById(R.id.dynamicXYPlot));
                                 speedText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.textView2);
+                                speedTopLabel = (TextView) mCardScrollView.findViewById(R.id.labelTopSpeed);
+                                speedBottomLabel = (TextView) mCardScrollView.findViewById(R.id.labelBottomSpeed);
 
                                 //Log.d("FitHUD", "speedPlot " + speedText);
 
                                 if (!init_speed) {
                                     initializePlot(speedPlot, "speed");
                                     init_speed = true;
+                                    speedPlot.setVisibility(View.VISIBLE);
+                                } else {
                                     speedPlot.setVisibility(View.VISIBLE);
                                 }
                                 plot_speed = true;
@@ -550,12 +545,16 @@ public class MainImmersion extends Activity implements MessengerClient {
                                 }
                                 */
                                 break;
-                            case 4:
+                            case 1:
                                 heartPlot = (XYPlot) (mCardScrollView.getSelectedView().findViewById(R.id.heartRatePlot));
                                 heartText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.heartRateText);
+                                heartTopLabel = (TextView) mCardScrollView.findViewById(R.id.labelTopHeart);
+                                heartBottomLabel = (TextView) mCardScrollView.findViewById(R.id.labelBottomHeart);
                                 if (!init_heart) {
                                     initializePlot(heartPlot, "heart");
                                     init_heart = true;
+                                    heartPlot.setVisibility(View.VISIBLE);
+                                } else {
                                     heartPlot.setVisibility(View.VISIBLE);
                                 }
                                 plot_speed = false;
@@ -565,12 +564,16 @@ public class MainImmersion extends Activity implements MessengerClient {
 
                                 break;
 
-                            case 5:
+                            case 2:
                                 heightPlot = (XYPlot) (mCardScrollView.findViewById(R.id.heightPlot));
                                 heightText = (TextView) mCardScrollView.findViewById(R.id.heightText);
+                                heightTopLabel = (TextView) mCardScrollView.findViewById(R.id.labelTopHeight);
+                                heightBottomLabel = (TextView) mCardScrollView.findViewById(R.id.labelBottomHeight);
                                 if (!init_height) {
                                     initializePlot(heightPlot, "height");
                                     init_height = true;
+                                    heightPlot.setVisibility(View.VISIBLE);
+                                } else {
                                     heightPlot.setVisibility(View.VISIBLE);
                                 }
                                 plot_speed = false;
@@ -580,7 +583,7 @@ public class MainImmersion extends Activity implements MessengerClient {
 
                                 break;
 
-                            case 6:
+                            case 3:
                                 plot_speed = false;
                                 plot_heart = false;
                                 plot_height = false;
@@ -590,10 +593,10 @@ public class MainImmersion extends Activity implements MessengerClient {
                                 terrainRoadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainRoadText);
                                 terrainAsphaltText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainAsphaltText);
                                 terrainOffroadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainOffroadText);
-                                Log.i(TAG,"ID pie: "+terrainPie);
-                                Log.i(TAG,"ID roadtex: "+terrainRoadText);
-                                Log.i(TAG,"ID asphalt: "+terrainAsphaltText);
-                                Log.i(TAG,"ID offroadtext: "+terrainOffroadText);
+                                Log.i(TAG, "ID pie: " + terrainPie);
+                                Log.i(TAG, "ID roadtex: " + terrainRoadText);
+                                Log.i(TAG, "ID asphalt: " + terrainAsphaltText);
+                                Log.i(TAG, "ID offroadtext: " + terrainOffroadText);
                                 break;
                         }
 
@@ -602,10 +605,12 @@ public class MainImmersion extends Activity implements MessengerClient {
                         }
 
                         if (plot_heart) {
+                            addHeartData((int) speed);
                             plotHeartData((int) speed);
                         }
 
                         if (plot_height) {
+                            addHeightData((int) speed);
                             plotHeightData((int) speed);
                         }
 
@@ -626,37 +631,19 @@ public class MainImmersion extends Activity implements MessengerClient {
     protected void onResume() {
         super.onResume();
         mCardScrollView.activate();
-        //startTimer();
+        startTimer();
     }
 
     @Override
     protected void onPause() {
         mCardScrollView.deactivate();
         super.onPause();
-        //stoptimertask();
+        stoptimertask();
     }
 
     private void createCards() {
         mCards = new ArrayList<CardBuilder>();
-        CardBuilder sensorcard = new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Sensors Settings")
-                .setFootnote("Status and Search");
-        sensorview = sensorcard.getView();
-        mCards.add(sensorcard);
 
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Workout!")
-                .setFootnote("Starting a workout or set guide"));
-
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Achivements")
-                .setFootnote("Your unlocked Achivements!"));
-
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Plots")
-                .setFootnote("Live plots"));
-
-        /*
         CardBuilder speedcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
                 .setEmbeddedLayout(R.layout.currentspeed)
                 .setFootnote("Slower than a turtle")
@@ -664,13 +651,13 @@ public class MainImmersion extends Activity implements MessengerClient {
 //        speedview = speedcard.getView();
         mCards.add(speedcard);
 
-        CardBuilder heartcard =  new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+        CardBuilder heartcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
                 .setEmbeddedLayout(R.layout.heartrate)
                 .setFootnote("You are dead");
         //heartview = heartcard.getView();
         mCards.add(heartcard);
 
-        CardBuilder heightcard =  new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+        CardBuilder heightcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
                 .setEmbeddedLayout(R.layout.height)
                 .setFootnote("Very low");
         mCards.add(heightcard);
@@ -682,8 +669,6 @@ public class MainImmersion extends Activity implements MessengerClient {
         //terrainview = terraincard.getView();
         mCards.add(terraincard);
 
-        */
-
 
     }
 
@@ -691,6 +676,7 @@ public class MainImmersion extends Activity implements MessengerClient {
     protected void onDestroy() {
         super.onDestroy();
         conn.disconnect();
+        Log.i(TAG,"Showplots destroyed");
     }
 
     private class ExampleCardScrollAdapter extends CardScrollAdapter {
