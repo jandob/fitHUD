@@ -67,12 +67,12 @@ public class SensorMenu extends Activity implements MessengerClient {
                 if (sensor_status[1] == 1) {
                     speedometer_connected = true;
                 } else {
-                    heartrate_conected = false;
+                    speedometer_connected = false;
                 }
                 if (sensor_status[2] == 1) {
                     cadence_connected = true;
                 } else {
-                    heartrate_conected = false;
+                    cadence_connected = false;
                 }
                 speedCheckbox.setChecked(speedometer_connected);
                 heartrateCheckbox.setChecked(heartrate_conected);

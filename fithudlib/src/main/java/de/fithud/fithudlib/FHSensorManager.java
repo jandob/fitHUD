@@ -36,6 +36,7 @@ public class FHSensorManager extends MessengerService {
         public static final int SPEED_MESSAGE = 3;
         public static final int SENSOR_STATUS_MESSAGE = 4;
         public static final int ACC_RAW_MESSAGE = 5;
+        public static final int HEIGTH_MESSAGE = 5;
     }
 
     public final class Commands extends MessengerService.Commands {
@@ -53,8 +54,12 @@ public class FHSensorManager extends MessengerService {
                 break;
 
             case Commands.WAKEUP_COMMAND:
+
                 if(spdAccWake_connected == 1) {
                     sendWakeupMessage();
+                }
+                else{
+                    Log.i(TAG,"Wakeup not connected");
                 }
                 break;
         }
@@ -257,7 +262,9 @@ public class FHSensorManager extends MessengerService {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
 
-                if(gatt.getDevice().getAddress().equals(H7)){heartrate_connected = 1; };
+                if(gatt.getDevice().getAddress().equals(H7)){heartrate_connected = 1;
+                Log.i(TAG,"Heart connected");
+                };
                 if(gatt.getDevice().getAddress().equals(SPD)){speedometer_connected = 1; };
                 if(gatt.getDevice().getAddress().equals(CAD)){cadence_connected = 1; };
                 if(gatt.getDevice().getAddress().equals(SPD_ACC_WAKE)){
