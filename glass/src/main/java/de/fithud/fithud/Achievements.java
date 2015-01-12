@@ -63,16 +63,22 @@ public class Achievements extends Activity {
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
-                        .setText("Speed-Breaker!!")
-                        .setFootnote("Your are a freaking speed machine")
-                        .setTimestamp("just now")
-                        .addImage(R.drawable.bike));
+                .setText("Speed-Breaker!!")
+                .setFootnote("Your are a freaking speed machine")
+                .setTimestamp("just now")
+                .addImage(R.drawable.achievement_speed));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Distance record")
                 .setFootnote("you biked 50km!!")
                 .setTimestamp("just now")
-                .addImage(R.drawable.bike));
+                .addImage(R.drawable.achievement_distance));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
+                .setText("Height record")
+                .setFootnote("High as the sky!!")
+                .setTimestamp("literally")
+                .addImage(R.drawable.achievement_height));
     }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
