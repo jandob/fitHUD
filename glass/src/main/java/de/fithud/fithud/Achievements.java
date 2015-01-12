@@ -63,10 +63,10 @@ public class Achievements extends Activity {
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
-                        .setText("Speed-Breaker!!")
-                        .setFootnote("Your are a freaking speed machine")
-                        .setTimestamp("just now")
-                        .addImage(R.drawable.achievement_speed));
+                .setText("Speed-Breaker!!")
+                .setFootnote("Your are a freaking speed machine")
+                .setTimestamp("just now")
+                .addImage(R.drawable.achievement_speed));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Distance record")
