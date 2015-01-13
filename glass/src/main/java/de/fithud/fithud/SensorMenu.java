@@ -46,10 +46,14 @@ public class SensorMenu extends Activity implements MessengerClient {
     private boolean speedometer_connected = false;
     private boolean heartrate_conected = false;
     private boolean cadence_connected = false;
+    private boolean barometer_connected = false;
+    private boolean wakeup_connected = false;
 
     private CheckBox speedCheckbox = null;
     private CheckBox heartrateCheckbox = null;
     private CheckBox cadenceCheckbox = null;
+    private CheckBox barometerCheckbox = null;
+    private CheckBox wakeupCheckbox = null;
 
     private String TAG;
 
@@ -74,12 +78,30 @@ public class SensorMenu extends Activity implements MessengerClient {
                 } else {
                     cadence_connected = false;
                 }
+                if (sensor_status[3] == 1) {
+                    barometer_connected = true;
+                } else {
+                    barometer_connected = false;
+                }
+                if (sensor_status[4] == 1) {
+                    wakeup_connected = true;
+                } else {
+                    wakeup_connected = false;
+                }
                 speedCheckbox.setChecked(speedometer_connected);
                 heartrateCheckbox.setChecked(heartrate_conected);
                 cadenceCheckbox.setChecked(cadence_connected);
+                barometerCheckbox.setChecked(barometer_connected);
+                wakeupCheckbox.setChecked(wakeup_connected);
+
                 mAdapter.notifyDataSetChanged();
                 Log.i(TAG, "Status: " + sensor_status[0] + " " + sensor_status[1] + " " + sensor_status[2]);
 
+                break;
+
+            case FHSensorManager.Messages.SEARCH_READY:
+                mCards.get(1).setFootnote("");
+                mAdapter.notifyDataSetChanged();
                 break;
         }
     }
@@ -92,8 +114,7 @@ public class SensorMenu extends Activity implements MessengerClient {
         msg.setData(bundle);
         try {
             conn.send(msg);
-        }
-        catch (RemoteException e){
+        } catch (RemoteException e) {
 
         }
     }
@@ -104,6 +125,8 @@ public class SensorMenu extends Activity implements MessengerClient {
         test[0] = 1;
         test[1] = 0;
         sendDataToSensormanager(test);
+        mCards.get(1).setFootnote("Searching...");
+        mAdapter.notifyDataSetChanged();
     }
 
 
@@ -152,6 +175,8 @@ public class SensorMenu extends Activity implements MessengerClient {
         speedCheckbox = (CheckBox) findViewById(R.id.speedometerCheckBox);
         heartrateCheckbox = (CheckBox) findViewById(R.id.heartrateCheckBox);
         cadenceCheckbox = (CheckBox) findViewById(R.id.cadenceCheckBox);
+        barometerCheckbox = (CheckBox) findViewById(R.id.barometerCheckBox);
+        wakeupCheckbox = (CheckBox) findViewById(R.id.WakeupCheckBox);
     }
 
     @Override

@@ -7,7 +7,7 @@
     <CheckBox
         android:layout_width="260px"
         android:layout_height="70px"
-        android:layout_marginTop="60px"
+        android:layout_marginTop="30px"
         android:layout_marginLeft="100px"
         android:text="Heartrate"
         android:id="@+id/heartrateCheckBox"
@@ -17,7 +17,7 @@
     <CheckBox
         android:layout_width="260px"
         android:layout_height="70px"
-        android:layout_marginTop="100px"
+        android:layout_marginTop="70px"
         android:layout_marginLeft="100px"
         android:text="Cadence"
         android:id="@+id/cadenceCheckBox"
@@ -27,10 +27,30 @@
     <CheckBox
         android:layout_width="260px"
         android:layout_height="70px"
-        android:layout_marginTop="140px"
+        android:layout_marginTop="110px"
         android:layout_marginLeft="100px"
         android:text="Speedometer"
         android:id="@+id/speedometerCheckBox"
+        android:layout_alignBottom="@+id/terrainText"
+        android:layout_centerHorizontal="true" />
+
+    <CheckBox
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="150px"
+        android:layout_marginLeft="100px"
+        android:text="Barometer"
+        android:id="@+id/barometerCheckBox"
+        android:layout_alignBottom="@+id/terrainText"
+        android:layout_centerHorizontal="true" />
+
+    <CheckBox
+        android:layout_width="260px"
+        android:layout_height="70px"
+        android:layout_marginTop="190px"
+        android:layout_marginLeft="100px"
+        android:text="Wakeup"
+        android:id="@+id/WakeupCheckBox"
         android:layout_alignBottom="@+id/terrainText"
         android:layout_centerHorizontal="true" />
 

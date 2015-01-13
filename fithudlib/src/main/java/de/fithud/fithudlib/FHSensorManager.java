@@ -36,7 +36,8 @@ public class FHSensorManager extends MessengerService {
         public static final int SPEED_MESSAGE = 3;
         public static final int SENSOR_STATUS_MESSAGE = 4;
         public static final int ACC_RAW_MESSAGE = 5;
-        public static final int HEIGTH_MESSAGE = 5;
+        public static final int HEIGTH_MESSAGE = 6;
+        public static final int SEARCH_READY = 7;
     }
 
     public final class Commands extends MessengerService.Commands {
@@ -160,6 +161,7 @@ public class FHSensorManager extends MessengerService {
         if ((nrOfremainingDevices == 0) && (connectionInProgress == false)){
             Log.i(TAG,"All devices connected");
             mBtDevicesReadyToConnect.clear();
+            sendReadySearch();
         }
     }
 
@@ -172,13 +174,19 @@ public class FHSensorManager extends MessengerService {
         wakeupGATT.writeCharacteristic(wakeupCharacteristic);
     }
 
+    public void sendReadySearch(){
+        int searchReady[] = new int[1];
+        searchReady[0] = 1;
+        sendMsg(Messages.SEARCH_READY, searchReady);
+    }
+
     public void sendSensorStatus(){
         int sensorStatus_dataset[] = new int[5];
         sensorStatus_dataset[0] = heartrate_connected;
         sensorStatus_dataset[1] = speedometer_connected;
         sensorStatus_dataset[2] = cadence_connected;
-        sensorStatus_dataset[3] = spdAccWake_connected;
-        sensorStatus_dataset[4] = barometer_connected;
+        sensorStatus_dataset[3] = barometer_connected;
+        sensorStatus_dataset[4] = spdAccWake_connected;
         sendMsg(Messages.SENSOR_STATUS_MESSAGE, sensorStatus_dataset);
     }
 
