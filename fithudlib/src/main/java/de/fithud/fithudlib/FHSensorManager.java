@@ -91,6 +91,7 @@ public class FHSensorManager extends MessengerService {
     private List<BluetoothDevice> mBtDevicesReadyToConnect = new ArrayList<BluetoothDevice>();
     private List<String> mConnectableBtDevices = new ArrayList<String>();
     private List<String> mConnectedBtDevices = new ArrayList<String>();
+    private List<BluetoothGatt> mConnectedBtDevicesGattServices = new ArrayList<BluetoothGatt>();
     private BluetoothGattCharacteristic wakeupCharacteristic;
     private BluetoothGatt   wakeupGATT;
     //private int stopScanCount = 20;
@@ -298,6 +299,9 @@ public class FHSensorManager extends MessengerService {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "connected to device: " + gatt.getDevice().getName());
 
+                // Add Gatt to list for disconnecting purposes
+                mConnectedBtDevicesGattServices.add(gatt);
+
                 if(gatt.getDevice().getAddress().equals(H7)){heartrate_connected = 1;
                 Log.i(TAG,"Heart connected");
                 };
@@ -314,6 +318,10 @@ public class FHSensorManager extends MessengerService {
             }
 
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                // Since it is not connected any more remove it out of the list
+                mConnectedBtDevicesGattServices.remove(gatt);
+
+
                 mConnectedBtDevices.remove(gatt.getDevice().getAddress());
                 gatt.close();
                 Log.i(TAG, "disconnected from " + gatt.getDevice().getAddress());
@@ -382,7 +390,10 @@ public class FHSensorManager extends MessengerService {
     }
 
     public void closeConnections() {
-        mBtAdapter.disable();
+        for (BluetoothGatt gatt : mConnectedBtDevicesGattServices) {
+            gatt.disconnect();
+            Log.i(TAG,"Disconnect from: "+gatt.getDevice().getAddress().toString());
+        }
     }
 
     public void onCreate() {
