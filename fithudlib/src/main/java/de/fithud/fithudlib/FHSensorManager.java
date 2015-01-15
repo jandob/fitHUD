@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 /**
  * Created by jandob on 11/17/14.
  */
@@ -244,6 +245,12 @@ public class FHSensorManager extends MessengerService {
                 int speed_dataset[] = new int[1];
                 speed_dataset[0] = (int) characteristicData[1];
                 sendMsg(Messages.HEARTRATE_MESSAGE, speed_dataset);
+                int answerCheck = GuideClass.heartRateCheck(speed_dataset[0]);
+                if (answerCheck == 0) {
+                    Log.i(TAG,"heartRate is too low, faster you little piggy");
+                } else {
+                    Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
+                }
             }
 
             if(characteristic.getService().getUuid().toString().equals(ACCService)){

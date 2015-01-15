@@ -76,7 +76,7 @@ public class MainImmersion extends Activity implements MessengerClient {
     private static final double wheel_type = 4.4686;
 
     public boolean speedometer_connected = false;
-    public boolean heartrate_conected = false;
+    public boolean heartrate_connected = false;
     public boolean cadence_connected = false;
 
     View sensorview;
@@ -87,7 +87,7 @@ public class MainImmersion extends Activity implements MessengerClient {
 
     @Override
     public void handleMessage(Message msg) {
-        Log.i(TAG, "handling Msg");
+        //Log.i(TAG, "handling Msg");
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 int heartRate[] = msg.getData().getIntArray("value");
@@ -125,12 +125,12 @@ public class MainImmersion extends Activity implements MessengerClient {
                 break;
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
                 int[] sensor_status = msg.getData().getIntArray("value");
-                if(sensor_status[0] == 1){ heartrate_conected = true;}
-                else {heartrate_conected =false;}
+                if(sensor_status[0] == 1){ heartrate_connected = true;}
+                else {heartrate_connected =false;}
                 if(sensor_status[1] == 1){ speedometer_connected = true;}
-                else {heartrate_conected =false;}
+                else {heartrate_connected =false;}
                 if(sensor_status[2] == 1){ cadence_connected = true;}
-                else {heartrate_conected =false;}
+                else {heartrate_connected =false;}
                 break;
         }
     }
