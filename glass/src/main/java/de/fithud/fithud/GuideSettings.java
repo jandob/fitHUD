@@ -3,6 +3,8 @@ package de.fithud.fithud;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
@@ -25,12 +27,17 @@ import android.speech.tts.TextToSpeech;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.MessengerClient;
+import de.fithud.fithudlib.MessengerConnection;
+
 
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class GuideSettings extends Activity implements TextToSpeech.OnInitListener{
+public class GuideSettings extends Activity implements TextToSpeech.OnInitListener, MessengerClient {
 
+    MessengerConnection conn = new MessengerConnection(this);
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
@@ -38,9 +45,18 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     private TextToSpeech tts;
     private String speech_text = "test";
 
-    private static boolean guideOnOff = false;
-    private static boolean fatBurn = false;
-    private static boolean speechOn = false;
+    private final String TAG = "GuideSettings";
+
+    // Setting variables
+    private boolean speech_enabled = false;
+    private static int guide_active = 0;
+    private static int training_mode = 0;
+
+    // Available training modes
+    //private static boolean fatBurn = false;
+    //private static boolean cardio = false;
+    //private static boolean
+
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -67,67 +83,105 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         return super.onMenuItemSelected(featureId, item);
     }
 
+    public void sendDataToSensormanager(int[] data) {
+        Message msg = Message.obtain(null, 4);
+        Bundle bundle = new Bundle();
+        bundle.putIntArray("command", data);
+        msg.setData(bundle);
+
+        try {
+            conn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
+    }
+
     // This function is called with clicking on the first card in GuideSettings
     public void startStopGuide(){
         // Communicate with live card here !!
-        if(!guideOnOff) {
+        if(guide_active == 0) {
 
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD","Guide activating...");
+            Log.d(TAG,"Guide activating...");
             speech_text = "Guide is now activated";
-            guideOnOff = true;
+            guide_active = 1;
         }
         else {
             mCards.get(0).setText("Guide is deactivated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD","Guide deactivating...");
+            Log.d(TAG, "Guide deactivating...");
             speech_text = "Guide is now deactivated";
-            guideOnOff = false;
+            guide_active = 0;
         }
-        tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.GUIDE_COMMAND;
+        command[1] = guide_active;
+        sendDataToSensormanager(command);
+
+        if(speech_enabled) {
+            tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+        }
     }
 
     // This function is called with clicking on the second card in GuideSettings
-    public void fatCardioSwitch(){
+    public void trainingModeSwitch(){
         // Change here the style of the guide!!
-        if(!fatBurn) {
-            Log.d("FitHUD","Selecting fat-burn...");
+        if(training_mode == 0) {
+            Log.d(TAG,"Selecting fat-burn...");
             mCards.get(1).setText("Fat-Burn");
             mAdapter.notifyDataSetChanged();
             speech_text = "Fat burn training selected";
-            fatBurn = true;
+            training_mode = 1;
         }
-        else{
-            Log.d("FitHUD","Selecting cardio...");
+        else if (training_mode == 1){
+            Log.d(TAG,"Selecting interval...");
+            mCards.get(1).setText("Interval");
+            mAdapter.notifyDataSetChanged();
+            speech_text = "Interval training selected";
+            training_mode = 2;
+        } else {
+            Log.d(TAG,"Selecting cardio...");
             mCards.get(1).setText("Cardio");
             mAdapter.notifyDataSetChanged();
             speech_text = "Cardio training selected";
-            fatBurn = false;
+            training_mode = 0;
         }
-        tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.TRAINING_MODE_COMMAND;
+        command[1] = training_mode;
+        sendDataToSensormanager(command);
+        if(speech_enabled) {
+            tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+        }
+
+
+
     }
 
     public void speechSupportSwitch() {
 
-        if(!speechOn) {
-            Log.d("FitHUD","Speech support turned on...");
+        if(!speech_enabled) {
+            Log.d(TAG,"Speech support turned on...");
             mCards.get(2).setText("Speech enabled");
             mAdapter.notifyDataSetChanged();
             speech_text = "Speech output now enabled";
             tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
-            speechOn = true;
+            speech_enabled = true;
         }
         else {
-            Log.d("FitHUD","Speech support turned off...");
+            Log.d(TAG,"Speech support turned off...");
             mCards.get(2).setText("Speech disabled");
             mAdapter.notifyDataSetChanged();
-            speechOn = false;
+            speech_enabled = false;
         }
     }
 
     @Override
     protected void onCreate(Bundle bundle) {
+        conn.connect(FHSensorManager.class);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
@@ -149,7 +203,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
                         break;
 
                     case 1:
-                        fatCardioSwitch();
+                        trainingModeSwitch();
                         break;
                     case 2:
                         speechSupportSwitch();
@@ -165,26 +219,37 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
 
     @Override
     protected void onResume() {
-        if(guideOnOff) {
+        if(guide_active == 1) {
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Guide is activated...");
+            Log.d(TAG, "Guide is activated...");
         }
         else {
             mCards.get(0).setText("Guide is deactivated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Guide is deactivated...");
+            Log.d(TAG, "Guide is deactivated...");
         }
 
-        if(fatBurn){
+        if(training_mode == 1){
             mCards.get(1).setText("Fat-Burn");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Fatburn is activated...");
+            Log.d(TAG, "Fatburn is activated...");
         }
-        else{
+        else if (training_mode == 2) {
+            mCards.get(1).setText("Interval");
+            mAdapter.notifyDataSetChanged();
+            Log.d(TAG, "Interval is activated...");
+        } else {
             mCards.get(1).setText("Cardio");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Cardio is activated...");
+            Log.d(TAG, "Cardio is activated...");
+        }
+        if(speech_enabled){
+            mCards.get(2).setText("Speech enabled");
+            mAdapter.notifyDataSetChanged();
+        } else {
+            mCards.get(2).setText("Speech disabled");
+            mAdapter.notifyDataSetChanged();
         }
 
         super.onResume();
@@ -221,15 +286,21 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
 
             if (result == TextToSpeech.LANG_MISSING_DATA
                     || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.d("TTS", "This Language is not supported");
+                Log.d(TAG, "TTS:This Language is not supported");
             } else {
                 //speech_text = "Speech activated";
                 //tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
             }
         } else {
-            Log.d("TTS", "Initilization Failed!");
+            Log.d(TAG, "TTS:Initilization Failed!");
         }
     }
+
+    @Override
+    public void handleMessage(Message msg) {
+
+    }
+
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
 

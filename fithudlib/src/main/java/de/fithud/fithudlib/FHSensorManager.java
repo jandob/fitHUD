@@ -44,7 +44,12 @@ public class FHSensorManager extends MessengerService {
     public final class Commands extends MessengerService.Commands {
         public static final int SEARCH_COMMAND = 1;
         public static final int WAKEUP_COMMAND = 2;
+        public static final int GUIDE_COMMAND = 3;
+        public static final int TRAINING_MODE_COMMAND = 4;
     }
+
+    private static int guide_active = 0;
+    private static int training_mode = 0;
 
     @Override
     void handleMessage(Message msg) {
@@ -62,6 +67,23 @@ public class FHSensorManager extends MessengerService {
                 }
                 else{
                     Log.i(TAG,"Wakeup not connected");
+                }
+                break;
+
+            case Commands.GUIDE_COMMAND:
+                GuideClass.updateTrainingMode(training_mode);
+                Log.i(TAG,"Guide mode changed." + command[1]);
+                guide_active = command[1];
+                break;
+
+            case Commands.TRAINING_MODE_COMMAND:
+                training_mode = command[1];
+                GuideClass.updateTrainingMode(training_mode);
+                Log.i(TAG,"Training mode changed.");
+                if(training_mode == 2){
+
+                } else {
+
                 }
                 break;
         }
@@ -126,6 +148,7 @@ public class FHSensorManager extends MessengerService {
 
     private boolean barometer_calibrated = false;
     private int barometer_offset = 0;
+
 
 
 
@@ -239,18 +262,36 @@ public class FHSensorManager extends MessengerService {
                     speed_dataset[0] = wheel_revolutions;
                     speed_dataset[1] = time_speed;
                     sendMsg(Messages.SPEED_MESSAGE, speed_dataset);
+
+                    if(training_mode == 2) {
+                        int answerCheck = GuideClass.speedCheck(speed_dataset[0]);
+                        if (answerCheck == 0) {
+
+                        } else {
+
+                        }
+                    }
+
+
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
-                int speed_dataset[] = new int[1];
-                speed_dataset[0] = (int) characteristicData[1];
-                sendMsg(Messages.HEARTRATE_MESSAGE, speed_dataset);
-                int answerCheck = GuideClass.heartRateCheck(speed_dataset[0]);
-                if (answerCheck == 0) {
-                    Log.i(TAG,"heartRate is too low, faster you little piggy");
-                } else {
-                    Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
+                int hr_dataset[] = new int[1];
+                hr_dataset[0] = (int) characteristicData[1];
+                sendMsg(Messages.HEARTRATE_MESSAGE, hr_dataset);
+
+
+                if(guide_active == 1) {
+                    int answerCheck = GuideClass.heartRateCheck(hr_dataset[0]);
+                    if (answerCheck == 0) {
+                        Log.i(TAG,"HR" + hr_dataset[0]);
+                        Log.i(TAG,"heartRate is too low, faster you little piggy");
+                    } else {
+                        Log.i(TAG,"HR" + hr_dataset[0]);
+                        Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
+                    }
                 }
+
             }
 
             if(characteristic.getService().getUuid().toString().equals(ACCService)){
@@ -453,6 +494,7 @@ public class FHSensorManager extends MessengerService {
             mHandler.postDelayed(mTickRunnable, 1000);
         }
     };
+
 
     @Override
     public void onDestroy() {

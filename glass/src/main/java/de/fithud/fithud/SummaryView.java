@@ -57,6 +57,8 @@ public class SummaryView extends Activity implements MessengerClient {
         }
     }
 
+
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
