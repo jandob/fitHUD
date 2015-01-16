@@ -3,6 +3,7 @@ package de.fithud.fithud;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,6 +19,8 @@ import com.google.android.glass.media.Sounds;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollView;
+import java.util.Locale;
+import android.speech.tts.TextToSpeech;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,15 +29,18 @@ import java.util.List;
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class GuideSettings extends Activity {
+public class GuideSettings extends Activity implements TextToSpeech.OnInitListener{
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
+    private TextToSpeech tts;
+    private String speech_text = "test";
 
     private static boolean guideOnOff = false;
     private static boolean fatBurn = false;
+    private static boolean speechOn = false;
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -69,14 +75,17 @@ public class GuideSettings extends Activity {
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD","Guide activating...");
+            speech_text = "Guide is now activated";
             guideOnOff = true;
         }
         else {
             mCards.get(0).setText("Guide is deactivated");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD","Guide deactivating...");
+            speech_text = "Guide is now deactivated";
             guideOnOff = false;
         }
+        tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
     }
 
     // This function is called with clicking on the second card in GuideSettings
@@ -86,15 +95,35 @@ public class GuideSettings extends Activity {
             Log.d("FitHUD","Selecting fat-burn...");
             mCards.get(1).setText("Fat-Burn");
             mAdapter.notifyDataSetChanged();
+            speech_text = "Fat burn training selected";
             fatBurn = true;
         }
         else{
             Log.d("FitHUD","Selecting cardio...");
             mCards.get(1).setText("Cardio");
             mAdapter.notifyDataSetChanged();
+            speech_text = "Cardio training selected";
             fatBurn = false;
         }
+        tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+    }
 
+    public void speechSupportSwitch() {
+
+        if(!speechOn) {
+            Log.d("FitHUD","Speech support turned on...");
+            mCards.get(2).setText("Speech enabled");
+            mAdapter.notifyDataSetChanged();
+            speech_text = "Speech output now enabled";
+            tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+            speechOn = true;
+        }
+        else {
+            Log.d("FitHUD","Speech support turned off...");
+            mCards.get(2).setText("Speech disabled");
+            mAdapter.notifyDataSetChanged();
+            speechOn = false;
+        }
     }
 
     @Override
@@ -104,6 +133,8 @@ public class GuideSettings extends Activity {
 
         super.onCreate(bundle);
         createCards();
+
+        tts = new TextToSpeech(this,this);
 
         mCardScrollView = new CardScrollView(this);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -120,6 +151,8 @@ public class GuideSettings extends Activity {
                     case 1:
                         fatCardioSwitch();
                         break;
+                    case 2:
+                        speechSupportSwitch();
                 }
             }
         });
@@ -174,6 +207,28 @@ public class GuideSettings extends Activity {
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Fat-Burn")
                 .setFootnote("Guide setting for biking"));
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Speech Settings.")
+                .setFootnote("Activate speech support"));
+    }
+
+    @Override
+    public void onInit(int status) {
+
+        if (status == TextToSpeech.SUCCESS) {
+
+            int result = tts.setLanguage(Locale.US);
+
+            if (result == TextToSpeech.LANG_MISSING_DATA
+                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.d("TTS", "This Language is not supported");
+            } else {
+                //speech_text = "Speech activated";
+                //tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+            }
+        } else {
+            Log.d("TTS", "Initilization Failed!");
+        }
     }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
