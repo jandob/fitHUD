@@ -1,24 +1,14 @@
 package de.fithud.fithud;
 
-import android.app.Activity;
+
 import android.app.Dialog;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.ServiceConnection;
-import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.RemoteException;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -38,12 +28,12 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 
 
-public class MainActivity extends FragmentActivity
+public class GDriveActivity extends FragmentActivity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     Button btnStart, btnStop, btnBind, btnUnbind;
     TextView textStatus, textData;
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String TAG = GDriveActivity.class.getSimpleName();
 
     // google drive stuff
     private GoogleApiClient mGoogleApiClient;
@@ -59,8 +49,6 @@ public class MainActivity extends FragmentActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //Logger.getLogger(HttpTransport.class.getName()).setLevel(Level.CONFIG);
-        setupButtons();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Drive.API)
                 .addScope(Drive.SCOPE_FILE)
@@ -81,6 +69,8 @@ public class MainActivity extends FragmentActivity
         // Connected to Google Play services!
         // The good stuff goes here.
         Log.i(TAG, "onConnected()");
+        Drive.DriveApi.newDriveContents(mGoogleApiClient)
+                .setResultCallback(driveContentsCallback);
     }
 
     @Override
@@ -158,99 +148,58 @@ public class MainActivity extends FragmentActivity
 
         @Override
         public void onDismiss(DialogInterface dialog) {
-            ((MainActivity)getActivity()).onDialogDismissed();
+            ((GDriveActivity)getActivity()).onDialogDismissed();
         }
     }
 
     final private ResultCallback<DriveApi.DriveContentsResult> driveContentsCallback = new
-        ResultCallback<DriveApi.DriveContentsResult>() {
-            @Override
-            public void onResult(DriveApi.DriveContentsResult result) {
-                if (!result.getStatus().isSuccess()) {
-                    Log.i(TAG, "Error while trying to create new file contents");
-                    return;
-                }
-                final DriveContents driveContents = result.getDriveContents();
+            ResultCallback<DriveApi.DriveContentsResult>() {
+                @Override
+                public void onResult(DriveApi.DriveContentsResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        Log.i(TAG, "Error while trying to create new file contents");
+                        return;
+                    }
+                    final DriveContents driveContents = result.getDriveContents();
 
-                // Perform I/O off the UI thread.
-                new Thread() {
-                    @Override
-                    public void run() {
-                        // write content to DriveContents
-                        OutputStream outputStream = driveContents.getOutputStream();
-                        Writer writer = new OutputStreamWriter(outputStream);
-                        try {
-                            writer.write("Hello World!");
-                            writer.close();
-                        } catch (IOException e) {
-                            Log.e(TAG, e.getMessage());
+                    // Perform I/O off the UI thread.
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            // write content to DriveContents
+                            OutputStream outputStream = driveContents.getOutputStream();
+                            Writer writer = new OutputStreamWriter(outputStream);
+                            try {
+                                writer.write("Hello World!");
+                                writer.close();
+                            } catch (IOException e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+
+                            MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                                    .setTitle("New file")
+                                    .setMimeType("text/plain")
+                                    .setStarred(true).build();
+
+                            // create a file on root folder
+                            Drive.DriveApi.getRootFolder(mGoogleApiClient)
+                                    .createFile(mGoogleApiClient, changeSet, driveContents)
+                                    .setResultCallback(fileCallback);
                         }
-
-                        MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                                .setTitle("New file")
-                                .setMimeType("text/plain")
-                                .setStarred(true).build();
-
-                        // create a file on root folder
-                        Drive.DriveApi.getRootFolder(mGoogleApiClient)
-                                .createFile(mGoogleApiClient, changeSet, driveContents)
-                                .setResultCallback(fileCallback);
-                    }
-                }.start();
-            }
-        };
+                    }.start();
+                }
+            };
     final private ResultCallback<DriveFolder.DriveFileResult> fileCallback = new
-        ResultCallback<DriveFolder.DriveFileResult>() {
-            @Override
-            public void onResult(DriveFolder.DriveFileResult result) {
-                if (!result.getStatus().isSuccess()) {
-                    Log.i(TAG, "Error while trying to create the file");
-                    return;
-                }
-                Log.i(TAG, "Created a file with content: " + result.getDriveFile().getDriveId());
-            }
-        };
-    private void setupButtons() {
-        setContentView(R.layout.activity_main);
-        btnStart = (Button) findViewById(R.id.btnStart);
-        btnStop = (Button) findViewById(R.id.btnStop);
-        btnBind = (Button) findViewById(R.id.btnBind);
-        btnUnbind = (Button) findViewById(R.id.btnUnbind);
-        textStatus = (TextView) findViewById(R.id.textStatus);
-        textData = (TextView) findViewById(R.id.textData);
-
-        btnStart.setOnClickListener(
-                new View.OnClickListener() {
-                    public void onClick(View v){
-
-                        Log.i(TAG, "hans");
-                        Drive.DriveApi.newDriveContents(mGoogleApiClient)
-                                .setResultCallback(driveContentsCallback);
+            ResultCallback<DriveFolder.DriveFileResult>() {
+                @Override
+                public void onResult(DriveFolder.DriveFileResult result) {
+                    if (!result.getStatus().isSuccess()) {
+                        Log.i(TAG, "Error while trying to create the file");
+                        return;
                     }
+                    Log.i(TAG, "Created a file with content: " + result.getDriveFile().getDriveId());
                 }
-        );
-        btnStop.setOnClickListener(
-                new View.OnClickListener() {
-                    public void onClick(View v){
-
-                    }
-                }
-        );
-        btnBind.setOnClickListener(
-                new View.OnClickListener() {
-                    public void onClick(View v){
-
-                    }
-                }
-        );
-        btnUnbind.setOnClickListener(
-                new View.OnClickListener() {
-                    public void onClick(View v){
-
-                    }
-                }
-        );
-    }
+            };
 
     @Override
     protected void onStart() {
@@ -278,28 +227,6 @@ public class MainActivity extends FragmentActivity
     protected void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "onDestroy()");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
 }

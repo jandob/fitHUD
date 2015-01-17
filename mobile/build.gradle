@@ -23,4 +23,6 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile project(':fithudlib')
+    // for version updates see http://gradleplease.appspot.com/
+    compile 'com.google.android.gms:play-services-drive:6.5.87'
 }
