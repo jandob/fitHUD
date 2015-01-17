@@ -80,11 +80,11 @@ public class FHSensorManager extends MessengerService {
                 training_mode = command[1];
                 GuideClass.updateTrainingMode(training_mode);
                 Log.i(TAG,"Training mode changed.");
-                if(training_mode == 2){
+                //if(training_mode == 2){
 
-                } else {
+                //} else {
 
-                }
+                //}
                 break;
         }
     }
@@ -266,9 +266,11 @@ public class FHSensorManager extends MessengerService {
                     if(training_mode == 2) {
                         int answerCheck = GuideClass.speedCheck(speed_dataset[0]);
                         if (answerCheck == 0) {
-
-                        } else {
-
+                            Log.i(TAG,"Speed too low");
+                        } else if (answerCheck == 1){
+                            Log.i(TAG,"Speed OK");
+                        } else{
+                            Log.i(TAG,"Speed too high");
                         }
                     }
 

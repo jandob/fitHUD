@@ -23,15 +23,15 @@ public class GuideClass {
 
     private static int hr_min = 0;
     private static int hr_max = 0;
-    private static int speed_low_min = 10;
-    private static int speed_low_max = 12;
-    private static int speed_high_min = 18;
-    private static int speed_high_max = 20;
+    private static int speed_low_min = 80;
+    private static int speed_low_max = 90;
+    private static int speed_high_min = 90;
+    private static int speed_high_max = 100;
     private static int cadence_min = 0;
     private static int cadence_max = 0;
     private static int height_min = 0;
     private static int height_max = 0;
-    private static long intervalTime = 30000;      // Duration of an interval in mSec
+    private static long intervalTime = 5000;      // Duration of an interval in mSec
 
     private static boolean interval_state = false;
     private static long startTime = 0;
