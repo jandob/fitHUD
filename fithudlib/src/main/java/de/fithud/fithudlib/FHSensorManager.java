@@ -46,10 +46,12 @@ public class FHSensorManager extends MessengerService {
         public static final int WAKEUP_COMMAND = 2;
         public static final int GUIDE_COMMAND = 3;
         public static final int TRAINING_MODE_COMMAND = 4;
+        public static final int SPEECH_COMMAND = 5;
     }
 
     private static int guide_active = 0;
     private static int training_mode = 0;
+    private static boolean speech_active = false;
 
     @Override
     void handleMessage(Message msg) {
@@ -79,13 +81,22 @@ public class FHSensorManager extends MessengerService {
             case Commands.TRAINING_MODE_COMMAND:
                 training_mode = command[1];
                 GuideClass.updateTrainingMode(training_mode);
-                Log.i(TAG,"Training mode changed.");
+                Log.i(TAG,"Training mode changed." + command[1]);
                 //if(training_mode == 2){
 
                 //} else {
 
                 //}
                 break;
+
+            case Commands.SPEECH_COMMAND:
+                Log.i(TAG,"Speech mode changed." +command[1]);
+                if(command[1] == 1) {
+                    speech_active = true;
+                }
+                else {
+                    speech_active = false;
+                }
         }
     }
 

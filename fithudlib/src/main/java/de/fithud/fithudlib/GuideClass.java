@@ -20,6 +20,7 @@ public class GuideClass {
     private static final int cardio = 0;
     private static final int fatburn = 1;
     private static final int interval = 2;
+    private static final int recreation = 3;
 
     private static int hr_min = 0;
     private static int hr_max = 0;
@@ -49,6 +50,10 @@ public class GuideClass {
         }
         if(training_mode == interval){
             startTime = System.currentTimeMillis();
+        }
+        if(training_mode == recreation){
+            hr_min = 60;
+            hr_max = 90;
         }
     }
 

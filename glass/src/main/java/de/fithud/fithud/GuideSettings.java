@@ -18,11 +18,14 @@ import android.content.Intent;
 import android.media.AudioManager;
 
 import com.google.android.glass.media.Sounds;
+import com.google.android.glass.touchpad.GestureDetector;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollView;
 import java.util.Locale;
 import android.speech.tts.TextToSpeech;
+
+import org.apache.http.auth.MalformedChallengeException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +45,14 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
+    private GestureDetector mGestureDetector;
     private TextToSpeech tts;
     private String speech_text = "test";
 
     private final String TAG = "GuideSettings";
 
     // Setting variables
-    private boolean speech_enabled = false;
+    private static int speech_enabled = 0;
     private static int guide_active = 0;
     private static int training_mode = 0;
 
@@ -120,7 +124,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         command[1] = guide_active;
         sendDataToSensormanager(command);
 
-        if(speech_enabled) {
+        if(speech_enabled == 1) {
             tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
         }
     }
@@ -129,20 +133,22 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     public void trainingModeSwitch(){
         // Change here the style of the guide!!
         if(training_mode == 0) {
-            Log.d(TAG,"Selecting fat-burn...");
             mCards.get(1).setText("Fat-Burn");
             mAdapter.notifyDataSetChanged();
             speech_text = "Fat burn training selected";
             training_mode = 1;
         }
         else if (training_mode == 1){
-            Log.d(TAG,"Selecting interval...");
             mCards.get(1).setText("Interval");
             mAdapter.notifyDataSetChanged();
             speech_text = "Interval training selected";
             training_mode = 2;
+        } else if(training_mode == 2) {
+            mCards.get(1).setText("Recreation");
+            mAdapter.notifyDataSetChanged();
+            speech_text = "Recreation selected";
+            training_mode = 3;
         } else {
-            Log.d(TAG,"Selecting cardio...");
             mCards.get(1).setText("Cardio");
             mAdapter.notifyDataSetChanged();
             speech_text = "Cardio training selected";
@@ -152,30 +158,48 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         command[0] = FHSensorManager.Commands.TRAINING_MODE_COMMAND;
         command[1] = training_mode;
         sendDataToSensormanager(command);
-        if(speech_enabled) {
+
+        if(speech_enabled == 1) {
             tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
         }
-
-
-
     }
 
     public void speechSupportSwitch() {
 
-        if(!speech_enabled) {
+        if(speech_enabled == 0) {
             Log.d(TAG,"Speech support turned on...");
             mCards.get(2).setText("Speech enabled");
             mAdapter.notifyDataSetChanged();
             speech_text = "Speech output now enabled";
             tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
-            speech_enabled = true;
+            speech_enabled = 1;
         }
         else {
             Log.d(TAG,"Speech support turned off...");
             mCards.get(2).setText("Speech disabled");
             mAdapter.notifyDataSetChanged();
-            speech_enabled = false;
+            speech_enabled = 0;
         }
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.SPEECH_COMMAND;
+        command[1] = speech_enabled;
+        sendDataToSensormanager(command);
+    }
+
+    private GestureDetector createGestureDetector(Context context) {
+        GestureDetector gestureDetector = new GestureDetector(context);
+
+        gestureDetector.setScrollListener(new GestureDetector.ScrollListener() {
+            @Override
+            public boolean onScroll(float displacement, float delta, float velocity) {
+                // This is a crude way to estimate the scale size
+                int scaleFactor = (int) delta/10;
+                Log.d(TAG,"ScaleFactor:" + scaleFactor);
+
+                return true;
+            }
+        });
+        return gestureDetector;
     }
 
     @Override
@@ -198,23 +222,32 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
-                    case 0:
+                    case 0:                     //Guide
                         startStopGuide();
                         break;
-
-                    case 1:
+                    case 1:                     //
                         trainingModeSwitch();
                         break;
-                    case 2:
+                    case 2:                     // Speech settings
                         speechSupportSwitch();
+                        break;
+                    case 3:                     // Training mode
+                        //mGestureDetector = createGestureDetector(GuideSettings.this);
+                        //startActivity(new Intent(GuideSettings.this, TrainingMode.class));
+                        break;
+                    case 4:
+                        //startActivity(new Intent(GuideSettings.this, ));
+                        break;
                 }
-            }
+        }
         });
 
         mAdapter = new CardScrollAdapter();
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
+
+        mGestureDetector = createGestureDetector(this);
     }
 
     @Override
@@ -239,12 +272,16 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
             mCards.get(1).setText("Interval");
             mAdapter.notifyDataSetChanged();
             Log.d(TAG, "Interval is activated...");
+        } else if (training_mode == 3) {
+            mCards.get(1).setText("Recreation");
+            mAdapter.notifyDataSetChanged();
+            Log.d(TAG, "Recreation is activated...");
         } else {
             mCards.get(1).setText("Cardio");
             mAdapter.notifyDataSetChanged();
             Log.d(TAG, "Cardio is activated...");
         }
-        if(speech_enabled){
+        if(speech_enabled == 1){
             mCards.get(2).setText("Speech enabled");
             mAdapter.notifyDataSetChanged();
         } else {
@@ -272,9 +309,19 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Fat-Burn")
                 .setFootnote("Guide setting for biking"));
+
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Speech Settings.")
                 .setFootnote("Activate speech support"));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Set training mode")
+                .setFootnote("Tap to choose your training mode"));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Challenge yourself!")
+                .setFootnote("Tap to select your challenge"));
+
     }
 
     @Override
