@@ -52,16 +52,6 @@ import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.MessengerServiceActivity;
 
-/**
- * An {@link android.app.Activity} showing a tuggable "Hello World!" card.
- * <p/>
- * The main content view is composed of a one-card {@link com.google.android.glass.widget.CardScrollView} that provides tugging
- * feedback to the user when swipe gestures are detected.
- * If your Glassware intends to intercept swipe gestures, you should set the content view directly
- * and use a {@link com.google.android.glass.touchpad.GestureDetector}.
- *
- * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
- */
 public class ShowPlots extends Activity implements MessengerClient {
     //CardBuilder mCard;
     MessengerConnection conn = new MessengerConnection(this);
