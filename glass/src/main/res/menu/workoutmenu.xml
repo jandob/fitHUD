@@ -4,4 +4,6 @@
         android:title="Start/Stop Workout" />
     <item android:id="@+id/guideSettings"
         android:title="Guide Settings" />
+    <item android:id="@+id/showSummary"
+        android:title="Show Summary" />
 </menu>
