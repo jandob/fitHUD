@@ -87,7 +87,6 @@ public class MainImmersion extends Activity implements MessengerClient {
 
     @Override
     public void handleMessage(Message msg) {
-        Log.i(TAG, "handling Msg");
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 int heartRate[] = msg.getData().getIntArray("value");
@@ -337,7 +336,8 @@ public class MainImmersion extends Activity implements MessengerClient {
     }
     @Override
     protected void onCreate(Bundle bundle) {
-        //doBindService(FHSensorManager.class);
+        stopService(new Intent(this, StorageService.class));
+        startService(new Intent(this, StorageService.class));
         conn.connect(FHSensorManager.class);
 
         Log.i("MainImmersion", "on start");
