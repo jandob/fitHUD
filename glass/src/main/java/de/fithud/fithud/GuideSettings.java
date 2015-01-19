@@ -45,7 +45,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
-    private GestureDetector mGestureDetector;
+
     private TextToSpeech tts;
     private String speech_text = "test";
 
@@ -186,21 +186,6 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         sendDataToSensormanager(command);
     }
 
-    private GestureDetector createGestureDetector(Context context) {
-        GestureDetector gestureDetector = new GestureDetector(context);
-
-        gestureDetector.setScrollListener(new GestureDetector.ScrollListener() {
-            @Override
-            public boolean onScroll(float displacement, float delta, float velocity) {
-                // This is a crude way to estimate the scale size
-                int scaleFactor = (int) delta/10;
-                Log.d(TAG,"ScaleFactor:" + scaleFactor);
-
-                return true;
-            }
-        });
-        return gestureDetector;
-    }
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -232,8 +217,9 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
                         speechSupportSwitch();
                         break;
                     case 3:                     // Training mode
+                        // Deactivate Card scrolling (@ first klick)
                         //mGestureDetector = createGestureDetector(GuideSettings.this);
-                        //startActivity(new Intent(GuideSettings.this, TrainingMode.class));
+                        startActivity(new Intent(GuideSettings.this, TrainingMode.class));
                         break;
                     case 4:
                         //startActivity(new Intent(GuideSettings.this, ));
@@ -247,7 +233,6 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         mCardScrollView.activate();
         setContentView(mCardScrollView);
 
-        mGestureDetector = createGestureDetector(this);
     }
 
     @Override

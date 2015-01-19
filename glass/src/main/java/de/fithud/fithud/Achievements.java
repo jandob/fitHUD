@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewDebug;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -15,7 +16,11 @@ import com.google.android.glass.media.Sounds;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import de.fithud.fithudlib.FHSensorManager;
@@ -34,11 +39,20 @@ public class Achievements extends Activity implements MessengerClient{
     private AudioManager mAudioManager;
     private final String TAG = "Achievements";
     MessengerConnection conn = new MessengerConnection(this);
+    SimpleDateFormat sdf = new SimpleDateFormat("dd.MMM yyyy HH:mm");
 
     // Achievement values
-    private static int speed_record = 0;
-    private static int distance_record = 0;
-    private static int height_record = 0;
+    private static int speedRecord = 0;
+    private static int distanceRecord = 0;
+    private static int heightRecord = 0;
+    private static int caloriesRecord = 0;
+
+    private static String speedRecordDate;
+    private static String heightRecordDate;
+    private static String distanceRecordDate;
+    private static String caloriesRecordDate;
+
+    private static boolean recordChanged = false;
 
 
     @Override
@@ -48,6 +62,25 @@ public class Achievements extends Activity implements MessengerClient{
         conn.connect(FHSensorManager.class);
 
         super.onCreate(bundle);
+
+        // Load achievement history !!!
+
+        // Set record history
+        speedRecord = 15;
+        distanceRecord = 200;
+        heightRecord = 250;
+        caloriesRecord = 50;
+
+        // Set date/time of records
+        speedRecordDate = sdf.format(new Date(0));
+        distanceRecordDate = sdf.format(new Date(0));
+        heightRecordDate = sdf.format(new Date(0));
+        caloriesRecordDate = sdf.format(new Date(0));
+        Log.d(TAG, "Date1:" + speedRecordDate);
+        Log.d(TAG, "Date1:" + distanceRecordDate);
+        Log.d(TAG, "Date1:" + heightRecordDate);
+        Log.d(TAG, "Date1:" + caloriesRecordDate);
+
         createCards();
 
         mCardScrollView = new CardScrollView(this);
@@ -74,26 +107,32 @@ public class Achievements extends Activity implements MessengerClient{
     private void createCards() {
 
         // Create here cards based of completed achivements
-
         mCards = new ArrayList<CardBuilder>();
 
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
-                .setText("Speed-Breaker!!")
-                .setFootnote("Your are a freaking speed machine")
-                .setTimestamp("just now")
+        String speedString = Integer.toString(speedRecord);
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)        // Add embedded layout
+                .setText("Speed record: " + speedString + " km/h")
+                .setFootnote("Not too bad")
+                .setTimestamp(speedRecordDate)          // Not working
                 .addImage(R.drawable.achievement_speed));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Distance record")
                 .setFootnote("you biked 50km!!")
-                .setTimestamp("just now")
+                .setTimestamp("Now")
                 .addImage(R.drawable.achievement_distance));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Height record")
                 .setFootnote("High as the sky!!")
-                .setTimestamp("literally")
+                .setTimestamp("Yesterday")
                 .addImage(R.drawable.achievement_height));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
+                .setText("Calories record")
+                .setFootnote("Calorie killer!!")
+                .setTimestamp("Now"));
     }
 
     @Override
@@ -111,13 +150,43 @@ public class Achievements extends Activity implements MessengerClient{
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
+                checkSpeed(msg.getData().getIntArray("value")[0]);
+                Log.i(TAG, "Current Speed");
                 break;
         }
 
     }
 
-    private void checkHeartRate(int heartRate){
+    private void checkHeartRate(int current_heartRate){
 
+
+    }
+
+    private void checkSpeed(int current_speed){
+
+        if(current_speed > speedRecord){                // Set new record values
+            speedRecord = current_speed;
+            speedRecordDate = sdf.format(new Date());
+            Log.i(TAG, "New speed record:" + speedRecord);
+            Log.i(TAG, "Date changed: " + speedRecordDate);
+
+            String speedString = Integer.toString(current_speed);
+            mCards.get(0).setText(speedString);         // Update card - ???
+
+            recordChanged = true;
+
+            //textView.setText(currentDateTimeString);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        //mCardScrollView.destroyDrawingCache();
+        if(recordChanged){
+            // Save new achievements
+        }
+
+        super.onPause();
     }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
