@@ -59,54 +59,16 @@ public class MainImmersion extends Activity implements MessengerClient {
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
-    public static float last_speed = 0;
-    public static int last_revolutions = 0;
-    private static final double wheel_type = 4.4686;
 
     public boolean speedometer_connected = false;
     public boolean heartrate_conected = false;
     public boolean cadence_connected = false;
 
     View sensorview;
-    private int speed_sensor = 0;
 
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
-            case FHSensorManager.Messages.HEARTRATE_MESSAGE:
-                int heartRate[] = msg.getData().getIntArray("value");
-                Log.i(TAG, "Heartrate " + heartRate[0]);
-                break;
-            case FHSensorManager.Messages.CADENCE_MESSAGE:
-                int[] cadence = msg.getData().getIntArray("value");
-                Log.i(TAG, "Cadence_rev: " + cadence[0] + " Cadence_time: " + cadence[1]);
-                break;
-            case FHSensorManager.Messages.SPEED_MESSAGE:
-                int speed_dataset[] = msg.getData().getIntArray("value");
-                float time_difference = 0;
-                int revolutions_difference = speed_dataset[0] - last_revolutions;
-                if (speed_dataset[1] < last_speed) {
-                    time_difference = (float) speed_dataset[1] + 65536 - last_speed;
-                } else {
-                    time_difference = (float) speed_dataset[1] - last_speed;
-                }
-                last_speed = (float) speed_dataset[1];
-                last_revolutions = speed_dataset[0];
-
-                time_difference = time_difference / 1024;
-                double speed = 0;
-                if (time_difference > 0) {
-                    speed = ((revolutions_difference*wheel_type) / time_difference) * 3.6;
-                } else {
-                    speed = 0;
-                }
-
-                Log.i(TAG, "Speed_rev: " + speed_dataset[0] + " speed_time: " + speed_dataset[1]);
-                Log.i(TAG, "Speed: " + speed);
-
-                speed_sensor = (int)speed;
-                //addSpeedData(speed_sensor);
-                break;
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
                 int[] sensor_status = msg.getData().getIntArray("value");
                 if(sensor_status[0] == 1){ heartrate_conected = true;}

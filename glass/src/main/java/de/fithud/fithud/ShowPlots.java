@@ -76,42 +76,22 @@ public class ShowPlots extends Activity implements MessengerClient {
 
     @Override
     public void handleMessage(Message msg) {
-        Log.i(TAG, "handling Msg");
+        float input;
+        //Log.i(TAG, "handling Msg");
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
-                int heartRate[] = msg.getData().getIntArray("value");
-                addHeartData((int) heartRate[0]);
-                heart_sensor = (int) heartRate[0];
-                Log.i(TAG, "Heartrate " + heartRate[0]);
+                input = msg.getData().getFloat("value");
+                addHeartData((int) input);
+                heart_sensor = (int) input;
+                Log.i(TAG, "Heartrate " + input);
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
-                int[] cadence = msg.getData().getIntArray("value");
-                Log.i(TAG, "Cadence_rev: " + cadence[0] + " Cadence_time: " + cadence[1]);
+                input = msg.getData().getFloat("value");
+                Log.i(TAG, "Cadence: " + input);
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                int speed_dataset[] = msg.getData().getIntArray("value");
-                float time_difference = 0;
-                int revolutions_difference = speed_dataset[0] - last_revolutions;
-                if (speed_dataset[1] < last_speed) {
-                    time_difference = (float) speed_dataset[1] + 65536 - last_speed;
-                } else {
-                    time_difference = (float) speed_dataset[1] - last_speed;
-                }
-                last_speed = (float) speed_dataset[1];
-                last_revolutions = speed_dataset[0];
-
-                time_difference = time_difference / 1024;
-                double speed = 0;
-                if (time_difference > 0) {
-                    speed = ((revolutions_difference * wheel_type) / time_difference) * 3.6;
-                } else {
-                    speed = 0;
-                }
-
-                Log.i(TAG, "Speed_rev: " + speed_dataset[0] + " speed_time: " + speed_dataset[1]);
-                Log.i(TAG, "Speed: " + speed);
-
-                speed_sensor = (int) speed;
+                input = msg.getData().getFloat("value");
+                speed_sensor = (int) input;
                 addSpeedData(speed_sensor);
                 break;
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
@@ -134,8 +114,8 @@ public class ShowPlots extends Activity implements MessengerClient {
                 break;
 
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
-                int[] barometer_value = msg.getData().getIntArray("value");
-                barometer_sensor = barometer_value[0];
+                input = msg.getData().getFloat("value");
+                barometer_sensor = (int)input;
                 addHeightData((int) barometer_sensor);
                 break;
         }

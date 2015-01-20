@@ -66,6 +66,23 @@ public class FHSensorManager extends MessengerService {
         }
     }
 
+    void sendMsgFloat(int messageType, float val){
+        for (int i = mClients.size() - 1; i >= 0; i--) {
+            try {Message msg = Message.obtain(null, messageType);
+                Bundle bundle = new Bundle();
+                // bundle.putFloat("value", val);
+                bundle.putFloat("value", val);
+                msg.setData(bundle);
+                mClients.get(i).send(msg);
+            } catch (RemoteException e) {
+                // The client is dead.  Remove it from the list;
+                // we are going through the list from back to front
+                // so this is safe to do inside the loop.
+                mClients.remove(i);
+            }
+        }
+    }
+
     void sendMsg(int messageType, int[] val) {
         for (int i = mClients.size() - 1; i >= 0; i--) {
 
@@ -126,7 +143,15 @@ public class FHSensorManager extends MessengerService {
     private boolean barometer_calibrated = false;
     private int barometer_offset = 0;
 
+    // Variables for speed calculations
+    public static float last_speed = 0;
+    public static int last_revolutions = 0;
+    private static final double wheel_type = 4.4686;
 
+    // Variables for cadence calculations
+
+    private static int lastRevolutionsCrank = 0;
+    private static float lastSpeedCrank = 0;
 
     Timer timer;
     TimerTask timerTask;
@@ -191,6 +216,10 @@ public class FHSensorManager extends MessengerService {
         sendMsg(Messages.SENSOR_STATUS_MESSAGE, sensorStatus_dataset);
     }
 
+    public static short twoBytesToShort(byte b1, byte b2) {
+        return (short) ((b1 << 8) | (b2 & 0xFF));
+    }
+
     private final BluetoothGattCallback btleGattCallback = new BluetoothGattCallback() {
 
         @Override
@@ -208,6 +237,7 @@ public class FHSensorManager extends MessengerService {
             //Log.i(TAG,"Got MSG from characteristic: "+characteristic.getService().getUuid().toString());
             if (characteristic.getService().getUuid().toString().equals(SPDCADService)) {
 
+                // Is cadence indicator set
                 if ((characteristicData[0] & (1L << 1)) != 0) {
                     //Log.i(TAG, "Got message");
                     int high_crank = ((int)characteristicData[2]) & 0xff;
@@ -218,12 +248,28 @@ public class FHSensorManager extends MessengerService {
                     int low_time = ((int)characteristicData[3]) & 0xff;
                     int time_cadence = (high_time << 8) | low_time;
 
-                    int cadence_dataset[] = new int[2];
-                    cadence_dataset[0] = crank_revolutions;
-                    cadence_dataset[1] = time_cadence;
-                    //Log.i(TAG, "Cadence wheel: " + crank_revolutions);
-                    sendMsg(Messages.CADENCE_MESSAGE, cadence_dataset);
-                } else if ((characteristicData[0] & (1L << 0)) != 0) {
+                    float timeDifference = 0;
+                    int revolutions_difference = crank_revolutions - lastRevolutionsCrank;
+                    if (time_cadence < lastSpeedCrank) {
+                        timeDifference = (float) time_cadence + 65536 - lastSpeedCrank;
+                    } else {
+                        timeDifference = (float) time_cadence - lastSpeedCrank;
+                    }
+                    lastSpeedCrank = (float) time_cadence;
+                    lastRevolutionsCrank = crank_revolutions;
+                    timeDifference = timeDifference / 1024;
+
+                    float cadenceRpm = 0;
+                    if (timeDifference > 0) {
+                        cadenceRpm = ((float)(revolutions_difference) / timeDifference) * (float)60;
+                        Log.i(TAG, "Cadence : " + cadenceRpm);
+                        sendMsgFloat(Messages.CADENCE_MESSAGE, cadenceRpm);
+                    } else {
+                        cadenceRpm = 0;
+                    }
+
+                    // Speed indicator is set
+                }  else if ((characteristicData[0] & (1L << 0)) != 0) {
                     int fourth_wheel = ((int)characteristicData[4]) & 0xff;
                     int third_wheel = ((int)characteristicData[3]) & 0xff;
                     int second_wheel = ((int)characteristicData[2]) & 0xff;
@@ -233,17 +279,37 @@ public class FHSensorManager extends MessengerService {
                     int high_time = ((int)characteristicData[6]) & 0xff;
                     int low_time = ((int)characteristicData[5]) & 0xff;
                     int time_speed = (high_time << 8) | low_time;
-
+                    // Construct array which holds speed raw data (not converted)
                     int speed_dataset[] = new int[2];
                     speed_dataset[0] = wheel_revolutions;
                     speed_dataset[1] = time_speed;
-                    sendMsg(Messages.SPEED_MESSAGE, speed_dataset);
+
+                    // Convert data in real speed float
+                    float time_difference = 0;
+                    int revolutions_difference = speed_dataset[0] - last_revolutions;
+                    if (speed_dataset[1] < last_speed) {
+                        time_difference = (float) speed_dataset[1] + 65536 - last_speed;
+                    } else {
+                        time_difference = (float) speed_dataset[1] - last_speed;
+                    }
+                    last_speed = (float) speed_dataset[1];
+                    last_revolutions = speed_dataset[0];
+
+                    time_difference = time_difference / 1024;
+                    float speed = 0;
+                    if (time_difference > 0) {
+                        speed = ((revolutions_difference * (float)wheel_type) / time_difference) * (float)3.6;
+                    } else {
+                        speed = 0;
+                    }
+                    Log.i(TAG, "Speed: " + speed);
+
+                    sendMsgFloat(Messages.SPEED_MESSAGE, speed);
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
-                int speed_dataset[] = new int[1];
-                speed_dataset[0] = (int) characteristicData[1];
-                sendMsg(Messages.HEARTRATE_MESSAGE, speed_dataset);
+                int heartrate = (int) characteristicData[1];
+                sendMsgFloat(Messages.HEARTRATE_MESSAGE, (float)heartrate);
             }
 
             if(characteristic.getService().getUuid().toString().equals(ACCService)){
@@ -264,27 +330,20 @@ public class FHSensorManager extends MessengerService {
                 acc_dataset[0] = acc_x;
                 acc_dataset[1] = acc_y;
                 acc_dataset[2] = acc_z;
-                sendMsg(Messages.ACC_RAW_MESSAGE, acc_dataset);
+                //sendMsg(Messages.ACC_RAW_MESSAGE, acc_dataset);
             }
 
             if(characteristic.getService().getUuid().toString().equals(BarometerService)){
                 Log.i(TAG,"GOT Pressure");
-
-
-                int high_baro = ((int)characteristicData[0]) & 0xff;
-                int low_baro = ((int)characteristicData[1]) & 0xff;
-                int barometer_value = (high_baro << 8) | low_baro;
+                short barometer_value = twoBytesToShort(characteristicData[0],characteristicData[1]);
 
                 if(!barometer_calibrated){
-                    barometer_offset = barometer_value;
+                    barometer_offset = (int)barometer_value;
                     barometer_calibrated = true;
                 }
 
-                barometer_value = barometer_value - barometer_offset;
-
-                int baro_dataset[] = new int[1];
-                baro_dataset[0] = barometer_value;
-                sendMsg(Messages.HEIGTH_MESSAGE,baro_dataset);
+                int barometerFinal = (int)barometer_value-(int)barometer_offset;
+                sendMsgFloat(Messages.HEIGTH_MESSAGE,(float)barometerFinal);
             }
         }
 
