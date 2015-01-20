@@ -47,6 +47,9 @@ public class SummaryView extends Activity implements MessengerClient {
     private  TextView liveCardHeightText = null;
     private  TextView liveCardStatus = null;
     private String TAG;
+    int heartRate[] = new int[] {1};
+    int speed[] = new int[] {1};
+    int cadence[] = new int[] {1};
 
     @Override
     public void handleMessage(Message msg) {
@@ -54,9 +57,25 @@ public class SummaryView extends Activity implements MessengerClient {
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
             Log.i(TAG,"Got msg");
                 break;
+            case FHSensorManager.Messages.HEARTRATE_MESSAGE:
+                heartRate = msg.getData().getIntArray("value");
+                updateTextViews();
+                break;
+            case FHSensorManager.Messages.CADENCE_MESSAGE:
+                cadence = msg.getData().getIntArray("value");
+                break;
+            case FHSensorManager.Messages.SPEED_MESSAGE:
+                speed = msg.getData().getIntArray("value");
+                break;
         }
     }
 
+    private void updateTextViews() {
+        liveCardBikeText.setText(speed[0] + " km/h");
+        liveCardHeartText.setText(heartRate[0] + " bpm");
+        liveCardHeightText.setText(cadence[0] + " U/min");
+
+    }
 
 
     @Override
@@ -82,7 +101,7 @@ public class SummaryView extends Activity implements MessengerClient {
         liveCardStatus = (TextView) findViewById(R.id.liveCardStatus);
 
         int speed = 5;
-        int heartrate = 5;
+        int heartrate = heartRate[0];
         int height = 5;
         liveCardBikeText.setText(speed + " km/h");
         liveCardHeartText.setText(heartrate + " bpm");

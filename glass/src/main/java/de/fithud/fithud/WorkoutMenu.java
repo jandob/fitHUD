@@ -53,6 +53,10 @@ public class WorkoutMenu extends Activity {
                     //mCardScrollView.setSelection(1);
                     startActivity(new Intent(WorkoutMenu.this, GuideSettings.class));
                     break;
+                case R.id.showSummary:
+                    startActivity(new Intent(WorkoutMenu.this, SummaryView.class));
+                    //startService(new Intent(this, FHLiveCardService.class));
+                    break;
             }
             return true;
         }
