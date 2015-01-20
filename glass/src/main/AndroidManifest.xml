@@ -1,56 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.fithud.fithud" >
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!--BLE only-->
-    <!--<uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>-->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <!-- BLE only -->
+    <!-- <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/> -->
     <category android:name="android.intent.category.LAUNCHER" />
 
-
     <uses-permission android:name="com.google.android.glass.permission.DEVELOPMENT" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-
         <service
             android:name=".FHLiveCardService"
-            android:label="@string/app_name"
+            android:enabled="true"
             android:icon="@drawable/ic_glass_logo"
-            android:enabled="true" >
+            android:label="@string/app_name" >
         </service>
         <service
             android:name="de.fithud.fithudlib.FHSensorManager"
-            android:label="@string/app_name"
+            android:enabled="true"
             android:icon="@drawable/ic_glass_logo"
-            android:enabled="true" >
+            android:label="@string/app_name" >
         </service>
+
         <activity
             android:name=".FHMenuActivity"
-            android:theme="@style/MenuTheme">
+            android:theme="@style/MenuTheme" >
         </activity>
         <activity
-            android:name="de.fithud.fithud.MainImmersion"
+            android:name=".MainImmersion"
             android:icon="@drawable/ic_glass_logo"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="com.google.android.glass.action.VOICE_TRIGGER" />
             </intent-filter>
+
             <meta-data
                 android:name="com.google.android.glass.VoiceTrigger"
                 android:resource="@xml/voice_trigger" />
         </activity>
-
         <activity android:name=".WorkoutMenu" />
-
         <activity android:name=".Achievements" />
-
         <activity android:name=".GuideSettings" />
-
         <activity android:name=".SensorMenu" />
 
         <activity android:name=".TrainingMode" />
@@ -58,8 +57,13 @@
         <activity android:name=".ChallengeMode" />
 
         <activity android:name=".SummaryView" />
-
         <activity android:name=".ShowPlots" />
+
+        <service
+            android:name="de.fithud.fithudlib.StorageService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>
