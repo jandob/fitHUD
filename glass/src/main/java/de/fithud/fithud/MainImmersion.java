@@ -1,21 +1,5 @@
 package de.fithud.fithud;
 
-import com.androidplot.Plot;
-import com.androidplot.pie.PieChart;
-import com.androidplot.pie.PieRenderer;
-import com.androidplot.pie.Segment;
-import com.androidplot.pie.SegmentFormatter;
-import com.androidplot.ui.SizeLayoutType;
-import com.androidplot.ui.SizeMetrics;
-import com.androidplot.ui.XLayoutStyle;
-import com.androidplot.ui.YLayoutStyle;
-import com.androidplot.ui.widget.Widget;
-import com.androidplot.util.PlotStatistics;
-import com.androidplot.xy.BoundaryMode;
-import com.androidplot.xy.LineAndPointFormatter;
-import com.androidplot.xy.SimpleXYSeries;
-import com.androidplot.xy.XYPlot;
-import com.androidplot.xy.XYStepMode;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollAdapter;
@@ -23,9 +7,7 @@ import com.google.android.glass.widget.CardScrollView;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
@@ -36,22 +18,14 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.CheckBox;
-import android.widget.ImageView;
-import android.widget.RemoteViews;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import de.fithud.fithudlib.FHSensorManager;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
-import de.fithud.fithudlib.MessengerServiceActivity;
+import de.fithud.fithudlib.StorageService;
 
 public class MainImmersion extends Activity implements MessengerClient {
     MessengerConnection conn = new MessengerConnection(this);
@@ -122,7 +96,7 @@ public class MainImmersion extends Activity implements MessengerClient {
 
     @Override
     protected void onCreate(Bundle bundle) {
-        stopService(new Intent(this, StorageService.class));
+
         startService(new Intent(this, StorageService.class));
         conn.connect(FHSensorManager.class);
 
@@ -223,8 +197,10 @@ public class MainImmersion extends Activity implements MessengerClient {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        stopService(new Intent(this, StorageService.class));
         conn.disconnect();
+        super.onDestroy();
+
     }
 
     private class ExampleCardScrollAdapter extends CardScrollAdapter {
