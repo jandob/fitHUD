@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewDebug;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import de.fithud.fithudlib.FHSensorManager;
 import de.fithud.fithudlib.GuideClass;
@@ -32,7 +34,7 @@ import de.fithud.fithudlib.MessengerConnection;
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class Achievements extends Activity implements MessengerClient{
+public class Achievements extends Activity implements MessengerClient, TextToSpeech.OnInitListener {
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
@@ -41,6 +43,7 @@ public class Achievements extends Activity implements MessengerClient{
     private final String TAG = "Achievements";
     MessengerConnection conn = new MessengerConnection(this);
     SimpleDateFormat sdf = new SimpleDateFormat("dd.MMM yyyy HH:mm");
+    private TextToSpeech tts;
 
     // Achievement values
     private static int speedRecord = 0;
@@ -57,16 +60,20 @@ public class Achievements extends Activity implements MessengerClient{
     private static String caloriesRecordDate;
     private static String cadenceRecordDate;
 
-    private static int[] speedAchievementLevel = new int[] {25, 50, 60, 70, 80};
-    private static int[] distanceAchievementLevel = new int[] {1, 10, 25, 50, 100};
-    private static int[] heightAchievementLevel = new int[] {100, 200, 300, 400, 500};
+    private static int[] speedAchievementLevel = new int[] {0, 25, 50, 60, 70, 80};
+    private static int[] heightAchievementLevel = new int[] {0, 100, 200, 300, 400, 500};
+    private static int[] cadenceAchievementLevel = new int[] {0, 60, 80, 120, 150};
 
     private static int speedLevelIndex = 0;
-    private static int distanceLevelIndex = 0;
     private static int heightLevelIndex = 0;
+    private static int cadenceLevelIndex = 0;
+
+    private static int speedDiff = 0;
+    private static int heightDiff = 0;
+    private static int cadenceDiff = 0;
 
     private static boolean recordChanged = false;
-    private static boolean speechOutputEnabled = false;
+    private static boolean speechOutputEnabled = true;
 
 
     @Override
@@ -77,16 +84,21 @@ public class Achievements extends Activity implements MessengerClient{
 
         super.onCreate(bundle);
 
+        tts = new TextToSpeech(this,this);
+
         // Load achievement history !!!
 
         // Set record history
         speedRecord = 15;
         distanceRecord = 50;
-        heightRecord = 250;
+        heightRecord = 0;
         cadenceRecord = 120;
         caloriesRecord = 50;
         totDistanceRecord = 50;
-        checkSpeed(30);
+
+        checkHeight(150);
+
+        checkHeight(250);
 
         // Set date/time of records
         speedRecordDate = sdf.format(new Date(0));
@@ -202,7 +214,7 @@ public class Achievements extends Activity implements MessengerClient{
                 Log.i(TAG, "Current height");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                //checkSpeed(msg.getData().getIntArray("value")[0]);
+                checkSpeed(msg.getData().getIntArray("value")[0]);
                 Log.i(TAG, "Current speed");
                 break;
             /*case FHSensorManager.Messages.SPEED_MESSAGE:
@@ -215,31 +227,54 @@ public class Achievements extends Activity implements MessengerClient{
 
     private void checkCadence(int current_cadence) {
 
-        if(current_cadence > cadenceRecord){                // Set new record values
+        if(current_cadence > cadenceRecord){                            // Set new record values
             cadenceRecord = current_cadence;
-            cadenceRecordDate = sdf.format(new Date());     // Get date of record
+            cadenceRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New cadence record:" + cadenceRecord);
             Log.i(TAG, "Date changed: " + cadenceRecordDate);
 
-            String cadenceString = Integer.toString(current_cadence);
-            mCards.get(0).setText(cadenceString);
-            mAdapter.notifyDataSetChanged();
             recordChanged = true;
+
+            if (cadenceLevelIndex + 1 <= cadenceAchievementLevel.length) {
+
+                if(cadenceRecord >= cadenceAchievementLevel[cadenceLevelIndex+1]){
+                    cadenceLevelIndex++;
+                    Log.d(TAG,"cadence level: " + cadenceAchievementLevel[cadenceLevelIndex]);
+
+                    if (speechOutputEnabled) {
+                        // TODO: tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                cadenceDiff = cadenceAchievementLevel[cadenceLevelIndex + 1] - cadenceRecord;
+                Log.d(TAG,"cadence diff: " + cadenceDiff);
+            }
         }
     }
 
+    //TODO: Height or max elevation?
     private void checkHeight(int current_height) {
 
-        if(current_height > heightRecord){                          // Set new record values
+        if(current_height > heightRecord){                            // Set new record values
             heightRecord = current_height;
-            heightRecordDate = sdf.format(new Date());              // Get date of record
+            heightRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New height record:" + heightRecord);
             Log.i(TAG, "Date changed: " + heightRecordDate);
 
-            String heightString = Integer.toString(current_height);
-            mCards.get(0).setText(heightString);
-            mAdapter.notifyDataSetChanged();
             recordChanged = true;
+
+            if (heightLevelIndex + 1 <= heightAchievementLevel.length) {
+
+                if(heightRecord >= heightAchievementLevel[heightLevelIndex+1]){
+                    heightLevelIndex++;
+                    Log.d(TAG,"Height level: " + heightAchievementLevel[heightLevelIndex]);
+
+                    if (speechOutputEnabled) {
+                        // TODO: tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                heightDiff = heightAchievementLevel[heightLevelIndex + 1] - heightRecord;
+                Log.d(TAG,"Height diff: " + heightDiff);
+            }
         }
 
     }
@@ -260,23 +295,19 @@ public class Achievements extends Activity implements MessengerClient{
             Log.i(TAG, "Date changed: " + speedRecordDate);
 
             recordChanged = true;
-        }
-
-        if (speedLevelIndex + 1 <= speedAchievementLevel.length) {
-            int speedDiff = current_speed - speedAchievementLevel[speedLevelIndex + 1];
-            Log.d(TAG,"Speed diff: " + speedDiff);
-        }
-
-        if((speedRecord >= speedAchievementLevel[speedLevelIndex]) && speedLevelIndex <= speedAchievementLevel.length){
-            Log.d(TAG,"Speed level: " + speedAchievementLevel[speedLevelIndex]);
-
             if (speedLevelIndex + 1 <= speedAchievementLevel.length) {
-                speedLevelIndex++;
-            }
 
-            if (speechOutputEnabled) {
-                // TODO: Speak output
-                //
+                if(speedRecord >= speedAchievementLevel[speedLevelIndex+1]){
+                    speedLevelIndex++;
+                    Log.d(TAG,"Speed level: " + speedAchievementLevel[speedLevelIndex]);
+
+                    if (speechOutputEnabled) {
+                        // TODO: tts.speak("New speed achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                speedDiff = speedAchievementLevel[speedLevelIndex + 1] - speedRecord;
+                Log.d(TAG,"Speed diff: " + speedDiff);
+
             }
         }
     }
@@ -289,6 +320,25 @@ public class Achievements extends Activity implements MessengerClient{
         }
 
         super.onPause();
+    }
+
+    @Override
+    public void onInit(int status) {
+
+        if (status == TextToSpeech.SUCCESS) {
+
+            int result = tts.setLanguage(Locale.US);
+
+            if (result == TextToSpeech.LANG_MISSING_DATA
+                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.d(TAG, "TTS:This Language is not supported");
+            } else {
+                //speech_text = "Speech activated";
+                //tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+            }
+        } else {
+            Log.d(TAG, "TTS:Initilization Failed!");
+        }
     }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {

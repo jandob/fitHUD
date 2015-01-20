@@ -310,7 +310,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     }
 
     @Override
-    public void onInit(int status) {
+         public void onInit(int status) {
 
         if (status == TextToSpeech.SUCCESS) {
 
