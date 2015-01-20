@@ -59,22 +59,17 @@ public class SummaryView extends Activity implements MessengerClient {
                 break;
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 heartRate = msg.getData().getIntArray("value");
-                updateTextViews();
+                liveCardHeartText.setText(heartRate[0] + " bpm");
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 cadence = msg.getData().getIntArray("value");
+                liveCardHeightText.setText(cadence[0] + " U/min");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 speed = msg.getData().getIntArray("value");
+                liveCardBikeText.setText(speed[0] + " km/h");
                 break;
         }
-    }
-
-    private void updateTextViews() {
-        liveCardBikeText.setText(speed[0] + " km/h");
-        liveCardHeartText.setText(heartRate[0] + " bpm");
-        liveCardHeightText.setText(cadence[0] + " U/min");
-
     }
 
 

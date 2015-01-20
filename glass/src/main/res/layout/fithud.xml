@@ -65,6 +65,15 @@
             android:layout_marginLeft="110px"
             android:text="0 m"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="GuideText"
+            android:id="@+id/summaryGuideText"
+            android:layout_below="@+id/liveCardHeart"
+            android:layout_centerHorizontal="true" />
+
     </RelativeLayout>
 
 </FrameLayout>
