@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Message;
+import android.os.RemoteException;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -33,15 +34,24 @@ import de.fithud.fithudlib.MessengerConnection;
 /**
  * Created by Nikolas on 2015-01-17.
  */
-public class TrainingMode extends Activity{
+public class TrainingMode extends Activity implements MessengerClient{
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
     private GestureDetector mGestureDetector;
+
+    MessengerConnection conn = new MessengerConnection(this);
     private String TAG = "TrainingMode";
     private boolean cardScrollAdapterOn = true;
+    private static int trainingMode = 4;
+
+    private static boolean speechEnabled = false;
+    private static final int CARDIO = 0;
+    private static final int FATBURN = 1;
+    private static final int INTERVAL = 2;
+
 
 
     @Override
@@ -49,7 +59,7 @@ public class TrainingMode extends Activity{
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
-
+        conn.connect(FHSensorManager.class);
         super.onCreate(bundle);
         createCards();
 
@@ -65,16 +75,13 @@ public class TrainingMode extends Activity{
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
-                        if (cardScrollAdapterOn){
-                            //mGestureDetector.setScrollListener()
-                            //mCardScrollView.deactivate();
-                            // Activate scroll
-                            //mCardScrollView.activate();
-                            //cardScrollAdapterOn = false;
-                        } else {
-                            //mCardScrollView.activate();
-                            //cardScrollAdapterOn = true;
-                        }
+                        trainingModeSwitch(CARDIO);
+                        break;
+                    case 1:
+                        trainingModeSwitch(FATBURN);
+                        break;
+                    case 2:
+                        trainingModeSwitch(INTERVAL);
                         break;
                 }
             }
@@ -88,24 +95,56 @@ public class TrainingMode extends Activity{
         setContentView(mCardScrollView);
     }
 
+
+    public void trainingModeSwitch(int training_mode){
+
+        if(training_mode == CARDIO) {
+            mCards.get(0).setIcon(R.drawable.check_black);
+            mCards.get(1).setIcon(R.drawable.empty);
+            mCards.get(2).setIcon(R.drawable.empty);
+            mAdapter.notifyDataSetChanged();
+        }
+        else if (training_mode == FATBURN){
+            mCards.get(1).setIcon(R.drawable.check_black);
+            mCards.get(0).setIcon(R.drawable.empty);
+            mCards.get(2).setIcon(R.drawable.empty);
+            mAdapter.notifyDataSetChanged();
+        } else {
+            mCards.get(2).setIcon(R.drawable.check_black);
+            mCards.get(0).setIcon(R.drawable.empty);
+            mCards.get(1).setIcon(R.drawable.empty);
+            mAdapter.notifyDataSetChanged();
+        }
+        trainingMode = training_mode;
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.TRAINING_MODE_COMMAND;
+        command[1] = training_mode;
+        //sendDataToSensormanager(command);
+
+        if(speechEnabled) {
+            //TODO: tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
+            Log.d(TAG, "Speech output");
+        }
+    }
+
     private void createCards() {
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Cardio")
-                .setFootnote("Start or stop the guide"));
+                .setIcon(R.drawable.empty)
+                .setFootnote("Tap to select this mode - swipe to see alternatives"));
+
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Fatburn")
-                .setFootnote("Start or stop the guide"));
+                .setIcon(R.drawable.empty)
+                .setFootnote("Tap to select this mode - swipe to see alternatives"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Interval")
-                .setFootnote("Start or stop the guide"));
-
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Recreation")
-                .setFootnote("Start or stop the guide"));
+                .setIcon(R.drawable.empty)
+                .setFootnote("Tap to select this mode - swipe to see alternatives"));
     }
 
     @Override
@@ -154,22 +193,62 @@ public class TrainingMode extends Activity{
     @Override
     protected void onResume() {
         super.onResume();
-        /*
-        if (guide_active == 1) {
-            mCards.get(0).setText("Guide is activated");
+
+        if(trainingMode == CARDIO) {
+            mCards.get(0).setIcon(R.drawable.check_black);
+            mCards.get(1).setIcon(R.drawable.empty);
+            mCards.get(2).setIcon(R.drawable.empty);
             mAdapter.notifyDataSetChanged();
-            Log.d(TAG, "Guide is activated...");
+        }
+        else if (trainingMode == FATBURN){
+            mCards.get(1).setIcon(R.drawable.check_black);
+            mCards.get(0).setIcon(R.drawable.empty);
+            mCards.get(2).setIcon(R.drawable.empty);
+            mAdapter.notifyDataSetChanged();
+        } else if (trainingMode == INTERVAL){
+            mCards.get(2).setIcon(R.drawable.check_black);
+            mCards.get(0).setIcon(R.drawable.empty);
+            mCards.get(1).setIcon(R.drawable.empty);
+            mAdapter.notifyDataSetChanged();
         } else {
-            mCards.get(0).setText("Guide is deactivated");
+            mCards.get(2).setIcon(R.drawable.empty);
+            mCards.get(0).setIcon(R.drawable.empty);
+            mCards.get(1).setIcon(R.drawable.empty);
             mAdapter.notifyDataSetChanged();
-            Log.d(TAG, "Guide is deactivated...");
-        }*/
+        }
+
+        mCardScrollView.activate();
     }
 
     @Override
     protected void onPause() {
         mCardScrollView.deactivate();
         super.onPause();
+    }
+
+    @Override
+    public void handleMessage(Message msg) {
+        int [] command = msg.getData().getIntArray("command");
+        Log.i(TAG, "handling Msg");
+       /* switch (command[0]) {
+            case FHSensorManager.Commands.SPEECH_COMMAND:
+                if (command[1] == 1) speechEnabled = true; speechEnabled = false;
+                break;
+        }*/
+    }
+
+    public void sendDataToSensormanager(int[] data) {
+        Message msg = Message.obtain(null, 4);
+        Bundle bundle = new Bundle();
+        bundle.putIntArray("command", data);
+        msg.setData(bundle);
+
+        try {
+            conn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
     }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
