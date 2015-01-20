@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/fitHUD.iml" filepath="$PROJECT_DIR$/fitHUD.iml" />
       <module fileurl="file://$PROJECT_DIR$/fithudlib/fithudlib.iml" filepath="$PROJECT_DIR$/fithudlib/fithudlib.iml" />
-      <module fileurl="file://$PROJECT_DIR$/fithudlib/fithudlib.iml" filepath="$PROJECT_DIR$/fithudlib/fithudlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/glass/glass.iml" filepath="$PROJECT_DIR$/glass/glass.iml" />
       <module fileurl="file://$PROJECT_DIR$/mobile/mobile.iml" filepath="$PROJECT_DIR$/mobile/mobile.iml" />
     </modules>
