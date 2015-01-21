@@ -39,6 +39,7 @@ public class FHSensorManager extends MessengerService {
         public static final int ACC_RAW_MESSAGE = 5;
         public static final int HEIGTH_MESSAGE = 6;
         public static final int SEARCH_READY = 7;
+        public static final int GUIDE_MESSAGE = 8;
     }
 
     public final class Commands extends MessengerService.Commands {
@@ -95,7 +96,7 @@ public class FHSensorManager extends MessengerService {
             case Commands.CHALLENGE_MODE_COMMAND:
                 challenge_mode = command[1];
                 training_mode = DISABLED;
-                //GuideClass.updateTrainingMode(training_mode);
+                GuideClass.updateChallengeMode(challenge_mode);
                 Log.i(TAG,"Challenge mode changed." + command[1]);
                 break;
         }
@@ -259,6 +260,15 @@ public class FHSensorManager extends MessengerService {
                     cadence_dataset[1] = time_cadence;
                     //Log.i(TAG, "Cadence wheel: " + crank_revolutions);
                     sendMsg(Messages.CADENCE_MESSAGE, cadence_dataset);
+
+                    if(guide_active == 1 && challenge_mode == 1) {
+                        int answerCheck = GuideClass.cadenceCheck(cadence_dataset[0]);
+                        // TODO: Update guide text
+                        if(speech_active){
+                            //TODO: Height challenge speech output
+                        }
+                    }
+
                 } else if ((characteristicData[0] & (1L << 0)) != 0) {
                     int fourth_wheel = ((int)characteristicData[4]) & 0xff;
                     int third_wheel = ((int)characteristicData[3]) & 0xff;
@@ -275,7 +285,7 @@ public class FHSensorManager extends MessengerService {
                     speed_dataset[1] = time_speed;
                     sendMsg(Messages.SPEED_MESSAGE, speed_dataset);
 
-                    if(training_mode == 2) {
+                    if(guide_active == 1 && challenge_mode == 2) {
                         int answerCheck = GuideClass.speedCheck(speed_dataset[0]);
                         if (answerCheck == 0) {
                             Log.i(TAG,"Speed too low");
@@ -294,8 +304,7 @@ public class FHSensorManager extends MessengerService {
                 hr_dataset[0] = (int) characteristicData[1];
                 sendMsg(Messages.HEARTRATE_MESSAGE, hr_dataset);
 
-
-                if(guide_active == 1) {
+                if(guide_active == 1 && training_mode < 2) {
                     int answerCheck = GuideClass.heartRateCheck(hr_dataset[0]);
                     if (answerCheck == 0) {
                         Log.i(TAG,"HR" + hr_dataset[0]);
@@ -303,6 +312,20 @@ public class FHSensorManager extends MessengerService {
                     } else {
                         Log.i(TAG,"HR" + hr_dataset[0]);
                         Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
+                    }
+                    //sendMsg(Messages.);   Send message to update
+                }
+
+                // TODO: Caluclate calories
+                int calories_dataset[] = new int[1];
+                // calories_dataset[0] = ...
+                // TODO: send calories message
+
+                if(guide_active == 1 && challenge_mode == 2) {
+                    int answerCheck = GuideClass.caloriesCheck(calories_dataset[0]);
+                    // TODO: Update guide text: Calories
+                    if(speech_active){
+                        //TODO: Calories challenge speech output
                     }
                 }
 
@@ -347,6 +370,18 @@ public class FHSensorManager extends MessengerService {
                 int baro_dataset[] = new int[1];
                 baro_dataset[0] = barometer_value;
                 sendMsg(Messages.HEIGTH_MESSAGE,baro_dataset);
+
+                if(guide_active == 1 && challenge_mode == 0) {
+                    int answerCheck = GuideClass.heightCheck(baro_dataset[0]);
+                    if (answerCheck == 0) {
+                        Log.i(TAG,"HR" + baro_dataset[0]);
+                        Log.i(TAG,"heartRate is too low, faster you little piggy");
+                    } else {
+                        Log.i(TAG,"HR" + baro_dataset[0]);
+                        Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
+                    }
+                    //sendMsg(Messages.);   Send message to update
+                }
             }
         }
 

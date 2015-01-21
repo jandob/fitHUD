@@ -40,21 +40,24 @@ public class GuideClass {
 
 
     public static void updateTrainingMode(int training_mode){
+        // TODO: Set min/max heart rate for cardio training
         if(training_mode == cardio){
             hr_min = 80;
             hr_max = 90;
         }
+        // TODO: Set min/max heart rate for fatburn training
         if(training_mode == fatburn){
             hr_min = 90;
             hr_max = 100;
         }
+
         if(training_mode == interval){
             startTime = System.currentTimeMillis();
         }
-        if(training_mode == recreation){
-            hr_min = 60;
-            hr_max = 90;
-        }
+    }
+
+    public static void updateChallengeMode(int challenge_mode) {
+
     }
 
 
@@ -95,14 +98,21 @@ public class GuideClass {
     };
 
 
-/*
+
     public static int cadenceCheck(int current_cadence) {
 
-    }
+        return 0;
+    };
 
     public static int heightCheck(int current_height) {
 
-    }*/
+        return 0;
+    };
+
+    public static int caloriesCheck(int current_calories) {
+
+        return 0;
+    };
 
 
 }
