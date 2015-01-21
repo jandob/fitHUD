@@ -178,7 +178,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
                         startActivity(new Intent(GuideSettings.this, TrainingMode.class));
                         break;
                     case 2:                     // Start challenge
-                        //startActivity(new Intent(GuideSettings.this, ));
+                        startActivity(new Intent(GuideSettings.this, ChallengeMode.class));
                         break;
                 }
         }
@@ -219,7 +219,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Start Guide!")
-                .setFootnote("Start or stop the guide"));
+                .setFootnote("Tap to start or stop the guide"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Training mode")
@@ -249,15 +249,31 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     @Override
     public void handleMessage(Message msg) {
 
-        int [] command = msg.getData().getIntArray("command");
+        //int [] command = msg.getData().getIntArray("command");
         Log.i(TAG, "handling Msg");
-/*
-        switch (command[0]) {
+/* GuideSettings is an activity - doesn't run all the time - cannot receive these messages
+        switch (msg.what) {
             case FHSensorManager.Commands.SPEECH_COMMAND:
-                if (command[1] == 1) speechEnabled = true; speechEnabled = false;
+                int[] speech_change = msg.getData().getIntArray("value");
+                if ( speech_change[0] == 1) speechEnabled = true; speechEnabled = false;
+                Log.i(TAG, "Speech settings: " + speech_change[0]);
                 break;
-        }
-        */
+            case FHSensorManager.Commands.TRAINING_MODE_COMMAND:
+                int[] training_mode = msg.getData().getIntArray("value");
+                if (training_mode[0] < 4) {
+                    mCards.get(1).setIcon(R.drawable.check_black);
+                    mCards.get(2).setIcon(R.drawable.empty);
+                    mAdapter.notifyDataSetChanged();
+                }
+            case FHSensorManager.Commands.CHALLENGE_MODE_COMMAND:
+                int[] challenge_mode = msg.getData().getIntArray("value");
+                if (challenge_mode[0] < 4) {
+                    mCards.get(2).setIcon(R.drawable.check_black);
+                    mCards.get(1).setIcon(R.drawable.empty);
+                    mAdapter.notifyDataSetChanged();
+                }
+        }*/
+
     }
 
 

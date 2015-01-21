@@ -55,6 +55,8 @@
 
         <activity android:name=".TrainingMode" />
 
+        <activity android:name=".ChallengeMode" />
+
         <activity android:name=".SummaryView" />
 
         <activity android:name=".ShowPlots" />

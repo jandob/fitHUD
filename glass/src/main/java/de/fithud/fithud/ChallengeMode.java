@@ -2,12 +2,10 @@ package de.fithud.fithud;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.RemoteException;
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,10 +16,8 @@ import android.widget.AdapterView;
 import com.google.android.glass.media.Sounds;
 import com.google.android.glass.touchpad.Gesture;
 import com.google.android.glass.touchpad.GestureDetector;
-
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
-import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
 import java.util.ArrayList;
@@ -34,7 +30,7 @@ import de.fithud.fithudlib.MessengerConnection;
 /**
  * Created by Nikolas on 2015-01-17.
  */
-public class TrainingMode extends Activity implements MessengerClient{
+public class ChallengeMode extends Activity implements MessengerClient{
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
@@ -43,16 +39,15 @@ public class TrainingMode extends Activity implements MessengerClient{
     private GestureDetector mGestureDetector;
 
     MessengerConnection conn = new MessengerConnection(this);
-    private String TAG = "TrainingMode";
-    private boolean cardScrollAdapterOn = true;
+    private String TAG = "ChallengeMode";
 
     private static boolean speechEnabled = false;
-    private static final int CARDIO = 0;
-    private static final int FATBURN = 1;
-    private static final int INTERVAL = 2;
+    private static final int HEIGHT = 0;
+    private static final int CADENCE = 1;
+    private static final int CALORIES = 2;
     private static final int DISABLED = 4;
 
-    private static int trainingMode = DISABLED;
+    private static int challengeMode = DISABLED;
 
 
 
@@ -77,19 +72,17 @@ public class TrainingMode extends Activity implements MessengerClient{
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
-                        trainingModeSwitch(CARDIO);
+                        challengeModeSwitch(HEIGHT);
                         break;
                     case 1:
-                        trainingModeSwitch(FATBURN);
+                        challengeModeSwitch(CADENCE);
                         break;
                     case 2:
-                        trainingModeSwitch(INTERVAL);
+                        challengeModeSwitch(CALORIES);
                         break;
                 }
             }
         });
-
-        mGestureDetector = createGestureDetector(this);
 
         mAdapter = new CardScrollAdapter();
         mCardScrollView.setAdapter(mAdapter);
@@ -98,15 +91,15 @@ public class TrainingMode extends Activity implements MessengerClient{
     }
 
 
-    public void trainingModeSwitch(int training_mode){
+    public void challengeModeSwitch(int challenge_mode){
 
-        if(training_mode == CARDIO) {
+        if(challenge_mode == HEIGHT) {
             mCards.get(0).setIcon(R.drawable.check_black);
             mCards.get(1).setIcon(R.drawable.empty);
             mCards.get(2).setIcon(R.drawable.empty);
             mAdapter.notifyDataSetChanged();
         }
-        else if (training_mode == FATBURN){
+        else if (challenge_mode == CADENCE){
             mCards.get(1).setIcon(R.drawable.check_black);
             mCards.get(0).setIcon(R.drawable.empty);
             mCards.get(2).setIcon(R.drawable.empty);
@@ -117,10 +110,10 @@ public class TrainingMode extends Activity implements MessengerClient{
             mCards.get(1).setIcon(R.drawable.empty);
             mAdapter.notifyDataSetChanged();
         }
-        trainingMode = training_mode;
+        challengeMode = challenge_mode;
         int[] command = new int[2];
-        command[0] = FHSensorManager.Commands.TRAINING_MODE_COMMAND;
-        command[1] = training_mode;
+        command[0] = FHSensorManager.Commands.CHALLENGE_MODE_COMMAND;
+        command[1] = challenge_mode;
         sendDataToSensormanager(command);
 
         if(speechEnabled) {
@@ -133,81 +126,38 @@ public class TrainingMode extends Activity implements MessengerClient{
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Cardio")
+                .setText("Height challenge!")
                 .setIcon(R.drawable.empty)
-                .setFootnote("Tap to select this mode - swipe to see alternatives"));
+                .setFootnote("Tap to set your challenge - swipe to see alternatives"));
 
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Fatburn")
+                .setText("Cadence challenge!")
                 .setIcon(R.drawable.empty)
-                .setFootnote("Tap to select this mode - swipe to see alternatives"));
+                .setFootnote("Tap to set your challenge - swipe to see alternatives"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Interval")
+                .setText("Calories challenge!")
                 .setIcon(R.drawable.empty)
-                .setFootnote("Tap to select this mode - swipe to see alternatives"));
+                .setFootnote("Tap to set your challenge - swipe to see alternatives"));
     }
 
-    @Override
-    public boolean onGenericMotionEvent(MotionEvent event)
-    {
-        if (mGestureDetector != null) {
-            return mGestureDetector.onMotionEvent(event);
-        }
-        return super.onGenericMotionEvent(event);
-    }
-
-    private GestureDetector createGestureDetector(Context context)
-    {
-        GestureDetector gestureDetector = new GestureDetector(context);
-        //Create a base listener for generic gestures
-        gestureDetector.setBaseListener( new GestureDetector.BaseListener() {
-            @Override
-            public boolean onGesture(Gesture gesture) {
-                Log.i(TAG, "gesture = " + gesture);
-                return false;
-            }
-        });
-
-        gestureDetector.setFingerListener(new GestureDetector.FingerListener() {
-            @Override
-            public void onFingerCountChanged(int previousCount, int currentCount) {
-                // do something on finger count changes
-                Log.i(TAG, "onFingerCountChanged()");
-
-            }
-        });
-        gestureDetector.setScrollListener(new GestureDetector.ScrollListener() {
-            @Override
-            public boolean onScroll(float displacement, float delta, float velocity) {
-                // do something on scrolling
-                Log.i(TAG, "onScroll()");
-
-                return false;
-            }
-        });
-        return gestureDetector;
-    }
-
-
-
-    @Override
+     @Override
     protected void onResume() {
         super.onResume();
 
-        if(trainingMode == CARDIO) {
+        if(challengeMode == HEIGHT) {
             mCards.get(0).setIcon(R.drawable.check_black);
             mCards.get(1).setIcon(R.drawable.empty);
             mCards.get(2).setIcon(R.drawable.empty);
             mAdapter.notifyDataSetChanged();
         }
-        else if (trainingMode == FATBURN){
+        else if (challengeMode == CADENCE){
             mCards.get(1).setIcon(R.drawable.check_black);
             mCards.get(0).setIcon(R.drawable.empty);
             mCards.get(2).setIcon(R.drawable.empty);
             mAdapter.notifyDataSetChanged();
-        } else if (trainingMode == INTERVAL){
+        } else if (challengeMode == CALORIES){
             mCards.get(2).setIcon(R.drawable.check_black);
             mCards.get(0).setIcon(R.drawable.empty);
             mCards.get(1).setIcon(R.drawable.empty);
@@ -230,24 +180,7 @@ public class TrainingMode extends Activity implements MessengerClient{
 
     @Override
     public void handleMessage(Message msg) {
-/*
         Log.i(TAG, "handling Msg");
-
-        switch (msg.what) {
-            case FHSensorManager.Commands.SPEECH_COMMAND:
-                int[] speech_change = msg.getData().getIntArray("value");
-                if ( speech_change[0] == 1) speechEnabled = true; speechEnabled = false;
-                Log.i(TAG, "Speech settings: " + speech_change[0]);
-                break;
-            case FHSensorManager.Commands.CHALLENGE_MODE_COMMAND:
-                int[] challenge_mode = msg.getData().getIntArray("value");
-                if (challenge_mode[0] < 4) {
-                    mCards.get(0).setIcon(R.drawable.empty);
-                    mCards.get(1).setIcon(R.drawable.empty);
-                    mCards.get(2).setIcon(R.drawable.empty);
-                    mAdapter.notifyDataSetChanged();
-                }
-        }*/
     }
 
     public void sendDataToSensormanager(int[] data) {
