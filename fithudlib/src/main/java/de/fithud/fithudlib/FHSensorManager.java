@@ -191,9 +191,40 @@ public class FHSensorManager extends MessengerService {
         }
     }
 
+    public void showSpeedOnWheel(boolean speedWheelSwitch){
+        byte[] signal = new byte[1];
+        if(speedWheelSwitch) {
+            signal[0] = (byte)0xFC;
+        }
+        else
+        {
+            signal[0] = (byte)0xFB;
+        }
+        // Save local in characterstic
+        wakeupCharacteristic.setValue(signal);
+        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+    }
+
+    public void startStopLight(boolean lightSwitch)
+    {
+        byte[] signal = new byte[1];
+        if(lightSwitch) {
+            signal[0] = (byte)0xFE;
+        }
+        else
+        {
+            signal[0] = (byte)0xFD;
+        }
+        // Save local in characterstic
+        wakeupCharacteristic.setValue(signal);
+        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+    }
+
     public void sendWakeupMessage(){
         byte[] wakeup_signal = new byte[1];
-        wakeup_signal[0] = 1;
+        wakeup_signal[0] = 0x00;
         // Save local in characterstic
         wakeupCharacteristic.setValue(wakeup_signal);
         // Send characteristic to remote device , afterwards onCharacteristicWrite is called
