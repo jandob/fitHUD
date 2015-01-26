@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.GuideService;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 
@@ -61,7 +62,7 @@ public class TrainingMode extends Activity implements MessengerClient{
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
-        conn.connect(FHSensorManager.class);
+        conn.connect(GuideService.class);
         super.onCreate(bundle);
         createCards();
 
@@ -119,9 +120,9 @@ public class TrainingMode extends Activity implements MessengerClient{
         }
         trainingMode = training_mode;
         int[] command = new int[2];
-        command[0] = FHSensorManager.Commands.TRAINING_MODE_COMMAND;
+        command[0] = GuideService.GuideMessages.TRAINING_MODE_COMMAND;
         command[1] = training_mode;
-        sendDataToSensormanager(command);
+        sendDataToGuide(command);
 
         if(speechEnabled) {
             //TODO: tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
@@ -250,7 +251,7 @@ public class TrainingMode extends Activity implements MessengerClient{
         }*/
     }
 
-    public void sendDataToSensormanager(int[] data) {
+    public void sendDataToGuide(int[] data) {
         Message msg = Message.obtain(null, 4);
         Bundle bundle = new Bundle();
         bundle.putIntArray("command", data);

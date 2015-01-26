@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.GuideService;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.MessengerServiceActivity;
@@ -39,23 +40,31 @@ import de.fithud.fithudlib.MessengerServiceActivity;
  */
 public class SummaryView extends Activity implements MessengerClient {
 
-    MessengerConnection conn = new MessengerConnection(this);
+    MessengerConnection sensorConn = new MessengerConnection(this);
+    MessengerConnection guideConn = new MessengerConnection(this);
     private AudioManager mAudioManager;
+
+
 
     private  TextView liveCardBikeText = null;
     private  TextView liveCardHeartText = null;
     private  TextView liveCardHeightText = null;
     private  TextView liveCardStatus = null;
+    private TextView summaryGuideText = null;
     private String TAG;
     int heartRate[] = new int[] {1};
     int speed[] = new int[] {1};
     int cadence[] = new int[] {1};
 
+    private static final String hrLow = "Your heart rate is too low by ";
+    private static final String hrHigh = "Your heart rate is too high by ";
+
     @Override
     public void handleMessage(Message msg) {
+        msg.what = 100;
         switch (msg.what) {
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
-            Log.i(TAG,"Got msg");
+                Log.i(TAG,"Got msg");
                 break;
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 heartRate = msg.getData().getIntArray("value");
@@ -69,14 +78,20 @@ public class SummaryView extends Activity implements MessengerClient {
                 speed = msg.getData().getIntArray("value");
                 liveCardBikeText.setText(speed[0] + " km/h");
                 break;
+
+            case GuideService.GuideMessages.FATBURN_TRAINING:
+                Log.d(TAG, "Summary view got fatburn training message");
+                break;
+
         }
     }
 
 
     @Override
     protected void onDestroy() {
+        sensorConn.disconnect();
+        guideConn.disconnect();
         super.onDestroy();
-        conn.disconnect();
     }
 
     @Override
@@ -84,7 +99,10 @@ public class SummaryView extends Activity implements MessengerClient {
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         TAG = SummaryView.class.getSimpleName();
-        conn.connect(FHSensorManager.class);
+
+        sensorConn.connect(FHSensorManager.class);
+        guideConn.connect(GuideService.class);
+
         super.onCreate(bundle);
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -94,6 +112,7 @@ public class SummaryView extends Activity implements MessengerClient {
         liveCardHeartText = (TextView) findViewById(R.id.liveCardHeartText);
         liveCardHeightText = (TextView) findViewById(R.id.liveCardHeightText);
         liveCardStatus = (TextView) findViewById(R.id.liveCardStatus);
+        summaryGuideText = (TextView) findViewById(R.id.summaryGuideText);
 
         int speed = 5;
         int heartrate = heartRate[0];
@@ -102,6 +121,8 @@ public class SummaryView extends Activity implements MessengerClient {
         liveCardHeartText.setText(heartrate + " bpm");
         liveCardHeightText.setText(height + " m");
         liveCardStatus.setBackgroundColor(Color.RED);
+
+        Log.d(TAG, "Summary on create");
     }
 
     @Override

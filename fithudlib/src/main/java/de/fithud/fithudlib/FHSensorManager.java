@@ -45,10 +45,10 @@ public class FHSensorManager extends MessengerService {
     public final class Commands extends MessengerService.Commands {
         public static final int SEARCH_COMMAND = 1;
         public static final int WAKEUP_COMMAND = 2;
-        public static final int GUIDE_COMMAND = 3;
-        public static final int TRAINING_MODE_COMMAND = 4;
-        public static final int CHALLENGE_MODE_COMMAND = 5;
-        public static final int SPEECH_COMMAND = 6;
+        //public static final int GUIDE_COMMAND = 3;
+        //public static final int TRAINING_MODE_COMMAND = 4;
+        //public static final int CHALLENGE_MODE_COMMAND = 5;
+        //public static final int SPEECH_COMMAND = 6;
     }
 
     private static int DISABLED = 4;
@@ -75,7 +75,7 @@ public class FHSensorManager extends MessengerService {
                     Log.i(TAG,"Wakeup not connected");
                 }
                 break;
-
+/*
             case Commands.GUIDE_COMMAND:
                 GuideClass.updateTrainingMode(training_mode);
                 Log.i(TAG,"Guide mode changed." + command[1]);
@@ -98,7 +98,7 @@ public class FHSensorManager extends MessengerService {
                 training_mode = DISABLED;
                 GuideClass.updateChallengeMode(challenge_mode);
                 Log.i(TAG,"Challenge mode changed." + command[1]);
-                break;
+                break;*/
         }
     }
 
@@ -177,7 +177,7 @@ public class FHSensorManager extends MessengerService {
     public int barometer_connected = 0;
 
     private boolean barometer_calibrated = false;
-    private int barometer_offset = 0;
+    private short barometer_offset = 0;
 
     // Variables for speed calculations
     public static float last_speed = 0;
@@ -298,18 +298,19 @@ public class FHSensorManager extends MessengerService {
                     float cadenceRpm = 0;
                     if (timeDifference > 0) {
                         cadenceRpm = ((float)(revolutions_difference) / timeDifference) * (float)60;
-                        Log.i(TAG, "Cadence : " + cadenceRpm);
+                        Log.v(TAG, "Cadence : " + cadenceRpm);
                         sendMsgFloat(Messages.CADENCE_MESSAGE, cadenceRpm);
                     } else {
                         cadenceRpm = 0;
                     }
+/*
                     if(guide_active == 1 && challenge_mode == 1) {
                         int answerCheck = GuideClass.cadenceCheck(cadenceRpm);
                         // TODO: Update guide text
                         if(speech_active){
                             //TODO: Height challenge speech output
                         }
-                    }
+                    }*/
 
                     // Speed indicator is set
                 }  else if ((characteristicData[0] & (1L << 0)) != 0) {
@@ -344,11 +345,11 @@ public class FHSensorManager extends MessengerService {
                     } else {
                         speed = 0;
                     }
-                    Log.i(TAG, "Speed: " + speed);
+                    Log.v(TAG, "Speed: " + speed);
 
                     sendMsgFloat(Messages.SPEED_MESSAGE, speed);
-
-                    if(guide_active == 1 && challenge_mode == 2) {
+/*
+                    if(guide_active == 1 && training_mode == 2) {
                         int answerCheck = GuideClass.speedCheck(speed);
                         if (answerCheck == 0) {
                             Log.i(TAG,"Speed too low");
@@ -357,12 +358,13 @@ public class FHSensorManager extends MessengerService {
                         } else{
                             Log.i(TAG,"Speed too high");
                         }
-                    }
+                    }*/
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
                 int heartrate = (int) characteristicData[1];
                 sendMsgFloat(Messages.HEARTRATE_MESSAGE, (float)heartrate);
+/*
                 if(guide_active == 1 && training_mode < 2) {
                     int answerCheck = GuideClass.heartRateCheck(heartrate);
                     if (answerCheck == 0) {
@@ -386,7 +388,7 @@ public class FHSensorManager extends MessengerService {
                     if(speech_active){
                         //TODO: Calories challenge speech output
                     }
-                }
+                }*/
             }
 
             if(characteristic.getService().getUuid().toString().equals(ACCService)){
@@ -415,15 +417,16 @@ public class FHSensorManager extends MessengerService {
                 short barometer_value = twoBytesToShort(characteristicData[0],characteristicData[1]);
 
                 if(!barometer_calibrated){
-                    barometer_offset = (int)barometer_value;
+                    barometer_offset = barometer_value;
                     barometer_calibrated = true;
                 }
 
-                barometer_value = barometer_value - barometer_offset;
+                // TODO: Check int to short cast
+                barometer_value = (short) (barometer_value - barometer_offset);
 
                 int barometerFinal = (int)barometer_value-(int)barometer_offset;
-                sendMsgFloat(Messages.HEIGTH_MESSAGE,(float)barometerFinal);
-
+                sendMsgFloat(Messages.HEIGTH_MESSAGE, (float) barometerFinal);
+/*
                 if(guide_active == 1 && challenge_mode == 0) {
                     int answerCheck = GuideClass.heightCheck(barometerFinal);
                     if (answerCheck == 0) {
@@ -434,7 +437,7 @@ public class FHSensorManager extends MessengerService {
                         Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
                     }
                     //sendMsg(Messages.);   Send message to update
-                }
+                }*/
             }
         }
 

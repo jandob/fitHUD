@@ -1,4 +1,4 @@
-/*
+
 package de.fithud.fithudlib;
 
 import android.app.Activity;
@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
@@ -28,122 +29,185 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-*/
 /**
  *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
- *//*
+ */
 
-public class GuideService extends Service implements MessengerClient {
+public class GuideService extends MessengerService implements MessengerClient {
     //CardBuilder mCard;
-    MessengerConnection conn = new MessengerConnection(this);
-    private final String TAG = "GuideService";
-    public static float last_speed = 0;
-    public static int last_revolutions = 0;
-    private static final double wheel_type = 4.4686;
+    MessengerConnection conn;
 
-    public boolean speedometer_connected = false;
-    public boolean heartrate_connected = false;
-    public boolean cadence_connected = false;
+
+    private final String TAG = GuideService.class.getSimpleName();
+
+    private static final int VALUE_LOW = 0;
+    private static final int VALUE_OK = 1;
+    private static final int VALUE_HIGH = 2;
+
+    private static final int cardio = 0;
+    private static final int fatburn = 1;
+    private static final int interval = 2;
+    private static final int recreation = 3;
+
+    private static int hr_min = 0;
+    private static int hr_max = 0;
+    private static int speed_low_min = 80;
+    private static int speed_low_max = 90;
+    private static int speed_high_min = 90;
+    private static int speed_high_max = 100;
+    private static int cadence_min = 0;
+    private static int cadence_max = 0;
+    private static int height_min = 0;
+    private static int height_max = 0;
+    private static long intervalTime = 5000;      // Duration of an interval in mSec
+
+    private static boolean interval_state = false;
+    private static long startTime = 0;
+
+    private static int DISABLED = 4;
+    private static boolean guide_active = false;
+    private static int training_mode = DISABLED;
+    private static int challenge_mode = DISABLED;
+    private static boolean speech_active = false;
+
+    public final class GuideMessages extends MessengerService.Messages {
+        public static final int CARDIO_TRAINING = 21;
+        public static final int FATBURN_TRAINING = 22;
+        public static final int INTERVAL_TRAINING = 23;
+        public static final int HEIGHT_CHALLENGE = 24;
+        public static final int CADENCE_CHALLENGE = 25;
+        public static final int CALORIES_CHALLENGE = 26;
+        public static final int GUIDE_COMMAND = 30;
+        public static final int TRAINING_MODE_COMMAND = 31;
+        public static final int CHALLENGE_MODE_COMMAND = 32;
+        public static final int SPEECH_COMMAND = 33;
+    }
+
 
     @Override
     public void handleMessage(Message msg) {
-        //Log.i(TAG, "handling Msg");
+
+
+        Log.i(TAG, "handling Msg");
+
         switch (msg.what) {
+            case GuideService.GuideMessages.GUIDE_COMMAND:
+                updateTrainingMode(training_mode);
+                guide_active = msg.getData().getBoolean("guideActive");
+                Log.i(TAG,"Guide mode changed." + msg.getData().getBoolean(""));
+                break;
+/*
+            case GuideService.GuideMessages.TRAINING_MODE_COMMAND:
+                training_mode = command[1];
+                challenge_mode = DISABLED;
+                updateTrainingMode(training_mode);
+                Log.i(TAG,"Training mode changed." + command[1]);
+                String guide_text = "Test guide message";
+                sendMsgString(GuideMessages.FATBURN_TRAINING, guide_text);
+                break;
+
+            case GuideService.GuideMessages.CHALLENGE_MODE_COMMAND:
+                challenge_mode = command[1];
+                training_mode = DISABLED;
+                updateChallengeMode(challenge_mode);
+                Log.i(TAG,"Challenge mode changed." + command[1]);
+                break;
+
+            case GuideService.GuideMessages.SPEECH_COMMAND:
+                Log.i(TAG,"Speech mode changed." + command[1]);
+                if(command[1] == 1) speech_active = true; else speech_active = false;
+
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 int heartRate[] = msg.getData().getIntArray("value");
-                Log.i(TAG, "Heartrate " + heartRate[0]);
+
+                Log.i(TAG, "Guide got hr message.");
+
+                if(guide_active == 1 && training_mode < 2) {
+                    int answerCheck = GuideClass.heartRateCheck(heartRate[0]);
+                    if (answerCheck == 0) {
+                        Log.i(TAG,"HR" + heartRate[0]);
+                        Log.i(TAG,"heartRate is too low, faster you little piggy");
+                    } else {
+                        Log.i(TAG,"HR" + heartRate[0]);
+                        Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
+                    }
+                }
+
+            case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
+                Log.i(TAG, "Guide got sensor status message.");
+
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
-                int[] cadence = msg.getData().getIntArray("value");
-                Log.i(TAG, "Cadence_rev: " + cadence[0] + " Cadence_time: " + cadence[1]);
+                int cadence[] = msg.getData().getIntArray("value");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                int speed_dataset[] = msg.getData().getIntArray("value");
-                float time_difference = 0;
-                int revolutions_difference = speed_dataset[0] - last_revolutions;
-                if (speed_dataset[1] < last_speed) {
-                    time_difference = (float) speed_dataset[1] + 65536 - last_speed;
-                } else {
-                    time_difference = (float) speed_dataset[1] - last_speed;
-                }
-                last_speed = (float) speed_dataset[1];
-                last_revolutions = speed_dataset[0];
-
-                time_difference = time_difference / 1024;
-                double speed = 0;
-                if (time_difference > 0) {
-                    speed = ((revolutions_difference*wheel_type) / time_difference) * 3.6;
-                } else {
-                    speed = 0;
-                }
-
-                Log.i(TAG, "Speed_rev: " + speed_dataset[0] + " speed_time: " + speed_dataset[1]);
-                Log.i(TAG, "Speed: " + speed);
-
-                speed_sensor = (int)speed;
-                //addSpeedData(speed_sensor);
+                Log.v(TAG, "speed received");
+                int speed[] = msg.getData().getIntArray("value");
                 break;
-            case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
-                int[] sensor_status = msg.getData().getIntArray("value");
-                if(sensor_status[0] == 1){ heartrate_connected = true;}
-                else {heartrate_connected =false;}
-                if(sensor_status[1] == 1){ speedometer_connected = true;}
-                else {heartrate_connected =false;}
-                if(sensor_status[2] == 1){ cadence_connected = true;}
-                else {heartrate_connected =false;}
-                break;
+            case FHSensorManager.Messages.GUIDE_MESSAGE:*/
         }
     }
 
-    //private GestureDetector mGestureDetector;
-    // Timer variables
+    public static void updateTrainingMode(int training_mode){
+        // TODO: Set min/max heart rate for cardio training
+        if(training_mode == cardio){
+            hr_min = 80;
+            hr_max = 90;
+        }
+        // TODO: Set min/max heart rate for fatburn training
+        if(training_mode == fatburn){
+            hr_min = 90;
+            hr_max = 100;
+        }
 
-    Timer timer;
-    TimerTask timerTask;
-    final Handler handler = new Handler();
+        if(training_mode == interval){
+            startTime = System.currentTimeMillis();
+        }
+    }
 
-    // Plotting Variables
-   private TextView speedText;
-    private TextView heartText;
-    private TextView heightText;
-    private TextView terrainRoadText;
-    private TextView terrainOffroadText;
-    private TextView terrainAsphaltText;
+    public static void updateChallengeMode(int challenge_mode) {
 
-    private static final int HISTORY_SIZE = 50;
-    private static double sin_counter = 0.0;
-    private static boolean plot_speed = false;
-    private static boolean plot_heart = false;
-    private static boolean plot_height = false;
-    private static boolean plot_terrain = false;
+    }
 
-    private static boolean init_speed = false;
-    private static boolean init_heart = false;
-    private static boolean init_height = false;
-    private static boolean init_terrain = false;
-    private ImageView imageview = null;
+    public static int heartRateCheck(int heartRate) {
+        if(heartRate < hr_min){
+            return VALUE_LOW;
+        } else if (heartRate < hr_max) {
+            return VALUE_OK;
+        } else {
+            return VALUE_HIGH;
+        }
+    };
 
-    private int speed_sensor = 0;
 
     @Override
-    protected void onCreate(Bundle bundle) {
-        //doBindService(FHSensorManager.class);
+    public void onCreate() {
+        super.onCreate();
+        Log.i(TAG, "on start");
+        MessengerConnection conn = new MessengerConnection(this);
         conn.connect(FHSensorManager.class);
 
-        Log.i("GuideService", "on start");
-        //initSeries();
-
-        super.onCreate(bundle);
     }
 
-    public void stoptimertask() {
-        //stop the timer, if it's not already null
-        if (timer != null) {
-            timer.cancel();
-            timer = null;
+    void sendMsgString(int messageType, String content){
+        for (int i = mClients.size() - 1; i >= 0; i--) {
+            try {Message msg = Message.obtain(null, messageType);
+                Bundle bundle = new Bundle();
+                // bundle.putFloat("value", val);
+                // bundle.putFloat("value", val);
+                bundle.putString("text", content);
+                msg.setData(bundle);
+                mClients.get(i).send(msg);
+            } catch (RemoteException e) {
+                // The client is dead.  Remove it from the list;
+                // we are going through the list from back to front
+                // so this is safe to do inside the loop.
+                mClients.remove(i);
+            }
         }
     }
+
 
     public void sendDataToSensormanager(int[] data) {
         Message msg = Message.obtain(null, 4);
@@ -158,56 +222,4 @@ public class GuideService extends Service implements MessengerClient {
 
         }
     }
-
-    public void sendWakeup() {
-        int[] command = new int[2];
-        command[0] = FHSensorManager.Commands.WAKEUP_COMMAND;
-        command[1] = 0;
-        sendDataToSensormanager(command);
-    }
-
-    public void startTimer() {
-        //set a new Timer
-        timer = new Timer();
-
-        //initialize the TimerTask's job
-        initializeTimerTask();
-
-        //schedule the timer, after the first 5000ms the TimerTask will run every 500ms
-        timer.schedule(timerTask, 5000, 1000); //
-    }
-
-    public void initializeTimerTask() {
-
-        timerTask = new TimerTask() {
-            public void run() {
-
-                //use a handler to run the plots
-                handler.post(new Runnable() {
-                    public void run() {
-                    }
-                });
-            }
-        };
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        //startTimer();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        //stoptimertask();
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        conn.disconnect();
-    }
 }
-*/

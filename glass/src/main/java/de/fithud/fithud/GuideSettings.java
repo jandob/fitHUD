@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.GuideService;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 
@@ -40,7 +41,9 @@ import de.fithud.fithudlib.MessengerConnection;
  */
 public class GuideSettings extends Activity implements TextToSpeech.OnInitListener, MessengerClient {
 
-    MessengerConnection conn = new MessengerConnection(this);
+    MessengerConnection sensorConn = new MessengerConnection(this);
+    MessengerConnection guideConn = new MessengerConnection(this);
+
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
@@ -91,12 +94,28 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         msg.setData(bundle);
 
         try {
-            conn.send(msg);
+            sensorConn.send(msg);
         }
         catch (RemoteException e){
 
         }
     }
+
+    public void sendDataToGuide(boolean guideActive) {
+        Message msg = Message.obtain(null, 4);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("guideActive", guideActive);
+        //bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        Log.d(TAG, "Data has been sent to guide.");
+        try {
+            guideConn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
+    }
+
 
     // This function is called with clicking on the first card in GuideSettings
     public void startStopGuide(){
@@ -117,9 +136,9 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
             guide_active = 0;
         }
         int[] command = new int[2];
-        command[0] = FHSensorManager.Commands.GUIDE_COMMAND;
+        command[0] = GuideService.GuideMessages.GUIDE_COMMAND;
         command[1] = guide_active;
-        sendDataToSensormanager(command);
+        //sendDataToGuide(command);
 
         if(speech_enabled == 1) {
             tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
@@ -153,7 +172,8 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
 
     @Override
     protected void onCreate(Bundle bundle) {
-        conn.connect(FHSensorManager.class);
+        //sensorConn.connect(FHSensorManager.class);
+        guideConn.connect(GuideService.class);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
@@ -189,6 +209,13 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         mCardScrollView.activate();
         setContentView(mCardScrollView);
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        sensorConn.disconnect();
+        guideConn.disconnect();
+        super.onDestroy();
     }
 
     @Override
@@ -250,7 +277,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     public void handleMessage(Message msg) {
 
         //int [] command = msg.getData().getIntArray("command");
-        Log.i(TAG, "handling Msg");
+        //Log.i(TAG, "handling Msg");
 /* GuideSettings is an activity - doesn't run all the time - cannot receive these messages
         switch (msg.what) {
             case FHSensorManager.Commands.SPEECH_COMMAND:
