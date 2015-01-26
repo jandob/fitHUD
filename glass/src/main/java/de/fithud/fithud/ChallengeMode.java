@@ -91,6 +91,11 @@ public class ChallengeMode extends Activity implements MessengerClient{
         setContentView(mCardScrollView);
     }
 
+    @Override
+    protected void onDestroy() {
+        conn.disconnect();
+        super.onDestroy();
+    }
 
     public void challengeModeSwitch(int challenge_mode){
 
@@ -112,10 +117,8 @@ public class ChallengeMode extends Activity implements MessengerClient{
             mAdapter.notifyDataSetChanged();
         }
         challengeMode = challenge_mode;
-        int[] command = new int[2];
-        command[0] = GuideService.GuideMessages.CHALLENGE_MODE_COMMAND;
-        command[1] = challenge_mode;
-        sendDataToGuide(command);
+        Log.v(TAG, "challenge mode: " + challengeMode);
+        sendModeToGuide(GuideService.GuideMessages.CHALLENGE_MODE_COMMAND, challengeMode);
 
         if(speechEnabled) {
             //TODO: tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
@@ -184,10 +187,10 @@ public class ChallengeMode extends Activity implements MessengerClient{
         Log.i(TAG, "handling Msg");
     }
 
-    public void sendDataToGuide(int[] data) {
-        Message msg = Message.obtain(null, 4);
+    public void sendModeToGuide(int messageType, int mode) {
+        Message msg = Message.obtain(null, messageType);
         Bundle bundle = new Bundle();
-        bundle.putIntArray("command", data);
+        bundle.putInt("challengeMode", mode);
         msg.setData(bundle);
 
         try {

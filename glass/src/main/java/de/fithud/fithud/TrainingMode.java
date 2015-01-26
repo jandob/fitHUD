@@ -79,12 +79,15 @@ public class TrainingMode extends Activity implements MessengerClient{
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
                         trainingModeSwitch(CARDIO);
+                        Log.v(TAG, "training mode: " + trainingMode);
                         break;
                     case 1:
                         trainingModeSwitch(FATBURN);
+                        Log.v(TAG, "training mode: " + trainingMode);
                         break;
                     case 2:
                         trainingModeSwitch(INTERVAL);
+                        Log.v(TAG, "training mode: " + trainingMode);
                         break;
                 }
             }
@@ -98,6 +101,11 @@ public class TrainingMode extends Activity implements MessengerClient{
         setContentView(mCardScrollView);
     }
 
+    @Override
+    protected void onDestroy() {
+        conn.disconnect();
+        super.onDestroy();
+    }
 
     public void trainingModeSwitch(int training_mode){
 
@@ -119,10 +127,7 @@ public class TrainingMode extends Activity implements MessengerClient{
             mAdapter.notifyDataSetChanged();
         }
         trainingMode = training_mode;
-        int[] command = new int[2];
-        command[0] = GuideService.GuideMessages.TRAINING_MODE_COMMAND;
-        command[1] = training_mode;
-        sendDataToGuide(command);
+        sendModeToGuide(GuideService.GuideMessages.TRAINING_MODE_COMMAND, trainingMode);
 
         if(speechEnabled) {
             //TODO: tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
@@ -251,10 +256,10 @@ public class TrainingMode extends Activity implements MessengerClient{
         }*/
     }
 
-    public void sendDataToGuide(int[] data) {
-        Message msg = Message.obtain(null, 4);
+    public void sendModeToGuide(int messageType, int mode) {
+        Message msg = Message.obtain(null, messageType);
         Bundle bundle = new Bundle();
-        bundle.putIntArray("command", data);
+        bundle.putInt("trainingMode", mode);
         msg.setData(bundle);
 
         try {

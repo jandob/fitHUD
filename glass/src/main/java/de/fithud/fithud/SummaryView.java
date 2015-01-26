@@ -52,35 +52,36 @@ public class SummaryView extends Activity implements MessengerClient {
     private  TextView liveCardStatus = null;
     private TextView summaryGuideText = null;
     private String TAG;
-    int heartRate[] = new int[] {1};
-    int speed[] = new int[] {1};
-    int cadence[] = new int[] {1};
+    int heartRate = 1;
+    int speed = 1;
+    int cadence = 1;
 
     private static final String hrLow = "Your heart rate is too low by ";
     private static final String hrHigh = "Your heart rate is too high by ";
 
     @Override
     public void handleMessage(Message msg) {
-        msg.what = 100;
+
         switch (msg.what) {
             case FHSensorManager.Messages.SENSOR_STATUS_MESSAGE:
                 Log.i(TAG,"Got msg");
                 break;
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
-                heartRate = msg.getData().getIntArray("value");
-                liveCardHeartText.setText(heartRate[0] + " bpm");
+                heartRate = (int) msg.getData().getFloat("value");
+                liveCardHeartText.setText(heartRate + " bpm");
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
-                cadence = msg.getData().getIntArray("value");
-                liveCardHeightText.setText(cadence[0] + " U/min");
+                cadence = (int) msg.getData().getFloat("value");
+                liveCardHeightText.setText(cadence + " U/min");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                speed = msg.getData().getIntArray("value");
-                liveCardBikeText.setText(speed[0] + " km/h");
+                speed = (int) msg.getData().getFloat("value");
+                liveCardBikeText.setText(speed + " km/h");
                 break;
 
-            case GuideService.GuideMessages.FATBURN_TRAINING:
-                Log.d(TAG, "Summary view got fatburn training message");
+            case GuideService.GuideMessages.GUIDE_TEXT:
+                Log.d(TAG, "Summary got guide text: " + msg.getData().getString("text"));
+                summaryGuideText.setText(msg.getData().getString("text"));
                 break;
 
         }
@@ -115,7 +116,7 @@ public class SummaryView extends Activity implements MessengerClient {
         summaryGuideText = (TextView) findViewById(R.id.summaryGuideText);
 
         int speed = 5;
-        int heartrate = heartRate[0];
+        int heartrate = heartRate;
         int height = 5;
         liveCardBikeText.setText(speed + " km/h");
         liveCardHeartText.setText(heartrate + " bpm");

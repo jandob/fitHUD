@@ -39,7 +39,7 @@ import de.fithud.fithudlib.MessengerConnection;
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class GuideSettings extends Activity implements TextToSpeech.OnInitListener, MessengerClient {
+public class GuideSettings extends Activity implements MessengerClient {
 
     MessengerConnection sensorConn = new MessengerConnection(this);
     MessengerConnection guideConn = new MessengerConnection(this);
@@ -49,17 +49,11 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
 
-    private TextToSpeech tts;
-    private String speech_text = "test";
+    private final String TAG = GuideSettings.class.getSimpleName();
 
-    private final String TAG = "GuideSettings";
     private static boolean speechEnabled = false;
-
-    // Setting variables
     private static int speech_enabled = 0;
-    private static int guide_active = 0;
-    private static int training_mode = 0;
-
+    private static boolean guide_active = false;
 
 
     @Override
@@ -87,22 +81,8 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
         return super.onMenuItemSelected(featureId, item);
     }
 
-    public void sendDataToSensormanager(int[] data) {
-        Message msg = Message.obtain(null, 4);
-        Bundle bundle = new Bundle();
-        bundle.putIntArray("command", data);
-        msg.setData(bundle);
-
-        try {
-            sensorConn.send(msg);
-        }
-        catch (RemoteException e){
-
-        }
-    }
-
-    public void sendDataToGuide(boolean guideActive) {
-        Message msg = Message.obtain(null, 4);
+    public void sendBoolToGuide(int messageType, boolean guideActive) {
+        Message msg = Message.obtain(null, messageType);
         Bundle bundle = new Bundle();
         bundle.putBoolean("guideActive", guideActive);
         //bundle.putIntArray("command", data);
@@ -119,69 +99,33 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
 
     // This function is called with clicking on the first card in GuideSettings
     public void startStopGuide(){
-        // Communicate with live card here !!
-        if(guide_active == 0) {
+
+        if(!guide_active) {
 
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
-            Log.d(TAG,"Guide activating...");
-            speech_text = "Guide is now activated";
-            guide_active = 1;
+            Log.v(TAG,"Guide activated");
+            guide_active = true;
         }
         else {
             mCards.get(0).setText("Guide is deactivated");
             mAdapter.notifyDataSetChanged();
-            Log.d(TAG, "Guide deactivating...");
-            speech_text = "Guide is now deactivated";
-            guide_active = 0;
+            Log.v(TAG, "Guide deactivated");
+            guide_active = false;
         }
-        int[] command = new int[2];
-        command[0] = GuideService.GuideMessages.GUIDE_COMMAND;
-        command[1] = guide_active;
-        //sendDataToGuide(command);
 
-        if(speech_enabled == 1) {
-            tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
-        }
+        sendBoolToGuide(GuideService.GuideMessages.GUIDE_COMMAND, guide_active);
     }
-
-
-/*
-    public void speechSupportSwitch() {
-
-        if(speech_enabled == 0) {
-            Log.d(TAG,"Speech support turned on...");
-            mCards.get(2).setText("Speech enabled");
-            mAdapter.notifyDataSetChanged();
-            speech_text = "Speech output now enabled";
-            tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
-            speech_enabled = 1;
-        }
-        else {
-            Log.d(TAG,"Speech support turned off...");
-            mCards.get(2).setText("Speech disabled");
-            mAdapter.notifyDataSetChanged();
-            speech_enabled = 0;
-        }
-        int[] command = new int[2];
-        command[0] = FHSensorManager.Commands.SPEECH_COMMAND;
-        command[1] = speech_enabled;
-        sendDataToSensormanager(command);
-    }*/
 
 
     @Override
     protected void onCreate(Bundle bundle) {
-        //sensorConn.connect(FHSensorManager.class);
-        guideConn.connect(GuideService.class);
 
+        guideConn.connect(GuideService.class);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
-
         super.onCreate(bundle);
         createCards();
-
-        tts = new TextToSpeech(this,this);
 
         mCardScrollView = new CardScrollView(this);
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -220,7 +164,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
 
     @Override
     protected void onResume() {
-        if(guide_active == 1) {
+        if(guide_active) {
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
             Log.d(TAG, "Guide is activated...");
@@ -260,46 +204,7 @@ public class GuideSettings extends Activity implements TextToSpeech.OnInitListen
     }
 
     @Override
-         public void onInit(int status) {
-
-        if (status == TextToSpeech.SUCCESS) {
-            int result = tts.setLanguage(Locale.US);
-            if (result == TextToSpeech.LANG_MISSING_DATA
-                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.d(TAG, "TTS:This Language is not supported");
-            }
-        } else {
-            Log.d(TAG, "TTS:Initilization Failed!");
-        }
-    }
-
-    @Override
     public void handleMessage(Message msg) {
-
-        //int [] command = msg.getData().getIntArray("command");
-        //Log.i(TAG, "handling Msg");
-/* GuideSettings is an activity - doesn't run all the time - cannot receive these messages
-        switch (msg.what) {
-            case FHSensorManager.Commands.SPEECH_COMMAND:
-                int[] speech_change = msg.getData().getIntArray("value");
-                if ( speech_change[0] == 1) speechEnabled = true; speechEnabled = false;
-                Log.i(TAG, "Speech settings: " + speech_change[0]);
-                break;
-            case FHSensorManager.Commands.TRAINING_MODE_COMMAND:
-                int[] training_mode = msg.getData().getIntArray("value");
-                if (training_mode[0] < 4) {
-                    mCards.get(1).setIcon(R.drawable.check_black);
-                    mCards.get(2).setIcon(R.drawable.empty);
-                    mAdapter.notifyDataSetChanged();
-                }
-            case FHSensorManager.Commands.CHALLENGE_MODE_COMMAND:
-                int[] challenge_mode = msg.getData().getIntArray("value");
-                if (challenge_mode[0] < 4) {
-                    mCards.get(2).setIcon(R.drawable.check_black);
-                    mCards.get(1).setIcon(R.drawable.empty);
-                    mAdapter.notifyDataSetChanged();
-                }
-        }*/
 
     }
 

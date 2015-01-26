@@ -1,12 +1,15 @@
 package de.fithud.fithud;
 
+import com.google.android.glass.media.Sounds;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.RemoteException;
@@ -23,20 +26,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.GuideService;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.StorageService;
 
 public class MainImmersion extends Activity implements MessengerClient {
     MessengerConnection conn = new MessengerConnection(this);
+    MessengerConnection guideConn = new MessengerConnection(this);
     private final String TAG = "MainImmersion";
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
+    private AudioManager mAudioManager;
 
     public boolean speedometer_connected = false;
     public boolean heartrate_connected = false;
     public boolean cadence_connected = false;
+    private boolean speechActive = false;
 
     View sensorview;
 
@@ -100,6 +107,7 @@ public class MainImmersion extends Activity implements MessengerClient {
 
         startService(new Intent(this, StorageService.class));
         conn.connect(FHSensorManager.class);
+        guideConn.connect(GuideService.class);
 
         Log.i("MainImmersion", "on start");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -109,27 +117,30 @@ public class MainImmersion extends Activity implements MessengerClient {
         createCards();
 
         mCardScrollView = new CardScrollView(this);
-
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         // Handle the TAP event.
         mCardScrollView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //openOptionsMenu();
+                mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
+                        speechSwitch();
+                        break;
+                    case 1:
                         //Toast.makeText(getApplicationContext(), "Searching....", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(MainImmersion.this, SensorMenu.class));
                         break;
 
-                    case 1:
+                    case 2:
                         startActivity(new Intent(MainImmersion.this, WorkoutMenu.class));
                         break;
 
-                    case 2:
+                    case 3:
                         startActivity(new Intent(MainImmersion.this, Achievements.class));
                         break;
 
-                    case 3:
+                    case 4:
                         startActivity(new Intent(MainImmersion.this, ShowPlots.class));
                         break;
                 }
@@ -140,7 +151,7 @@ public class MainImmersion extends Activity implements MessengerClient {
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
-        mCardScrollView.setSelection(1);
+        mCardScrollView.setSelection(2);
     }
     public void sendDataToSensormanager(int[] data) {
         Message msg = Message.obtain(null, 4);
@@ -154,6 +165,25 @@ public class MainImmersion extends Activity implements MessengerClient {
         catch (RemoteException e){
 
         }
+    }
+
+    private void speechSwitch(){
+
+        if(!speechActive) {
+
+            mCards.get(0).setText("Speech on");
+            mAdapter.notifyDataSetChanged();
+            Log.v(TAG,"Speech on");
+            speechActive = true;
+        }
+        else {
+            mCards.get(0).setText("Speech off");
+            mAdapter.notifyDataSetChanged();
+            Log.v(TAG, "Speech off");
+            speechActive = false;
+        }
+
+        sendBoolToGuide(GuideService.GuideMessages.SPEECH_COMMAND, speechActive);
     }
 
     public void sendWakeup() {
@@ -177,6 +207,11 @@ public class MainImmersion extends Activity implements MessengerClient {
 
     private void createCards() {
         mCards = new ArrayList<CardBuilder>();
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Speech off")
+                .setFootnote("Tap to turn on speech."));
+
         CardBuilder sensorcard = new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Sensors Settings")
                 .setFootnote("Status and Search");
@@ -200,8 +235,23 @@ public class MainImmersion extends Activity implements MessengerClient {
     protected void onDestroy() {
         stopService(new Intent(this, StorageService.class));
         conn.disconnect();
+        guideConn.disconnect();
         super.onDestroy();
 
+    }
+
+    public void sendBoolToGuide(int messageType, boolean guideActive) {
+        Message msg = Message.obtain(null, messageType);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("speechActive", guideActive);
+        //bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        try {
+            guideConn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
     }
 
     private class ExampleCardScrollAdapter extends CardScrollAdapter {
