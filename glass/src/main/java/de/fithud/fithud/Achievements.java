@@ -159,36 +159,35 @@ public class Achievements extends Activity implements MessengerClient, TextToSpe
 
         String speedString = Integer.toString(speedRecord);
 
+        // 0: Achievement card for speed
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)        // Add embedded layout
                 .setText("Speed record: " + speedString + " km/h")
                 .setFootnote("Not too bad")
                 .setTimestamp(speedRecordDate)
                 .addImage(R.drawable.achievement_speed));
 
+        // 1: Achievement card for distance
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Distance record: " + distanceRecord + " km")
                 .setFootnote("you biked 50km!!")
                 .setTimestamp(distanceRecordDate)
                 .addImage(R.drawable.achievement_distance));
 
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
-                .setText("Total distance: " + totDistanceRecord + " km")
-                .setFootnote("you biked 50km!!")
-                .setTimestamp(totDistanceStartDate)
-                .addImage(R.drawable.achievement_distance));
-
+        // 2: Achievement card for Speed
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Height record: " + heightRecord + "m")
                 .setFootnote("High as the sky!!")
                 .setTimestamp(heightRecordDate)
                 .addImage(R.drawable.achievement_height));
 
+        // 3: Achievement card for Speed
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Cadence record: " + cadenceRecord + "m")
                 .setFootnote("You can do better")
                 .setTimestamp(cadenceRecordDate)
                 .addImage(R.drawable.achievement_speed));
 
+        // 4: Achievement card for Speed
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)
                 .setText("Calories record: " + caloriesRecord)
                 .setFootnote("Calorie killer!!")
