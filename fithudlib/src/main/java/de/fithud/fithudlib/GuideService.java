@@ -67,8 +67,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
     private static int DISABLED = 4;
     private static boolean guide_active = false;
-    private static int training_mode = DISABLED;
-    private static int challenge_mode = DISABLED;
+    public static int training_mode = DISABLED;
+    public static int challenge_mode = DISABLED;
     private static boolean speech_active = false;
     private static int speechCounter = 0;
     private static int speechPeriod = 10;

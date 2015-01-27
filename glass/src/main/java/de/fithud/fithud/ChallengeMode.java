@@ -93,7 +93,7 @@ public class ChallengeMode extends Activity implements MessengerClient{
 
     @Override
     protected void onDestroy() {
-        conn.disconnect();
+        //conn.disconnect();
         super.onDestroy();
     }
 
@@ -149,7 +149,7 @@ public class ChallengeMode extends Activity implements MessengerClient{
      @Override
     protected void onResume() {
         super.onResume();
-
+        challengeMode = GuideService.challenge_mode;
         if(challengeMode == HEIGHT) {
             mCards.get(0).setIcon(R.drawable.check_black);
             mCards.get(1).setIcon(R.drawable.empty);

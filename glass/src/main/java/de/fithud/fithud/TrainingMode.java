@@ -103,7 +103,7 @@ public class TrainingMode extends Activity implements MessengerClient{
 
     @Override
     protected void onDestroy() {
-        conn.disconnect();
+        //conn.disconnect();
         super.onDestroy();
     }
 
@@ -201,6 +201,7 @@ public class TrainingMode extends Activity implements MessengerClient{
     @Override
     protected void onResume() {
         super.onResume();
+        trainingMode = GuideService.training_mode;
 
         if(trainingMode == CARDIO) {
             mCards.get(0).setIcon(R.drawable.check_black);

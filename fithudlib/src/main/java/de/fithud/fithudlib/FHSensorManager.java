@@ -40,6 +40,8 @@ public class FHSensorManager extends MessengerService {
         public static final int HEIGTH_MESSAGE = 6;
         public static final int SEARCH_READY = 7;
         public static final int GUIDE_MESSAGE = 8;
+        public static final int DISTANCE_MESSAGE = 9;
+        public static final int CALORIES_MESSAGE = 10;
     }
 
     public final class Commands extends MessengerService.Commands {
@@ -183,11 +185,15 @@ public class FHSensorManager extends MessengerService {
     public static float last_speed = 0;
     public static int last_revolutions = 0;
     private static final double wheel_type = 4.4686;
+    private static final double wheel_circumference = 2.2;
 
     // Variables for cadence calculations
 
     private static int lastRevolutionsCrank = 0;
     private static float lastSpeedCrank = 0;
+    private static int firstWheelRevolution = 0;
+    private static int totalWheelRevolution = 0;
+    private static float distance = 0;
 
 
     Timer timer;
@@ -303,14 +309,7 @@ public class FHSensorManager extends MessengerService {
                     } else {
                         cadenceRpm = 0;
                     }
-/*
-                    if(guide_active == 1 && challenge_mode == 1) {
-                        int answerCheck = GuideClass.cadenceCheck(cadenceRpm);
-                        // TODO: Update guide text
-                        if(speech_active){
-                            //TODO: Height challenge speech output
-                        }
-                    }*/
+
 
                     // Speed indicator is set
                 }  else if ((characteristicData[0] & (1L << 0)) != 0) {
@@ -348,17 +347,14 @@ public class FHSensorManager extends MessengerService {
                     Log.v(TAG, "Speed: " + speed);
 
                     sendMsgFloat(Messages.SPEED_MESSAGE, speed);
-/*
-                    if(guide_active == 1 && training_mode == 2) {
-                        int answerCheck = GuideClass.speedCheck(speed);
-                        if (answerCheck == 0) {
-                            Log.i(TAG,"Speed too low");
-                        } else if (answerCheck == 1){
-                            Log.i(TAG,"Speed OK");
-                        } else{
-                            Log.i(TAG,"Speed too high");
-                        }
-                    }*/
+
+                    if (firstWheelRevolution == 0){
+                        firstWheelRevolution = wheel_revolutions;
+                    }
+                    totalWheelRevolution = wheel_revolutions - firstWheelRevolution;
+                    distance = totalWheelRevolution * (float)wheel_circumference;
+
+                    sendMsgFloat(Messages.DISTANCE_MESSAGE, distance);
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {

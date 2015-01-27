@@ -158,7 +158,7 @@ public class GuideSettings extends Activity implements MessengerClient {
     @Override
     protected void onDestroy() {
         sensorConn.disconnect();
-        guideConn.disconnect();
+        //guideConn.disconnect();
         super.onDestroy();
     }
 
