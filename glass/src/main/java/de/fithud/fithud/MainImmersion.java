@@ -223,8 +223,8 @@ public class MainImmersion extends Activity implements MessengerClient {
                 .setFootnote("Starting a workout or set guide"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Achivements")
-                .setFootnote("Your unlocked Achivements!"));
+                .setText("Achievements")
+                .setFootnote("Your unlocked Achievements!"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Plots")

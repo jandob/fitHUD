@@ -194,6 +194,12 @@ public class FHSensorManager extends MessengerService {
     private static int firstWheelRevolution = 0;
     private static int totalWheelRevolution = 0;
     private static float distance = 0;
+    private final int age = 24;
+    private final double vo2max = 44.60;    // for 2500m
+    private final int weight = 70;
+    private double calories = 0.0;
+
+
 
 
     Timer timer;
@@ -360,31 +366,18 @@ public class FHSensorManager extends MessengerService {
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
                 int heartrate = (int) characteristicData[1];
                 sendMsgFloat(Messages.HEARTRATE_MESSAGE, (float)heartrate);
-/*
-                if(guide_active == 1 && training_mode < 2) {
-                    int answerCheck = GuideClass.heartRateCheck(heartrate);
-                    if (answerCheck == 0) {
-                        Log.i(TAG,"HR" + heartrate);
-                        Log.i(TAG,"heartRate is too low, faster you little piggy");
-                    } else {
-                        Log.i(TAG,"HR" + heartrate);
-                        Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
-                    }
-                    //sendMsg(Messages.);   Send message to update
-                }
 
-                // TODO: Caluclate calories
-                int calories_dataset[] = new int[1];
-                // calories_dataset[0] = ...
-                // TODO: send calories message
+                //double calories = ((0.380 * vo2max)+(0.450 * heartrate)+(0.274 * age)+(0.0468 * weight) - 59.3954) * time / 4.184;
+                calories = calories + (((0.380 * vo2max) + (0.450 * heartrate) + (0.274 * age) + (0.0468 * weight) - 59.3954) / 4.184);
+                /*
+                * Source: Paper - Accurate Caloric Expenditure of Bicyclists using Cellphones
+                * Calories =[(0.380 * VO2_max)+(0.450 * BPM)
+                * +(0.274 * age)+(0.0468 * weight) - 59.3954] * time / 4.184
+                * (for male biker) - in kJ ???
+                * with: VO2_max = (D - 504.9) / 44.73
+                */
+                sendMsgFloat(Messages.CALORIES_MESSAGE, (float)calories);
 
-                if(guide_active == 1 && challenge_mode == 2) {
-                    int answerCheck = GuideClass.caloriesCheck(calories_dataset[0]);
-                    // TODO: Update guide text: Calories
-                    if(speech_active){
-                        //TODO: Calories challenge speech output
-                    }
-                }*/
             }
 
             if(characteristic.getService().getUuid().toString().equals(ACCService)){
@@ -422,18 +415,6 @@ public class FHSensorManager extends MessengerService {
 
                 int barometerFinal = (int)barometer_value-(int)barometer_offset;
                 sendMsgFloat(Messages.HEIGTH_MESSAGE, (float) barometerFinal);
-/*
-                if(guide_active == 1 && challenge_mode == 0) {
-                    int answerCheck = GuideClass.heightCheck(barometerFinal);
-                    if (answerCheck == 0) {
-                        Log.i(TAG,"HR" + barometerFinal);
-                        Log.i(TAG,"heartRate is too low, faster you little piggy");
-                    } else {
-                        Log.i(TAG,"HR" + barometerFinal);
-                        Log.i(TAG, "heartRateCHeck sais: " + answerCheck);
-                    }
-                    //sendMsg(Messages.);   Send message to update
-                }*/
             }
         }
 

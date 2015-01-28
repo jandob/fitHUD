@@ -34,7 +34,7 @@ import de.fithud.fithudlib.MessengerConnection;
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class Achievements extends Activity implements MessengerClient, TextToSpeech.OnInitListener {
+public class Achievements extends Activity implements MessengerClient {
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
@@ -84,8 +84,6 @@ public class Achievements extends Activity implements MessengerClient, TextToSpe
 
         super.onCreate(bundle);
 
-        tts = new TextToSpeech(this,this);
-
         // Load achievement history !!!
 
         // Set record history
@@ -96,9 +94,6 @@ public class Achievements extends Activity implements MessengerClient, TextToSpe
         caloriesRecord = 50;
         totDistanceRecord = 50;
 
-        checkHeight(150);
-
-        checkHeight(250);
 
         // Set date/time of records
         speedRecordDate = sdf.format(new Date(0));
@@ -196,149 +191,32 @@ public class Achievements extends Activity implements MessengerClient, TextToSpe
 
     @Override
     public void handleMessage(Message msg) {
-        Log.i(TAG, "handling Msg");
+        //Log.i(TAG, "handling Msg");
 
         switch (msg.what) {
-            case FHSensorManager.Messages.HEARTRATE_MESSAGE:
-                //int heartRate[] = msg.getData().getIntArray("value");
-                //checkHeartRate(heartRate[0]);
-                //Log.i(TAG, "Heartrate " + heartRate[0]);
-                break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
-                checkCadence(msg.getData().getIntArray("value")[0]);
-                Log.i(TAG, "Current cadence");
+                //checkCadence(msg.getData().getIntArray("value")[0]);
+                //Log.i(TAG, "Current cadence");
                 break;
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
-                checkHeight(msg.getData().getIntArray("value")[0]);
+                //checkHeight(msg.getData().getIntArray("value")[0]);
                 Log.i(TAG, "Current height");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                checkSpeed(msg.getData().getIntArray("value")[0]);
+                //checkSpeed(msg.getData().getIntArray("value")[0]);
                 Log.i(TAG, "Current speed");
                 break;
-            /*case FHSensorManager.Messages.SPEED_MESSAGE:
-                checkCadence(msg.getData().getIntArray("value")[0]);
-                Log.i(TAG, "Calories");
-                break;*/
         }
 
     }
 
-    private void checkCadence(int current_cadence) {
-
-        if(current_cadence > cadenceRecord){                            // Set new record values
-            cadenceRecord = current_cadence;
-            cadenceRecordDate = sdf.format(new Date());               // Get date of record
-            Log.i(TAG, "New cadence record:" + cadenceRecord);
-            Log.i(TAG, "Date changed: " + cadenceRecordDate);
-
-            recordChanged = true;
-
-            if (cadenceLevelIndex + 1 <= cadenceAchievementLevel.length) {
-
-                if(cadenceRecord >= cadenceAchievementLevel[cadenceLevelIndex+1]){
-                    cadenceLevelIndex++;
-                    Log.d(TAG,"cadence level: " + cadenceAchievementLevel[cadenceLevelIndex]);
-
-                    if (speechOutputEnabled) {
-                        // TODO: tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                }
-                cadenceDiff = cadenceAchievementLevel[cadenceLevelIndex + 1] - cadenceRecord;
-                Log.d(TAG,"cadence diff: " + cadenceDiff);
-            }
-        }
-    }
-
-    //TODO: Height or max elevation?
-    private void checkHeight(int current_height) {
-
-        if(current_height > heightRecord){                            // Set new record values
-            heightRecord = current_height;
-            heightRecordDate = sdf.format(new Date());               // Get date of record
-            Log.i(TAG, "New height record:" + heightRecord);
-            Log.i(TAG, "Date changed: " + heightRecordDate);
-
-            recordChanged = true;
-
-            if (heightLevelIndex + 1 <= heightAchievementLevel.length) {
-
-                if(heightRecord >= heightAchievementLevel[heightLevelIndex+1]){
-                    heightLevelIndex++;
-                    Log.d(TAG,"Height level: " + heightAchievementLevel[heightLevelIndex]);
-
-                    if (speechOutputEnabled) {
-                        // TODO: tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                }
-                heightDiff = heightAchievementLevel[heightLevelIndex + 1] - heightRecord;
-                Log.d(TAG,"Height diff: " + heightDiff);
-            }
-        }
-
-    }
-
-
-/*
-    private void checkCalories(int current_heartRate){
-
-
-    }*/
-
-    private void checkSpeed(int current_speed){
-
-        if(current_speed > speedRecord){                            // Set new record values
-            speedRecord = current_speed;
-            speedRecordDate = sdf.format(new Date());               // Get date of record
-            Log.i(TAG, "New speed record:" + speedRecord);
-            Log.i(TAG, "Date changed: " + speedRecordDate);
-
-            recordChanged = true;
-            if (speedLevelIndex + 1 <= speedAchievementLevel.length) {
-
-                if(speedRecord >= speedAchievementLevel[speedLevelIndex+1]){
-                    speedLevelIndex++;
-                    Log.d(TAG,"Speed level: " + speedAchievementLevel[speedLevelIndex]);
-
-                    if (speechOutputEnabled) {
-                        // TODO: tts.speak("New speed achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
-                    }
-                }
-                speedDiff = speedAchievementLevel[speedLevelIndex + 1] - speedRecord;
-                Log.d(TAG,"Speed diff: " + speedDiff);
-
-            }
-        }
-    }
 
     @Override
     protected void onDestroy() {
         //mCardScrollView.destroyDrawingCache();
-        if(recordChanged){
-            // Save new achievements
-        }
-
         super.onPause();
     }
 
-    @Override
-    public void onInit(int status) {
-
-        if (status == TextToSpeech.SUCCESS) {
-
-            int result = tts.setLanguage(Locale.US);
-
-            if (result == TextToSpeech.LANG_MISSING_DATA
-                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.d(TAG, "TTS:This Language is not supported");
-            } else {
-                //speech_text = "Speech activated";
-                //tts.speak(speech_text, TextToSpeech.QUEUE_FLUSH, null);
-            }
-        } else {
-            Log.d(TAG, "TTS:Initilization Failed!");
-        }
-    }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
 

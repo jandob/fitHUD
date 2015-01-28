@@ -75,6 +75,15 @@
             android:layout_below="@+id/liveCardHeart"
             android:layout_centerHorizontal="true" />
 
+        <TextView
+            android:id="@+id/distanceText"
+            android:layout_width="250px"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="110px"
+            android:text="0 m"
+            android:layout_alignTop="@+id/summaryGuideText"
+            android:layout_alignParentStart="true" />
+
     </RelativeLayout>
 
 </FrameLayout>

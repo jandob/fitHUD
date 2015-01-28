@@ -22,12 +22,15 @@ import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import org.w3c.dom.Text;
 
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -70,6 +73,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int training_mode = DISABLED;
     public static int challenge_mode = DISABLED;
     private static boolean speech_active = false;
+    private static boolean workout_started = false;
     private static int speechCounter = 0;
     private static int speechPeriod = 10;
 
@@ -80,12 +84,54 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private static String GuideText;
     private static int progressIndex = 0;
 
+    // Achievements variables
+    SimpleDateFormat sdf = new SimpleDateFormat("dd.MMM yyyy HH:mm");
+
+    // Ignore previous values
+    boolean speedCheckActive = false;
+    boolean distanceCheckActive = false;
+    boolean heightCheckActive = false;
+    boolean cadenceCheckActive = false;
+    boolean caloriesCheckActive = false;
+
+    private static int speedRecord = 0;
+    private static int totDistanceRecord = 0;
+    private static int distanceRecord = 0;
+    private static int heightRecord = 0;
+    private static int caloriesRecord = 0;
+    private static int cadenceRecord = 0;
+
+    private static String speedRecordDate;
+    private static String heightRecordDate;
+    private static String distanceRecordDate;
+    private static String totDistanceStartDate;
+    private static String caloriesRecordDate;
+    private static String cadenceRecordDate;
+
+    private static int[] speedAchievementLevel = new int[] {0, 25, 50, 60, 70, 80};
+    private static int[] heightAchievementLevel = new int[] {0, 100, 200, 300, 400, 500};
+    private static int[] cadenceAchievementLevel = new int[] {0, 60, 80, 120, 150};
+
+    private static int speedLevelIndex = 0;
+    private static int heightLevelIndex = 0;
+    private static int cadenceLevelIndex = 0;
+
+    private static int speedDiff = 0;
+    private static int heightDiff = 0;
+    private static int cadenceDiff = 0;
+
+    private static boolean recordChanged = false;
+    private static boolean speechOutputEnabled = true;
+    // end Achievements variables
+
+
     public final class GuideMessages extends MessengerService.Messages {
         public static final int GUIDE_COMMAND = 30;
         public static final int TRAINING_MODE_COMMAND = 31;
         public static final int CHALLENGE_MODE_COMMAND = 32;
         public static final int SPEECH_COMMAND = 33;
         public static final int GUIDE_TEXT = 34;
+        public static final int WORKOUT_COMMAND = 35;
     }
 
 
@@ -104,6 +150,18 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                         tts.speak("Guide is now activated", TextToSpeech.QUEUE_FLUSH, null);
                     } else {
                         tts.speak("Guide is not activated anymore", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                break;
+
+            case GuideService.GuideMessages.WORKOUT_COMMAND:
+                workout_started = msg.getData().getBoolean("workoutActive");
+
+                if(speech_active){
+                    if (workout_started){
+                        tts.speak("Workout started.", TextToSpeech.QUEUE_FLUSH, null);
+                    } else {
+                        tts.speak("Workout finished.", TextToSpeech.QUEUE_FLUSH, null);
                     }
                 }
                 break;
@@ -162,13 +220,17 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "HR received" + value);
 
-                if(guide_active) {
-                    if (training_mode < 2) {                          // Cardio & Fatburn training
-                        heartRateCheck((int)value);
-                    }
-                    if (challenge_mode == 2) {                        // Calories challenge
-                        caloriesCheck((int)value);
-                    }
+                if(workout_started && guide_active && training_mode < 2) {  // Cardio & Fatburn training
+                    heartRateCheck((int)value);
+                }
+                break;
+
+            case FHSensorManager.Messages.CALORIES_MESSAGE:
+                value = msg.getData().getFloat("value");
+                Log.v(TAG, "Calories received" + value);
+
+                if(workout_started && guide_active && challenge_mode == 2) {    // Calories challenge
+                    caloriesCheck((int)value);
                 }
                 break;
 
@@ -176,28 +238,46 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "cadence received" + value);
 
-                if(guide_active && (challenge_mode == 1)) {          // Cadence challenge
+                if(workout_started && guide_active && (challenge_mode == 1)) {  // Cadence challenge
                     cadenceCheck(value);
                 }
                 break;
 
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 value = msg.getData().getFloat("value");
-                Log.v(TAG, "speed received" + value);
 
-                if(guide_active && (training_mode == 2)) {          // Interval training mode
-                    speedCheck(value);
+                if(value == 0)
+                    speedCheckActive = true;
+
+                if(workout_started && speedCheckActive == true) {
+                    Log.v(TAG, "speed received" + value);
+
+                    if (guide_active && (training_mode == 2)) {          // Interval training mode
+                        speedCheck(value);
+                    }
+
+                    achievementSpeedCheck((int) value);                 // Check speed achievements
                 }
+
                 break;
 
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
                 value = msg.getData().getFloat("value");
-                Log.v(TAG, "height received" + value);
 
-                if(guide_active && (challenge_mode == 0)) {         // Height challenge
-                    heightCheck((int)value);
+                if(value == 0)
+                    heightCheckActive = true;
+
+                if(workout_started && heightCheckActive == true) {
+                    Log.v(TAG, "height received" + value);
+
+                    if (guide_active && (challenge_mode == 0)) {         // Height challenge
+                        heightCheck((int) value);
+                    }
+
+                    achievementHeightCheck((int) value);
                 }
                 break;
+
 
 
         }
@@ -404,5 +484,87 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             }
         }
     }
+
+    private void achievementSpeedCheck(int current_speed){
+
+        if(current_speed > speedRecord){                            // Set new record values
+            speedRecord = current_speed;
+            speedRecordDate = sdf.format(new Date());               // Get date of record
+            Log.i(TAG, "New speed record:" + speedRecord);
+            Log.i(TAG, "Date changed: " + speedRecordDate);
+
+            recordChanged = true;
+            if (speedLevelIndex + 1 <= speedAchievementLevel.length) {
+
+                if(speedRecord >= speedAchievementLevel[speedLevelIndex+1]){
+                    speedLevelIndex++;
+                    Log.d(TAG,"Speed level: " + speedAchievementLevel[speedLevelIndex]);
+
+                    if (speechOutputEnabled) {
+                        // TODO: tts.speak("New speed achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                    Toast.makeText(this, "Speed record: " + speedAchievementLevel[speedLevelIndex + 1] + "km/h", Toast.LENGTH_LONG).show();
+                }
+                speedDiff = speedAchievementLevel[speedLevelIndex + 1] - speedRecord;
+                Log.d(TAG,"Speed diff: " + speedDiff);
+
+            }
+        }
+    }
+
+    //TODO: Height or max elevation?
+    private void achievementHeightCheck(int current_height) {
+
+        if(current_height > heightRecord){                            // Set new record values
+            heightRecord = current_height;
+            heightRecordDate = sdf.format(new Date());               // Get date of record
+            Log.i(TAG, "New height record:" + heightRecord);
+            Log.i(TAG, "Date changed: " + heightRecordDate);
+
+            recordChanged = true;
+
+            if (heightLevelIndex + 1 <= heightAchievementLevel.length) {
+
+                if(heightRecord >= heightAchievementLevel[heightLevelIndex+1]){
+                    heightLevelIndex++;
+                    Log.d(TAG,"Height level: " + heightAchievementLevel[heightLevelIndex]);
+
+                    if (speechOutputEnabled) {
+                        // TODO: tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                    Toast.makeText(this, "Height record: " + heightAchievementLevel[heightLevelIndex+1] + "m", Toast.LENGTH_LONG).show();
+                }
+                heightDiff = heightAchievementLevel[heightLevelIndex + 1] - heightRecord;
+                Log.d(TAG,"Height diff: " + heightDiff);
+            }
+        }
+    }
+
+    private void checkCadence(int current_cadence) {
+
+        if(current_cadence > cadenceRecord){                          // Set new record values
+            cadenceRecord = current_cadence;
+            cadenceRecordDate = sdf.format(new Date());               // Get date of record
+            Log.i(TAG, "New cadence record:" + cadenceRecord);
+            Log.i(TAG, "Date changed: " + cadenceRecordDate);
+
+            recordChanged = true;
+
+            if (cadenceLevelIndex + 1 <= cadenceAchievementLevel.length) {
+
+                if(cadenceRecord >= cadenceAchievementLevel[cadenceLevelIndex+1]){
+                    cadenceLevelIndex++;
+                    Log.d(TAG,"cadence level: " + cadenceAchievementLevel[cadenceLevelIndex]);
+
+                    if (speechOutputEnabled) {
+                        // TODO: tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                cadenceDiff = cadenceAchievementLevel[cadenceLevelIndex + 1] - cadenceRecord;
+                Log.d(TAG,"cadence diff: " + cadenceDiff);
+            }
+        }
+    }
+
 
 }

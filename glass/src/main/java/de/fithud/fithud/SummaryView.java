@@ -51,13 +51,13 @@ public class SummaryView extends Activity implements MessengerClient {
     private  TextView liveCardHeightText = null;
     private  TextView liveCardStatus = null;
     private TextView summaryGuideText = null;
+    private TextView distanceText = null;
     private String TAG;
-    int heartRate = 1;
-    int speed = 1;
-    int cadence = 1;
+    int heartRate = 0;
+    float speed = (float) 0.0;
+    int cadence = 0;
+    float distance = (float) 0.0;
 
-    private static final String hrLow = "Your heart rate is too low by ";
-    private static final String hrHigh = "Your heart rate is too high by ";
 
     @Override
     public void handleMessage(Message msg) {
@@ -75,9 +75,12 @@ public class SummaryView extends Activity implements MessengerClient {
                 liveCardHeightText.setText(cadence + " U/min");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
-                speed = (int) msg.getData().getFloat("value");
+                speed = msg.getData().getFloat("value");
                 liveCardBikeText.setText(speed + " km/h");
                 break;
+            case FHSensorManager.Messages.DISTANCE_MESSAGE:
+                distance = msg.getData().getFloat("value");
+                distanceText.setText("distance: " + distance);
 
             case GuideService.GuideMessages.GUIDE_TEXT:
                 Log.d(TAG, "Summary got guide text: " + msg.getData().getString("text"));
@@ -91,7 +94,7 @@ public class SummaryView extends Activity implements MessengerClient {
     @Override
     protected void onDestroy() {
         sensorConn.disconnect();
-        guideConn.disconnect();
+        //guideConn.disconnect();
         super.onDestroy();
     }
 
@@ -114,6 +117,7 @@ public class SummaryView extends Activity implements MessengerClient {
         liveCardHeightText = (TextView) findViewById(R.id.liveCardHeightText);
         liveCardStatus = (TextView) findViewById(R.id.liveCardStatus);
         summaryGuideText = (TextView) findViewById(R.id.summaryGuideText);
+        distanceText = (TextView) findViewById(R.id.distanceText);
 
         int speed = 5;
         int heartrate = heartRate;
