@@ -51,7 +51,6 @@ public class ChallengeMode extends Activity implements MessengerClient{
     private static int challengeMode = DISABLED;
 
 
-
     @Override
     protected void onCreate(Bundle bundle) {
 

@@ -133,14 +133,17 @@ public class MainImmersion extends Activity implements MessengerClient {
                         break;
 
                     case 2:
+                        startActivity(new Intent(MainImmersion.this, WheelSettings.class));
+                        break;
+                    case 3:
                         startActivity(new Intent(MainImmersion.this, WorkoutMenu.class));
                         break;
 
-                    case 3:
+                    case 4:
                         startActivity(new Intent(MainImmersion.this, Achievements.class));
                         break;
 
-                    case 4:
+                    case 5:
                         startActivity(new Intent(MainImmersion.this, ShowPlots.class));
                         break;
                 }
@@ -151,7 +154,7 @@ public class MainImmersion extends Activity implements MessengerClient {
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
-        mCardScrollView.setSelection(2);
+        mCardScrollView.setSelection(3);
     }
     public void sendDataToSensormanager(int[] data) {
         Message msg = Message.obtain(null, 4);
@@ -217,6 +220,10 @@ public class MainImmersion extends Activity implements MessengerClient {
                 .setFootnote("Status and Search");
         sensorview = sensorcard.getView();
         mCards.add(sensorcard);
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Wheel Settings")
+                .setFootnote("Tap to change wheel settings!"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Workout!")

@@ -61,9 +61,8 @@
         <activity android:name=".SensorMenu" />
 
         <activity android:name=".TrainingMode" />
-
         <activity android:name=".ChallengeMode" />
-
+        <activity android:name=".WheelSettings" />
         <activity android:name=".SummaryView" />
         <activity android:name=".ShowPlots" />
 

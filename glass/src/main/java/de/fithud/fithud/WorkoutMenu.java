@@ -110,13 +110,14 @@ public class WorkoutMenu extends Activity implements MessengerClient{
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
+                        startActivity(new Intent(WorkoutMenu.this, GuideSettings.class));
+                        break;
+
+                    case 1:
                         startStopWorkout();
                         sendBoolToGuide(GuideService.GuideMessages.WORKOUT_COMMAND, workoutActive);
                         break;
 
-                    case 1:
-                        startActivity(new Intent(WorkoutMenu.this, GuideSettings.class));
-                        break;
                 }
             }
         });
@@ -139,19 +140,20 @@ public class WorkoutMenu extends Activity implements MessengerClient{
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
+        mCardScrollView.setSelection(1);
     }
 
     @Override
     protected void onResume() {
         if(workoutActive) {
-            mCards.get(0).setText("Workout active");
+            mCards.get(1).setText("Workout active");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Workout is active...");
         }
         else{
-            mCards.get(0).setText("Workout inactive");
+            mCards.get(1).setText("Workout inactive");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Workzt is inactive...");
+            Log.d("FitHUD", "Workout is inactive...");
         }
 
         super.onResume();
@@ -173,12 +175,12 @@ public class WorkoutMenu extends Activity implements MessengerClient{
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Start/Stop!")
-                .setFootnote("Start or stop the workout"));
-
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Guide Settings")
                 .setFootnote("Start or set the guide"));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Start/Stop!")
+                .setFootnote("Start or stop the workout"));
     }
 
     @Override
@@ -190,7 +192,6 @@ public class WorkoutMenu extends Activity implements MessengerClient{
         Message msg = Message.obtain(null, messageType);
         Bundle bundle = new Bundle();
         bundle.putBoolean("workoutActive", guideActive);
-        //bundle.putIntArray("command", data);
         msg.setData(bundle);
         Log.d(TAG, "Data has been sent to guide.");
         try {
