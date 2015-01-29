@@ -68,12 +68,11 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="100px"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Let's go!"
             android:id="@+id/summaryGuideText"
-            android:layout_below="@+id/liveCardHeart"
-            android:layout_centerHorizontal="true" />
+            android:layout_below="@+id/liveCardHeight"
+            android:layout_toEndOf="@+id/distanceText" />
 
         <TextView
             android:id="@+id/distanceText"
@@ -83,6 +82,25 @@
             android:text="0 m"
             android:layout_alignTop="@+id/summaryGuideText"
             android:layout_alignParentStart="true" />
+
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="300px"
+            android:text="00:00:00"
+            android:layout_alignTop="@+id/liveCardBikeText"
+            android:layout_alignEnd="@+id/timeText" />
+
+
+        <TextView
+            android:id="@+id/caloriesText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="250px"
+            android:text="0 kJ"
+            android:layout_alignTop="@+id/liveCardHeart"
+            android:layout_alignEnd="@+id/timeText" />
 
     </RelativeLayout>
 

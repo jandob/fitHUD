@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.speech.tts.TextToSpeech;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -48,14 +50,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
     private static final String TAG = GuideService.class.getSimpleName();
 
-    private static final int VALUE_LOW = 0;
-    private static final int VALUE_OK = 1;
-    private static final int VALUE_HIGH = 2;
-
     private static final int cardio = 0;
     private static final int fatburn = 1;
     private static final int interval = 2;
-    private static final int recreation = 3;
 
     private static int hr_min = 0;
     private static int hr_max = 0;
@@ -87,26 +84,17 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     // Achievements variables
     SimpleDateFormat sdf = new SimpleDateFormat("dd.MMM yyyy HH:mm");
 
-    // Ignore previous values
-    boolean speedCheckActive = false;
-    boolean distanceCheckActive = false;
-    boolean heightCheckActive = false;
-    boolean cadenceCheckActive = false;
-    boolean caloriesCheckActive = false;
-
     private static int speedRecord = 0;
-    private static int totDistanceRecord = 0;
-    private static int distanceRecord = 0;
     private static int heightRecord = 0;
-    private static int caloriesRecord = 0;
     private static int cadenceRecord = 0;
 
     private static String speedRecordDate;
     private static String heightRecordDate;
-    private static String distanceRecordDate;
-    private static String totDistanceStartDate;
-    private static String caloriesRecordDate;
     private static String cadenceRecordDate;
+
+    private static String workoutRunningTime;
+    private long workoutStartTime;
+    private long workoutCurrentTime;
 
     private static int[] speedAchievementLevel = new int[] {0, 25, 50, 60, 70, 80};
     private static int[] heightAchievementLevel = new int[] {0, 100, 200, 300, 400, 500};
@@ -132,6 +120,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         public static final int SPEECH_COMMAND = 33;
         public static final int GUIDE_TEXT = 34;
         public static final int WORKOUT_COMMAND = 35;
+        public static final int GUIDE_TIME = 36;
     }
 
 
@@ -156,6 +145,13 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             case GuideService.GuideMessages.WORKOUT_COMMAND:
                 workout_started = msg.getData().getBoolean("workoutActive");
+                Log.v(TAG, "WorkoutActive changed");
+
+                if (workout_started) {
+                    startTimer();
+                } else {
+                    stopTimer();
+                }
 
                 if(speech_active){
                     if (workout_started){
@@ -245,17 +241,12 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 value = msg.getData().getFloat("value");
+                Log.v(TAG, "speed received" + value);
 
-                if(value == 0)
-                    speedCheckActive = true;
-
-                if(workout_started && speedCheckActive == true) {
-                    Log.v(TAG, "speed received" + value);
-
+                if(workout_started) {
                     if (guide_active && (training_mode == 2)) {          // Interval training mode
                         speedCheck(value);
                     }
-
                     achievementSpeedCheck((int) value);                 // Check speed achievements
                 }
 
@@ -263,12 +254,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
                 value = msg.getData().getFloat("value");
+                Log.v(TAG, "height received" + value);
 
-                if(value == 0)
-                    heightCheckActive = true;
-
-                if(workout_started && heightCheckActive == true) {
-                    Log.v(TAG, "height received" + value);
+                if(workout_started) {
 
                     if (guide_active && (challenge_mode == 0)) {         // Height challenge
                         heightCheck((int) value);
@@ -566,5 +554,57 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         }
     }
 
+
+    Timer timer;
+    TimerTask timerTask;
+    final Handler handler = new Handler();
+
+    private void stopTimer() {
+        //stop the timer, if it's not already null
+        if (timer != null) {
+            timer.cancel();
+            timer = null;
+        }
+    }
+
+
+    private void startTimer() {
+
+        timer = new Timer();
+        workoutStartTime = System.currentTimeMillis();
+
+        initializeTimerTask();
+        // TimerTask starts immediately, repeats every second
+        timer.schedule(timerTask, 100, 1000); //
+    }
+
+
+    public void initializeTimerTask() {
+
+        timerTask = new TimerTask() {
+            public void run() {
+
+                //use a handler to run the plots
+                handler.post(new Runnable() {
+                    public void run() {
+
+                        workoutCurrentTime = System.currentTimeMillis();
+                        long time_diff = workoutCurrentTime - workoutStartTime;
+
+                        //hh:mm:ss
+                        workoutRunningTime = String.format("%02d:%02d:%02d",
+                        TimeUnit.MILLISECONDS.toHours(time_diff),
+                        TimeUnit.MILLISECONDS.toMinutes(time_diff) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time_diff)),
+                        TimeUnit.MILLISECONDS.toSeconds(time_diff) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time_diff)));
+
+                        sendMsgString(GuideMessages.GUIDE_TIME, workoutRunningTime);
+
+                        Log.v(TAG, workoutRunningTime);
+
+                    }
+                });
+            }
+        };
+    }
 
 }

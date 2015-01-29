@@ -191,8 +191,8 @@ public class FHSensorManager extends MessengerService {
 
     private static int lastRevolutionsCrank = 0;
     private static float lastSpeedCrank = 0;
-    private static int firstWheelRevolution = 0;
-    private static int totalWheelRevolution = 0;
+    public static int firstWheelRevolution = 0;
+    public static int totalWheelRevolution = 0;
     private static float distance = 0;
     private final int age = 24;
     private final double vo2max = 44.60;    // for 2500m
@@ -352,7 +352,9 @@ public class FHSensorManager extends MessengerService {
                     }
                     Log.v(TAG, "Speed: " + speed);
 
-                    sendMsgFloat(Messages.SPEED_MESSAGE, speed);
+                    if(speed < 100) {                                  // if speed value valid
+                        sendMsgFloat(Messages.SPEED_MESSAGE, speed);
+                    }
 
                     if (firstWheelRevolution == 0){
                         firstWheelRevolution = wheel_revolutions;

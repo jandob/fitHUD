@@ -52,11 +52,15 @@ public class SummaryView extends Activity implements MessengerClient {
     private  TextView liveCardStatus = null;
     private TextView summaryGuideText = null;
     private TextView distanceText = null;
-    private String TAG;
+    private TextView timeText = null;
+    private TextView caloriesText = null;
+
+    private String TAG = SummaryView.class.getSimpleName();
     int heartRate = 0;
     float speed = (float) 0.0;
     int cadence = 0;
     float distance = (float) 0.0;
+    int calories = 10;
 
 
     @Override
@@ -87,6 +91,16 @@ public class SummaryView extends Activity implements MessengerClient {
                 summaryGuideText.setText(msg.getData().getString("text"));
                 break;
 
+            case GuideService.GuideMessages.GUIDE_TIME:
+                Log.d(TAG, "Workout time: " + msg.getData().getString("text"));
+                timeText.setText(msg.getData().getString("text"));
+                break;
+
+            case FHSensorManager.Messages.CALORIES_MESSAGE:
+                Log.d(TAG, "Calories: " + msg.getData().getFloat("value"));
+                calories = (int) msg.getData().getFloat("value");
+                caloriesText.setText(calories + " kJ");
+                break;
         }
     }
 
@@ -118,6 +132,8 @@ public class SummaryView extends Activity implements MessengerClient {
         liveCardStatus = (TextView) findViewById(R.id.liveCardStatus);
         summaryGuideText = (TextView) findViewById(R.id.summaryGuideText);
         distanceText = (TextView) findViewById(R.id.distanceText);
+        timeText = (TextView) findViewById(R.id.timeText);
+        caloriesText = (TextView) findViewById(R.id.caloriesText);
 
         int speed = 5;
         int heartrate = heartRate;
