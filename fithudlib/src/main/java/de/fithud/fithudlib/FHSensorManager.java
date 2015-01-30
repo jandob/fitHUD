@@ -47,17 +47,9 @@ public class FHSensorManager extends MessengerService {
     public final class Commands extends MessengerService.Commands {
         public static final int SEARCH_COMMAND = 1;
         public static final int WAKEUP_COMMAND = 2;
-        //public static final int GUIDE_COMMAND = 3;
-        //public static final int TRAINING_MODE_COMMAND = 4;
-        //public static final int CHALLENGE_MODE_COMMAND = 5;
-        //public static final int SPEECH_COMMAND = 6;
+        public static final int WHEEL_LIGHT = 3;
+        public static final int WHEEL_SPEED = 4;
     }
-
-    private static int DISABLED = 4;
-    private static int guide_active = 0;
-    private static int training_mode = DISABLED;
-    private static int challenge_mode = DISABLED;
-    private static boolean speech_active = false;
 
     @Override
     void handleMessage(Message msg) {
@@ -77,30 +69,27 @@ public class FHSensorManager extends MessengerService {
                     Log.i(TAG,"Wakeup not connected");
                 }
                 break;
-/*
-            case Commands.GUIDE_COMMAND:
-                GuideClass.updateTrainingMode(training_mode);
-                Log.i(TAG,"Guide mode changed." + command[1]);
-                guide_active = command[1];
+
+            case Commands.WHEEL_LIGHT:
+                if (wheelLightActive) {
+                    wheelLightActive = false;
+                    startStopLight(wheelLightActive);
+                } else {
+                    wheelLightActive = true;
+                    startStopLight(true);
+                }
+                Log.d(TAG, "wheel light on: " + wheelLightActive);
                 break;
-
-            case Commands.TRAINING_MODE_COMMAND:
-                training_mode = command[1];
-                challenge_mode = DISABLED;
-                GuideClass.updateTrainingMode(training_mode);
-                Log.i(TAG,"Training mode changed." + command[1]);
+            case Commands.WHEEL_SPEED:
+                if (wheelSpeedActive) {
+                    wheelSpeedActive = false;
+                    showSpeedOnWheel(wheelSpeedActive);
+                } else {
+                    wheelSpeedActive = true;
+                    showSpeedOnWheel(true);
+                }
+                Log.d(TAG, "wheel speed on: " + wheelSpeedActive);
                 break;
-
-            case Commands.SPEECH_COMMAND:
-                Log.i(TAG,"Speech mode changed." + command[1]);
-                if(command[1] == 1) speech_active = true; else speech_active = false;
-
-            case Commands.CHALLENGE_MODE_COMMAND:
-                challenge_mode = command[1];
-                training_mode = DISABLED;
-                GuideClass.updateChallengeMode(challenge_mode);
-                Log.i(TAG,"Challenge mode changed." + command[1]);
-                break;*/
         }
     }
 
@@ -199,7 +188,8 @@ public class FHSensorManager extends MessengerService {
     private final int weight = 70;
     private double calories = 0.0;
 
-
+    private boolean wheelLightActive = false;
+    private boolean wheelSpeedActive = false;
 
 
     Timer timer;
@@ -241,34 +231,40 @@ public class FHSensorManager extends MessengerService {
     }
 
     public void showSpeedOnWheel(boolean speedWheelSwitch){
-        byte[] signal = new byte[1];
-        if(speedWheelSwitch) {
-            signal[0] = (byte)0xFC;
+        if (spdAccWake_connected == 1) {
+            byte[] signal = new byte[1];
+            if(speedWheelSwitch) {
+                signal[0] = (byte)0xFC;
+            }
+            else
+            {
+                signal[0] = (byte)0xFB;
+            }
+            // Save local in characterstic
+            wakeupCharacteristic.setValue(signal);
+            // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+            wakeupGATT.writeCharacteristic(wakeupCharacteristic);
         }
-        else
-        {
-            signal[0] = (byte)0xFB;
-        }
-        // Save local in characterstic
-        wakeupCharacteristic.setValue(signal);
-        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
-        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+
     }
 
     public void startStopLight(boolean lightSwitch)
     {
-        byte[] signal = new byte[1];
-        if(lightSwitch) {
-            signal[0] = (byte)0xFE;
+        if (spdAccWake_connected == 1) {
+            byte[] signal = new byte[1];
+            if(lightSwitch) {
+                signal[0] = (byte)0xFE;
+            }
+            else
+            {
+                signal[0] = (byte)0xFD;
+            }
+            // Save local in characterstic
+            wakeupCharacteristic.setValue(signal);
+            // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+            wakeupGATT.writeCharacteristic(wakeupCharacteristic);
         }
-        else
-        {
-            signal[0] = (byte)0xFD;
-        }
-        // Save local in characterstic
-        wakeupCharacteristic.setValue(signal);
-        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
-        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+
     }
 
     public void sendWakeupMessage(){
