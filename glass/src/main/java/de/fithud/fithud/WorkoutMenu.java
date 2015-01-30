@@ -77,14 +77,14 @@ public class WorkoutMenu extends Activity implements MessengerClient{
         // Start workout here ! Therefore communicate with livecard
         if(!workoutActive) {
             workoutActive = true;
-            mCards.get(0).setText("Workout running");
+            mCards.get(1).setText("Workout running");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Activating workout...");
 
         }
         else
         {
-            mCards.get(0).setText("Workout inactive");
+            mCards.get(1).setText("Workout inactive");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Deactivating workout...");
             workoutActive = false;
@@ -128,7 +128,7 @@ public class WorkoutMenu extends Activity implements MessengerClient{
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 mAudioManager.playSoundEffect(Sounds.DISMISSED);
                 switch (mCardScrollView.getSelectedItemPosition()) {
-                    case 0:                     //Guide
+                    case 1:                     //Guide
                         startActivity(new Intent(WorkoutMenu.this, SummaryView.class));
                         break;
                 }

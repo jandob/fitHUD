@@ -452,6 +452,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     @Override
     public void onDestroy() {
         //conn.disconnect();
+        speech_active = false;
         super.onDestroy();
     }
 

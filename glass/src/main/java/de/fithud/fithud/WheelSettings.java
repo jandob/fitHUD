@@ -39,7 +39,8 @@ public class WheelSettings extends Activity implements MessengerClient{
     MessengerConnection conn = new MessengerConnection(this);
 
     private String TAG = WheelSettings.class.getSimpleName();
-    private int wheelMode = 0;
+    private boolean wheelSpeedActive = false;
+    private boolean wheelLightActive = false;
 
 
     @Override
@@ -64,6 +65,13 @@ public class WheelSettings extends Activity implements MessengerClient{
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
+                        sendWakeup();
+                        break;
+                    case 1:
+                        wheelSpeedSwitch();
+                        break;
+                    case 2:
+                        wheelLightSwitch();
                         break;
                 }
             }
@@ -81,25 +89,49 @@ public class WheelSettings extends Activity implements MessengerClient{
         super.onDestroy();
     }
 
-    public void wheelModeSwitch(int wheel_mode){
+    public void wheelSpeedSwitch(){
 
-        if(wheel_mode == 0) {
+        if(!wheelSpeedActive) {
+            mCards.get(1).setText("Wheel speed on");
+            mCards.get(1).setFootnote("Tap to turn off speed on wheel");
             mAdapter.notifyDataSetChanged();
-        }
-        else if (wheel_mode == 1) {
-            mAdapter.notifyDataSetChanged();
+            wheelSpeedActive = true;
         } else {
-
+            mCards.get(1).setText("Wheel speed off");
+            mCards.get(1).setFootnote("Tap to show your speed on wheel");
+            mAdapter.notifyDataSetChanged();
+            wheelSpeedActive = false;
         }
-        wheelMode = wheel_mode;
+    }
+
+    public void wheelLightSwitch(){
+        if(!wheelLightActive) {
+            mCards.get(2).setText("Wheel light on");
+            mCards.get(2).setFootnote("Tap to turn off your wheel light");
+            mAdapter.notifyDataSetChanged();
+            wheelLightActive = true;
+        }
+        else {
+            mCards.get(2).setText("Wheel light off");
+            mCards.get(2).setFootnote("Tap to turn on your wheel light");
+            mAdapter.notifyDataSetChanged();
+            wheelLightActive = false;
+        }
+
     }
 
     private void createCards() {
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Wheel mode 1")
-                .setFootnote("Tap to change wheel mode"));
+                .setText("Find your bike")
+                .setFootnote("Tap to wake up your bike!"));
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Wheel speed off")
+                .setFootnote("Tap to show your speed on wheel"));
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Wheel light off")
+                .setFootnote("Tap to turn on your wheel light"));
     }
 
      @Override
@@ -114,9 +146,39 @@ public class WheelSettings extends Activity implements MessengerClient{
         super.onPause();
     }
 
+    public void sendWakeup() {
+        mCards.get(0).setFootnote("Searching...");
+        mAdapter.notifyDataSetChanged();
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.WAKEUP_COMMAND;
+        command[1] = 0;
+        sendDataToSensormanager(command);
+    }
+
+    public void sendDataToSensormanager(int[] data) {
+        Message msg = Message.obtain(null, 4);
+        Bundle bundle = new Bundle();
+        bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        try {
+            conn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
+    }
+
     @Override
     public void handleMessage(Message msg) {
-        Log.i(TAG, "handling Msg");
+
+        switch (msg.what) {
+            case FHSensorManager.Messages.SEARCH_READY:
+                mCards.get(0).setFootnote("Tap to wake up your bike!");
+                mAdapter.notifyDataSetChanged();
+                break;
+
+
+        }
     }
 
 
