@@ -106,6 +106,7 @@ public class MainImmersion extends Activity implements MessengerClient {
     protected void onCreate(Bundle bundle) {
 
         startService(new Intent(this, StorageService.class));
+
         conn.connect(FHSensorManager.class);
         guideConn.connect(GuideService.class);
 
@@ -243,6 +244,7 @@ public class MainImmersion extends Activity implements MessengerClient {
         stopService(new Intent(this, StorageService.class));
         conn.disconnect();
         guideConn.disconnect();
+        stopService(new Intent(this, GuideService.class));
         super.onDestroy();
 
     }

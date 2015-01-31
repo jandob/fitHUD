@@ -1,4 +1,3 @@
-
 package de.fithud.fithudlib;
 
 import android.app.Activity;
@@ -37,6 +36,7 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+
 
 /**
  *
@@ -98,9 +98,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private long workoutStartTime;
     private long workoutCurrentTime;
 
-    private static int[] speedAchievementLevel = new int[] {0, 25, 50, 60, 70, 80};
-    private static int[] heightAchievementLevel = new int[] {0, 100, 200, 300, 400, 500};
-    private static int[] cadenceAchievementLevel = new int[] {0, 60, 80, 120, 150};
+    private static int[] speedAchievementLevels = new int[] {0, 20, 30, 40, 50, 60, 70, 80};
+    private static int[] distanceAchievementLevels = new int[] {0, 1, 2, 5, 10, 50};
+    private static int[] heightAchievementLevels = new int[] {0, 100, 500, 1000, 1500};
+    private static int[] cadenceAchievementLevels = new int[] {0, 70, 80, 120, 130};
+    private static int[] caloriesAchievementLevel = new int[] {0, 50, 100, 150};
 
     private static int speedLevelIndex = 0;
     private static int heightLevelIndex = 0;
@@ -112,6 +114,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
     private static boolean recordChanged = false;
     private static boolean speechOutputEnabled = true;
+
     // end Achievements variables
 
 
@@ -123,6 +126,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         public static final int GUIDE_TEXT = 34;
         public static final int WORKOUT_COMMAND = 35;
         public static final int GUIDE_TIME = 36;
+        public static final int ACHIEVEMENT_SPEED = 37;
+        public static final int ACHIEVEMENT_HEIGHT = 38;
     }
 
 
@@ -465,9 +470,18 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
     @Override
     public void onDestroy() {
-        //conn.disconnect();
         speech_active = false;
         summaryBoundToGuide = false;
+        conn.disconnect();
+
+        // Close the Text to Speech Library
+        if(tts != null) {
+
+            tts.stop();
+            tts.shutdown();
+            Log.d(TAG, "TTS Destroyed");
+        }
+
         super.onDestroy();
     }
 
@@ -498,19 +512,24 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             Log.i(TAG, "Date changed: " + speedRecordDate);
 
             recordChanged = true;
-            if (speedLevelIndex + 1 <= speedAchievementLevel.length) {
+            if (speedLevelIndex + 2 <= speedAchievementLevels.length) {
 
-                if(speedRecord >= speedAchievementLevel[speedLevelIndex+1]){
+                if(speedRecord >= speedAchievementLevels[speedLevelIndex+1]){
                     speedLevelIndex++;
-                    Log.d(TAG,"Speed level: " + speedAchievementLevel[speedLevelIndex]);
+                    Log.d(TAG,"Speed level: " + speedAchievementLevels[speedLevelIndex]);
 
                     if (speechOutputEnabled) {
-                        // TODO: tts.speak("New speed achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                        tts.speak("New speed achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
-                    Toast.makeText(this, "Speed record: " + speedAchievementLevel[speedLevelIndex + 1] + "km/h", Toast.LENGTH_LONG).show();
+
+                    // ToDo receive and act accordingly in Achievements.java
+                    // ZU SENDEN: speedLevelIndex, speedAchievementLevels[speedLevelIndex], speedAchievementLevels[speedLevelIndex + 1], speedAchievementLevels.length
+                    sendMsgString(GuideMessages.ACHIEVEMENT_SPEED, "value");
+
+                    Toast.makeText(this, "Speed record: " + speedAchievementLevels[speedLevelIndex] + "km/h", Toast.LENGTH_LONG).show();
                 }
-                speedDiff = speedAchievementLevel[speedLevelIndex + 1] - speedRecord;
-                Log.d(TAG,"Speed diff: " + speedDiff);
+                //speedDiff = speedAchievementLevels[speedLevelIndex + 1] - speedRecord;
+                //Log.d(TAG,"Speed diff: " + speedDiff);
 
             }
         }
@@ -527,18 +546,18 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             recordChanged = true;
 
-            if (heightLevelIndex + 1 <= heightAchievementLevel.length) {
+            if (heightLevelIndex + 1 <= heightAchievementLevels.length) {
 
-                if(heightRecord >= heightAchievementLevel[heightLevelIndex+1]){
+                if(heightRecord >= heightAchievementLevels[heightLevelIndex+1]){
                     heightLevelIndex++;
-                    Log.d(TAG,"Height level: " + heightAchievementLevel[heightLevelIndex]);
+                    Log.d(TAG,"Height level: " + heightAchievementLevels[heightLevelIndex]);
 
                     if (speechOutputEnabled) {
-                        // TODO: tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                        tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
-                    Toast.makeText(this, "Height record: " + heightAchievementLevel[heightLevelIndex+1] + "m", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Height record: " + heightAchievementLevels[heightLevelIndex+1] + "m", Toast.LENGTH_LONG).show();
                 }
-                heightDiff = heightAchievementLevel[heightLevelIndex + 1] - heightRecord;
+                heightDiff = heightAchievementLevels[heightLevelIndex + 1] - heightRecord;
                 Log.d(TAG,"Height diff: " + heightDiff);
             }
         }
@@ -554,17 +573,17 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             recordChanged = true;
 
-            if (cadenceLevelIndex + 1 <= cadenceAchievementLevel.length) {
+            if (cadenceLevelIndex + 1 <= cadenceAchievementLevels.length) {
 
-                if(cadenceRecord >= cadenceAchievementLevel[cadenceLevelIndex+1]){
+                if(cadenceRecord >= cadenceAchievementLevels[cadenceLevelIndex+1]){
                     cadenceLevelIndex++;
-                    Log.d(TAG,"cadence level: " + cadenceAchievementLevel[cadenceLevelIndex]);
+                    Log.d(TAG,"cadence level: " + cadenceAchievementLevels[cadenceLevelIndex]);
 
                     if (speechOutputEnabled) {
-                        // TODO: tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                        tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
                 }
-                cadenceDiff = cadenceAchievementLevel[cadenceLevelIndex + 1] - cadenceRecord;
+                cadenceDiff = cadenceAchievementLevels[cadenceLevelIndex + 1] - cadenceRecord;
                 Log.d(TAG,"cadence diff: " + cadenceDiff);
             }
         }
@@ -591,7 +610,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
         initializeTimerTask();
         // TimerTask starts immediately, repeats every second
-        timer.schedule(timerTask, 100, 1000); //
+        timer.schedule(timerTask, 100, 1000);
+
     }
 
 

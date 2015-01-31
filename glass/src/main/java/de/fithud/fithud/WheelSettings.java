@@ -102,6 +102,11 @@ public class WheelSettings extends Activity implements MessengerClient{
             mAdapter.notifyDataSetChanged();
             wheelSpeedActive = false;
         }
+
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.WHEEL_SPEED;
+        command[1] = 0;
+        sendDataToSensormanager(command);
     }
 
     public void wheelLightSwitch(){
@@ -118,6 +123,10 @@ public class WheelSettings extends Activity implements MessengerClient{
             wheelLightActive = false;
         }
 
+        int[] command = new int[2];
+        command[0] = FHSensorManager.Commands.WHEEL_LIGHT;
+        command[1] = 0;
+        sendDataToSensormanager(command);
     }
 
     private void createCards() {
