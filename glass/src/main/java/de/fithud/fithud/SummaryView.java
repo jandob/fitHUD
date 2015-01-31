@@ -45,7 +45,6 @@ public class SummaryView extends Activity implements MessengerClient {
     private AudioManager mAudioManager;
 
 
-
     private  TextView liveCardBikeText = null;
     private  TextView liveCardHeartText = null;
     private  TextView liveCardHeightText = null;
@@ -107,8 +106,10 @@ public class SummaryView extends Activity implements MessengerClient {
 
     @Override
     protected void onDestroy() {
+        //sendBoolToGuide(GuideService.GuideMessages.SPEECH_COMMAND, false);
+        GuideService.summaryBoundToGuide = false;
         sensorConn.disconnect();
-        //guideConn.disconnect();
+        guideConn.disconnect();
         super.onDestroy();
     }
 
@@ -142,17 +143,35 @@ public class SummaryView extends Activity implements MessengerClient {
         liveCardHeartText.setText(heartrate + " bpm");
         liveCardHeightText.setText(height + " m");
         liveCardStatus.setBackgroundColor(Color.RED);
-
+        GuideService.summaryBoundToGuide = true;
         Log.d(TAG, "Summary on create");
     }
 
     @Override
     protected void onResume() {
+        GuideService.summaryBoundToGuide = true;
+        //sendBoolToGuide(GuideService.GuideMessages.SPEECH_COMMAND, true);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
+        //sendBoolToGuide(GuideService.GuideMessages.SPEECH_COMMAND, false);
+        GuideService.summaryBoundToGuide = false;
         super.onPause();
+    }
+
+    public void sendBoolToGuide(int messageType, boolean guideActive) {
+        Message msg = Message.obtain(null, messageType);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("summaryBoundToGuide", guideActive);
+        //bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        try {
+            guideConn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
     }
 }
