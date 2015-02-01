@@ -97,7 +97,7 @@ public class MainImmersion extends Activity implements MessengerClient {
     @Override
     protected void onCreate(Bundle bundle) {
 
-        startService(new Intent(this, StorageService.class));
+        //startService(new Intent(this, StorageService.class));
         conn.connect(FHSensorManager.class);
 
         Log.i("MainImmersion", "on start");

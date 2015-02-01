@@ -36,7 +36,7 @@ public class StorageService extends Service implements MessengerClient {
     private static final String TAG = StorageService.class.getSimpleName();
     MessengerConnection conn = new MessengerConnection(this);
     private ArrayList<csvSensorEntry> sensorData = new ArrayList<>();
-    private ArrayList<csvSensorEntry> avchievementsData = new ArrayList<>();
+    private ArrayList<csvSensorEntry> avchievementData = new ArrayList<>();
 
     public void handleMessage(Message msg) {
         switch (msg.what) {
@@ -59,6 +59,7 @@ public class StorageService extends Service implements MessengerClient {
         sensorData.add(new csvSensorEntry("Heartrate", 90.0));
         sensorData.add(new csvSensorEntry("Heartrate", 88.0));
         sensorData.add(new csvSensorEntry("Heartrate", 87.0));
+
     }
 
     private class csvSensorEntry {
@@ -128,7 +129,7 @@ public class StorageService extends Service implements MessengerClient {
             ValueProcessorProvider vpp = new ValueProcessorProvider();
             CSVReader<csvSensorEntry> sensorReader = new CSVReaderBuilder<csvSensorEntry>(csvFile).entryParser(
                     new AnnotationEntryParser<csvSensorEntry>(csvSensorEntry.class, vpp)).build();
-            List<csvSensorEntry> persons = sensorReader.readAll();
+            List<csvSensorEntry> entries = sensorReader.readAll();
         } catch (IOException e) {
             e.printStackTrace();
         }

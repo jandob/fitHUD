@@ -22,6 +22,10 @@ import com.google.android.glass.widget.CardScrollView;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.fithud.fithudlib.MessengerClient;
+import de.fithud.fithudlib.MessengerConnection;
+import de.fithud.fithudlib.StorageService;
+
 /**
  * Created by JohanV on 04.01.2015.
  */
@@ -66,6 +70,7 @@ public class WorkoutMenu extends Activity {
             mCards.get(0).setText("Workout active");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Activating workout...");
+            startService(new Intent(WorkoutMenu.this, StorageService.class));
         }
         else
         {
@@ -73,6 +78,7 @@ public class WorkoutMenu extends Activity {
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Deactivating workout...");
             workoutActive = false;
+            stopService(new Intent(WorkoutMenu.this, StorageService.class));
         }
     }
 
