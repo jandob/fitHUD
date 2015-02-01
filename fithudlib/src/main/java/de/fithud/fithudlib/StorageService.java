@@ -1,5 +1,6 @@
 package de.fithud.fithudlib;
 
+import android.app.Activity;
 import android.app.Service;
 import android.content.Intent;
 import android.media.MediaScannerConnection;
@@ -55,10 +56,10 @@ public class StorageService extends Service implements MessengerClient {
     public void onCreate() {
         Log.i(TAG, "onCreate");
         super.onCreate();
-        //conn.connect(FHSensorManager.class);
-        sensorData.add(new csvSensorEntry("Heartrate", 90.0));
-        sensorData.add(new csvSensorEntry("Heartrate", 88.0));
-        sensorData.add(new csvSensorEntry("Heartrate", 87.0));
+        conn.connect(FHSensorManager.class);
+        //sensorData.add(new csvSensorEntry("Heartrate", 90.0));
+        //sensorData.add(new csvSensorEntry("Heartrate", 88.0));
+        //sensorData.add(new csvSensorEntry("Heartrate", 87.0));
 
     }
 
@@ -175,6 +176,7 @@ public class StorageService extends Service implements MessengerClient {
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy()");
+        conn.disconnect();
         if (isExternalStorageWritable()) {
             writeSensorCsv();
         }
