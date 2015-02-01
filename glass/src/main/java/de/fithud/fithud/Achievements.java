@@ -41,7 +41,7 @@ public class Achievements extends Activity implements MessengerClient {
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
-    private final String TAG = "Achievements";
+    private static final String TAG = Achievements.class.getSimpleName();
     MessengerConnection conn = new MessengerConnection(this);
     SimpleDateFormat sdf = new SimpleDateFormat("dd.MMM yyyy HH:mm");
     private TextToSpeech tts;
