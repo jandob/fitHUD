@@ -71,14 +71,16 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int challenge_mode = DISABLED;
     private static boolean speech_active = false;
     private static boolean workout_started = false;
-    private static int speechCounter = 0;
-    private static int speechPeriod = 10;
+    public static boolean summaryBoundToGuide = false;
+    //private static int speechCounter = 0;
+    //private static int speechPeriod = 10;
 
     private static final int heightAim = 100;       // Height difference in meters
     private static final int cadenceAim = 120;      // Cadence in rotations per minute
     private static final int caloriesAim = 100;
 
-    private static String GuideText;
+    private static String GuideText = "";
+    private static String GuideTextPrev = "";
     private static int progressIndex = 0;
 
     // Achievements variables
@@ -294,6 +296,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     }
 
     private void heartRateCheck(int heartRate) {
+        GuideTextPrev = GuideText;
         if(heartRate < hr_min){
             GuideText = "Your heart rate is too low!";
         } else if (heartRate < hr_max) {
@@ -303,16 +306,18 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         }
 
         sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-
-        if(speech_active && speechCounter == speechPeriod){
+        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
+            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        }
+        /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
             speechCounter = 0;
         }
-        speechCounter++;
-    }
+        speechCounter++;*/
+    };
 
     private void speedCheck(float current_speed) {
-
+        GuideTextPrev = GuideText;
         long currentTime = System.currentTimeMillis();
         if((currentTime - startTime) >= intervalTime) {
             interval_state = !interval_state;
@@ -320,7 +325,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         }
         if (interval_state){
             if(current_speed < speed_high_min) {
-                GuideText = "Hurry up, you are too slow";
+                GuideText = "Go faster, you are too slow";
             } else if (current_speed < speed_high_max) {
                 GuideText = "Perfect pace!";
             } else {
@@ -328,7 +333,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             }
         } else {
             if(current_speed < speed_low_min) {
-                GuideText = "Hurry up, you are too slow";
+                GuideText = "Go faster, you are too slow";
             } else if (current_speed < speed_low_max) {
                 GuideText = "Perfect pace!";
             } else {
@@ -337,17 +342,20 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         }
 
         sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-        if(speech_active && speechCounter == speechPeriod){
+        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
+            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        }
+        /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
             speechCounter = 0;
         }
-        speechCounter++;
-    }
+        speechCounter++;*/
+    };
 
 
     // Need to reset all flags if new challenge started.
     private void cadenceCheck(float current_cadence) {
-
+        GuideTextPrev = GuideText;
         if(current_cadence > 0 && progressIndex == 0){
             GuideText = "Let's get started.";
             progressIndex++;
@@ -361,23 +369,25 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Only a few meters left";
             progressIndex++;
         } else if(current_cadence >= cadenceAim && progressIndex == 4){
-            GuideText = "Congratulations! You have your challenge completed";
+            GuideText = "Congratulations! You have completed your challenge";
             progressIndex++;
         } else {
             GuideText = "Keep going.";
         }
         Log.v(TAG, "Guide: " + GuideText);
         sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-
-        if(speech_active && speechCounter == speechPeriod){
+        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
+            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        }
+        /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             speechCounter = 0;
         }
-        speechCounter++;
-    }
+        speechCounter++;*/
+    };
 
     public void heightCheck(int current_height) {
-
+        GuideTextPrev = GuideText;
         if(current_height > 0 && progressIndex == 0){
             GuideText = "Let's get started.";
             progressIndex++;
@@ -391,21 +401,23 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Only a few meters left";
             progressIndex++;
         } else if(current_height >= heightAim && progressIndex == 4){
-            GuideText = "Congratulations! You have your challenge succesfully completed";
+            GuideText = "Congratulations! You have completed your challenge successfully";
             progressIndex++;
         }
 
         sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-
-        if(speech_active && speechCounter == speechPeriod){
+        if(speech_active && summaryBoundToGuide &&GuideTextPrev != GuideText) {
+            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        }
+        /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             speechCounter = 0;
         }
-        speechCounter++;
-    }
+        speechCounter++;*/
+    };
 
     public void caloriesCheck(int current_calories) {
-
+        GuideTextPrev = GuideText;
         if(current_calories > 0 && progressIndex == 0){
             GuideText = "Let's get started.";
             progressIndex++;
@@ -419,18 +431,20 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Only a few more calories";
             progressIndex++;
         } else if(current_calories >= caloriesAim && progressIndex == 4){
-            GuideText = "Congratulations! You have your challenge succesfully completed";
+            GuideText = "Congratulations! You have completed your challenge successfully";
             progressIndex++;
         }
 
         sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-
-        if(speech_active && speechCounter == speechPeriod){
+        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
+            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        }
+        /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             speechCounter = 0;
         }
-        speechCounter++;
-    }
+        speechCounter++;*/
+    };
 
     @Override
     public void onCreate() {
@@ -457,6 +471,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     @Override
     public void onDestroy() {
         speech_active = false;
+        summaryBoundToGuide = false;
         conn.disconnect();
 
         // Close the Text to Speech Library
