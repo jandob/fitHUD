@@ -143,8 +143,8 @@ public class FHSensorManager extends MessengerService {
 
     // Devices:
     private final String H7 = "00:22:D0:3D:30:31";
-    private final String CAD = "C7:9E:DF:E6:F8:D5";
-    private final String SPD = "EB:03:59:83:C8:34";
+    private final String CAD = "C7:9E:DF:E6:F8:D5"; //D9:6A:83:DA:82:7C
+    private final String SPD = "C3:B0:19:D8:64:A2"; //"EB:03:59:83:C8:34";
     // Not added yet
     private final String SPD_ACC_WAKE = "02:80:E1:00:00:AA";
     private final String BAROMETER = "D4:BD:70:0E:E9:EE";
@@ -202,7 +202,7 @@ public class FHSensorManager extends MessengerService {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            //Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
             //Log.i(TAG, mConnectableBtDevices.toString());
             if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
                 if (!mBtDevicesReadyToConnect.contains(device)) {

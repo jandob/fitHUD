@@ -34,6 +34,8 @@ import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.MessengerServiceActivity;
 
+import static java.lang.Math.round;
+
 
 /**
  * Created by JohanV on 04.01.2015.
@@ -79,7 +81,7 @@ public class SummaryView extends Activity implements MessengerClient {
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 speed = msg.getData().getFloat("value");
-                liveCardBikeText.setText(speed + " km/h");
+                liveCardBikeText.setText(round(speed*100)/100 + " km/h");
                 break;
             case FHSensorManager.Messages.DISTANCE_MESSAGE:
                 distance = msg.getData().getFloat("value");
