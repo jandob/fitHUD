@@ -305,9 +305,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Slow down, your heart rate is too high!";
         }
 
-        sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+            sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
+            if(speech_active) {
+                tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
@@ -341,9 +343,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             }
         }
 
-        sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+            sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
+            if(speech_active) {
+                tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
@@ -375,9 +379,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Keep going.";
         }
         Log.v(TAG, "Guide: " + GuideText);
-        sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+            sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
+            if(speech_active) {
+                tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
@@ -405,9 +411,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             progressIndex++;
         }
 
-        sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-        if(speech_active && summaryBoundToGuide &&GuideTextPrev != GuideText) {
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+            sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
+            if(speech_active) {
+                tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
@@ -435,9 +443,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             progressIndex++;
         }
 
-        sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-        if(speech_active && summaryBoundToGuide && GuideTextPrev != GuideText) {
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
+        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+            sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
+            if(speech_active) {
+                tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
+            }
         }
         /*if(speech_active && speechCounter == speechPeriod){
             tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
