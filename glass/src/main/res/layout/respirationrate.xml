@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="#ff000000">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Your current breathrate: 0 Hz"
+        android:id="@+id/respirationRateText"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="0px" />
+
+    <TextView
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_marginTop="100px"
+        android:layout_marginLeft="100px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="10"
+        android:id="@+id/labelTopRespiration"
+        android:textSize="18dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <TextView
+        android:layout_width="50px"
+        android:layout_height="50px"
+        android:layout_marginTop="190px"
+        android:layout_marginLeft="100px"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="10"
+        android:id="@+id/labelBottomRespiration"
+        android:textSize="18dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/respirationRatePlot"
+        android:layout_width="400px"
+        android:layout_height="250px"
+        android:layout_marginTop="100px"
+        android:layout_marginLeft="70px"
+        android:visibility="invisible"
+
+        androidPlot.graphWidget.marginTop="0dp"
+        androidPlot.graphWidget.marginLeft="0dp"
+        androidPlot.graphWidget.marginBottom="0dp"
+        androidPlot.graphWidget.marginRight="0dp"
+
+        androidPlot.graphWidget.borderTop="0dp"
+        androidPlot.graphWidget.borderLeft="0dp"
+        androidPlot.graphWidget.borderBottom="0dp"
+        androidPlot.graphWidget.borderRight="0dp"
+
+        androidPlot.domainLabelWidget.labelPaint.textSize="@dimen/domain_label_font_size"
+        androidPlot.rangeLabelWidget.labelPaint.textSize="@dimen/range_label_font_size"
+
+        androidPlot.graphWidget.rangeLabelPaint.textSize="@dimen/range_tick_label_font_size"
+        androidPlot.graphWidget.rangeOriginLabelPaint.textSize="@dimen/range_tick_label_font_size"
+        androidPlot.graphWidget.domainLabelPaint.textSize="@dimen/domain_tick_label_font_size"
+        androidPlot.graphWidget.domainOriginLabelPaint.textSize="@dimen/domain_tick_label_font_size"
+        androidPlot.legendWidget.textPaint.textSize="@dimen/legend_text_font_size"
+
+        androidPlot.legendWidget.iconSizeMetrics.heightMetric.value="0dp"
+        androidPlot.legendWidget.iconSizeMetrics.widthMetric.value="0dp"
+        androidPlot.legendWidget.heightMetric.value="0dp"
+
+        androidPlot.legendWidget.positionMetrics.anchor="right_bottom"
+
+        androidPlot.backgroundPaint.color="#000000"
+        androidPlot.graphWidget.gridBackgroundPaint.color="#000000"
+        androidPlot.graphWidget.gridLinePaint.color="#000000"
+        androidPlot.graphWidget.domainOriginLinePaint.color="#000000"
+        />
+
+</RelativeLayout>

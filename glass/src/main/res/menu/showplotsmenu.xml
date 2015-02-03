@@ -6,6 +6,8 @@
         android:title="Show Heart Rate" />
     <item android:id="@+id/showHeightPlotMenu"
         android:title="Show Height" />
+    <item android:id="@+id/showRespirationPlotMenu"
+        android:title="Show Respiration" />
     <item android:id="@+id/showTerrainPlotMenu"
         android:title="Show Style" />
 </menu>
