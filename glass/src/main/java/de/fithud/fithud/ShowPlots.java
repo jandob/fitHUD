@@ -81,9 +81,9 @@ public class ShowPlots extends Activity implements MessengerClient {
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 input = msg.getData().getFloat("value");
-                addHeartData((int) input);
-                heart_sensor = (int) input;
-                Log.i(TAG, "Heartrate " + input);
+                //addHeartData((int) input);
+                //heart_sensor = (int) input;
+                //Log.i(TAG, "Heartrate " + input);
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 input = msg.getData().getFloat("value");
@@ -117,6 +117,14 @@ public class ShowPlots extends Activity implements MessengerClient {
                 input = msg.getData().getFloat("value");
                 barometer_sensor = (int)input;
                 addHeightData((int) barometer_sensor);
+                break;
+
+            case FHSensorManager.Messages.BREATH_MESSAGE:
+                int[] breathMsg = msg.getData().getIntArray("value");
+                respiration_sensor = (float)breathMsg[0]/(float)1000.0;
+                heart_sensor = (int) breathMsg[1];
+                addHeartData(heart_sensor);
+                addRespirationData(respiration_sensor);
                 break;
         }
     }
@@ -404,7 +412,7 @@ public class ShowPlots extends Activity implements MessengerClient {
         }
     }
 
-    public void addRespirationData(int respiration) {
+    public void addRespirationData(float respiration) {
         //if (init_speed) {
         Log.d("FitHUD", "add respiration now");
         if (respirationSeries.size() > HISTORY_SIZE) {

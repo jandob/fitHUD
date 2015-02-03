@@ -38,6 +38,7 @@ public class FHSensorManager extends MessengerService {
         public static final int ACC_RAW_MESSAGE = 5;
         public static final int HEIGTH_MESSAGE = 6;
         public static final int SEARCH_READY = 7;
+        public static final int BREATH_MESSAGE = 8;
     }
 
     public final class Commands extends MessengerService.Commands {
@@ -127,9 +128,10 @@ public class FHSensorManager extends MessengerService {
     private final String ACCService =    "02366e80-cf3a-11e1-9ab4-0002a5d5c51b";
     private final String WakeupService = "42821a40-e477-11e2-82d0-0002a5d5c51b";
     private final String BarometerService = "00001110-0000-1000-8000-00805f9b34fb";
-
+    private final String BreathService = "20306e80-ab3a-11e1-9ab4-0002a5d5c51b";
     // Characteristics
     private final String WakeupCharacteristicUUID = "a32e5520-e477-11e2-a9e3-0002a5d5c51b";
+    private final String BreathCharUUID = "34aa1bb8-cf4b-c0e1-ac36-0002a5d5c51b";
 
     private boolean connectionInProgress = false;
     private int nrOfremainingDevices = 0;
@@ -376,6 +378,16 @@ public class FHSensorManager extends MessengerService {
                 int barometerFinal = (int)barometer_value-(int)barometer_offset;
                 sendMsgFloat(Messages.HEIGTH_MESSAGE,(float)barometerFinal);
             }
+
+            if(characteristic.getService().getUuid().toString().equals(BreathService)){
+                short breathRate = twoBytesToShort(characteristicData[0],characteristicData[1]);
+                short heartRate = twoBytesToShort(characteristicData[2],characteristicData[3]);
+                int breathData[] = new int[2];
+                breathData[0] = breathRate;
+                breathData[1] = heartRate;
+                sendMsg(Messages.BREATH_MESSAGE, breathData);
+                Log.i(TAG,"BreathRate: "+breathRate);
+            }
         }
 
         @Override
@@ -410,8 +422,6 @@ public class FHSensorManager extends MessengerService {
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 // Since it is not connected any more remove it out of the list
                 mConnectedBtDevicesGattServices.remove(gatt);
-
-
                 mConnectedBtDevices.remove(gatt.getDevice().getAddress());
                 gatt.close();
                 Log.i(TAG, "disconnected from " + gatt.getDevice().getAddress());
@@ -432,7 +442,7 @@ public class FHSensorManager extends MessengerService {
             Log.i(TAG, gatt.getDevice().getName() + " discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
                 Log.i(TAG, service.getUuid().toString());
-                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService) || service.getUuid().toString().equals(ACCService) || service.getUuid().toString().equals(WakeupService) ||service.getUuid().toString().equals(BarometerService))) {
+                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService) || service.getUuid().toString().equals(ACCService) || service.getUuid().toString().equals(WakeupService) ||service.getUuid().toString().equals(BarometerService) || service.getUuid().toString().equals(BreathService))) {
                     continue;
                 }
 
