@@ -299,15 +299,14 @@ public class Achievements extends Activity implements MessengerClient {
 
         switch (msg.what) {
             case GuideService.GuideMessages.ACHIEVEMENT_SPEED:
-                String test = msg.getData().getString("value");
+                String test = msg.getData().getString("text");
                 Log.i("achMsg", "X"+test);
                 break;
             case GuideService.GuideMessages.ACHIEVEMENT_HEIGHT:
-                String test2 = msg.getData().getString("value");
+                String test2 = msg.getData().getString("text");
                 Log.i("achMsg", "Y"+test2);
                 break;
         }
-
 
     }
 

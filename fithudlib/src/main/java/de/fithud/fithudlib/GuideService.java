@@ -509,7 +509,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                     // ToDo receive and act accordingly in Achievements.java
                     // ZU SENDEN: speedLevelIndex, speedAchievementLevels[speedLevelIndex], speedAchievementLevels[speedLevelIndex + 1], speedAchievementLevels.length
-                    sendMsgString(GuideMessages.ACHIEVEMENT_SPEED, "value");
+                    sendMsgString(GuideMessages.ACHIEVEMENT_SPEED, "text");
 
                     Toast.makeText(this, "Speed record: " + speedAchievementLevels[speedLevelIndex] + "km/h", Toast.LENGTH_LONG).show();
                 }
