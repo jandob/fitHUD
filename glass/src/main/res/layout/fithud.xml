@@ -31,7 +31,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="35px"
             android:layout_marginLeft="110px"
-            android:text="0 km/h"/>
+            android:text="0.0 km/h"/>
 
         <ImageView
             android:id="@+id/liveCardHeart"
@@ -64,6 +64,51 @@
             android:layout_marginTop="210px"
             android:layout_marginLeft="110px"
             android:text="0 m"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Let's go!"
+            android:id="@+id/summaryGuideText"
+            android:layout_below="@+id/liveCardHeight"
+            android:layout_toEndOf="@+id/distanceText" />
+
+        <ImageView
+            android:id="@+id/liveCardDistance"
+            android:layout_width="80px"
+            android:layout_height="80px"
+            android:layout_marginTop="290px"
+            android:layout_marginLeft="0px"
+            android:src="@drawable/achievement_distance"/>
+
+        <TextView
+            android:id="@+id/distanceText"
+            android:layout_width="250px"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="110px"
+            android:text="0 m"
+            android:layout_alignTop="@+id/summaryGuideText"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="300px"
+            android:text="00:00:00"
+            android:layout_alignTop="@+id/liveCardBikeText"
+            android:layout_alignEnd="@+id/timeText" />
+
+
+        <TextView
+            android:id="@+id/caloriesText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="250px"
+            android:text="0 kJ"
+            android:layout_alignTop="@+id/liveCardHeart"
+            android:layout_alignEnd="@+id/timeText" />
 
     </RelativeLayout>
 

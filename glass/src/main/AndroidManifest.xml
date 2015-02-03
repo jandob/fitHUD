@@ -31,6 +31,14 @@
             android:label="@string/app_name" >
         </service>
 
+        <service
+            android:name="de.fithud.fithudlib.GuideService"
+            android:enabled="true"
+            android:icon="@drawable/ic_glass_logo"
+            android:label="@string/app_name" >
+        </service>
+
+
         <activity
             android:name=".FHMenuActivity"
             android:theme="@style/MenuTheme" >
@@ -51,6 +59,10 @@
         <activity android:name=".Achievements" />
         <activity android:name=".GuideSettings" />
         <activity android:name=".SensorMenu" />
+
+        <activity android:name=".TrainingMode" />
+        <activity android:name=".ChallengeMode" />
+        <activity android:name=".WheelSettings" />
         <activity android:name=".SummaryView" />
         <activity android:name=".ShowPlots" />
 
