@@ -175,6 +175,9 @@ public class ShowPlots extends Activity implements MessengerClient {
     private int heart_sensor = 0;
     private int barometer_sensor = 0;
 
+    private int offroadCounter = 0;
+    private int onroadCounter = 0;
+
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -416,25 +419,23 @@ public class ShowPlots extends Activity implements MessengerClient {
         }
     }
 
-    public void plotTerrainPie(int s1_val, int s2_val, int s3_val, PieChart work_pie) {
+    public void plotTerrainPie(int s1_val, int s2_val, PieChart work_pie) {
         Log.d("FitHUD", "test2 " + work_pie);
         s1 = new Segment("offroad", s1_val);
         s2 = new Segment("road", s2_val);
-        s3 = new Segment("asphalt", s3_val);
+
 
         terrainOffroadText.setText("Offroad: " + s1_val + "%");
         terrainRoadText.setText("Road: " + s2_val + "%");
-        terrainAsphaltText.setText("Asphalt: " + s3_val + "%");
+        terrainAsphaltText.setText("");
 
         work_pie.clear();
 
         SegmentFormatter sf1 = new SegmentFormatter(Color.rgb(106, 168, 79), Color.BLACK, Color.BLACK, Color.BLACK);
         SegmentFormatter sf2 = new SegmentFormatter(Color.rgb(255, 0, 0), Color.BLACK, Color.BLACK, Color.BLACK);
-        SegmentFormatter sf3 = new SegmentFormatter(Color.rgb(255, 153, 0), Color.BLACK, Color.BLACK, Color.BLACK);
 
         work_pie.addSeries(s1, sf1);
         work_pie.addSeries(s2, sf2);
-        work_pie.addSeries(s3, sf3);
 
         work_pie.getRenderer(PieRenderer.class).setDonutSize(0 / 100f,
                 PieRenderer.DonutMode.PERCENT);
@@ -600,7 +601,7 @@ public class ShowPlots extends Activity implements MessengerClient {
                                 initializeTerrainPie(terrainPie);
                                 terrainPie.setVisibility(View.VISIBLE);
                             }
-                            plotTerrainPie(33, 33, 33, terrainPie);
+                            plotTerrainPie(offroadCounter,onroadCounter , terrainPie);
                         }
                     }
                 });
