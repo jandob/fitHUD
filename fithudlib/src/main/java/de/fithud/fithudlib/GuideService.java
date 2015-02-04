@@ -86,33 +86,32 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     // Achievements variables
     SimpleDateFormat sdf = new SimpleDateFormat("dd.MMM yyyy HH:mm");
 
-    private static int speedRecord = 0;
-    private static int heightRecord = 0;
-    private static int cadenceRecord = 0;
+    public static int speedRecord = 0;
+    public static int heightRecord = 0;
+    public static int cadenceRecord = 0;
 
-    private static String speedRecordDate;
-    private static String heightRecordDate;
-    private static String cadenceRecordDate;
+    public static String speedRecordDate;
+    public static String heightRecordDate;
+    public static String cadenceRecordDate;
 
     private static String workoutRunningTime;
     private long workoutStartTime;
     private long workoutCurrentTime;
 
-    private static int[] speedAchievementLevels = new int[] {0, 20, 30, 40, 50, 60, 70, 80};
-    private static int[] distanceAchievementLevels = new int[] {0, 1, 2, 5, 10, 50};
-    private static int[] heightAchievementLevels = new int[] {0, 100, 500, 1000, 1500};
-    private static int[] cadenceAchievementLevels = new int[] {0, 70, 80, 120, 130};
-    private static int[] caloriesAchievementLevel = new int[] {0, 50, 100, 150};
+    public static int[] speedAchievementLevels = new int[] {0, 20, 30, 40, 50, 60, 70, 80};
+    public static int[] distanceAchievementLevels = new int[] {0, 1, 2, 5, 10, 50};
+    public static int[] heightAchievementLevels = new int[] {0, 100, 500, 1000, 1500};
+    public static int[] cadenceAchievementLevels = new int[] {0, 70, 80, 120, 130};
+    public static int[] caloriesAchievementLevel = new int[] {0, 50, 100, 150};
 
-    private static int speedLevelIndex = 0;
-    private static int heightLevelIndex = 0;
-    private static int cadenceLevelIndex = 0;
+    public static int speedLevelIndex = 0;
+    public static int heightLevelIndex = 0;
+    public static int cadenceLevelIndex = 0;
 
-    private static int speedDiff = 0;
-    private static int heightDiff = 0;
-    private static int cadenceDiff = 0;
+    public static int speedDiff = 0;
+    public static int heightDiff = 0;
+    public static int cadenceDiff = 0;
 
-    private static boolean recordChanged = false;
     private static boolean speechOutputEnabled = true;
 
     // end Achievements variables
@@ -126,7 +125,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         public static final int GUIDE_TEXT = 34;
         public static final int WORKOUT_COMMAND = 35;
         public static final int GUIDE_TIME = 36;
-        public static final int ACHIEVEMENT_SPEED = 37;
+        public static final int ACHIEVEMENT_REACHED = 37;
         public static final int ACHIEVEMENT_HEIGHT = 38;
     }
 
@@ -521,7 +520,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             Log.i(TAG, "New speed record:" + speedRecord);
             Log.i(TAG, "Date changed: " + speedRecordDate);
 
-            recordChanged = true;
             if (speedLevelIndex + 2 <= speedAchievementLevels.length) {
 
                 if(speedRecord >= speedAchievementLevels[speedLevelIndex+1]){
@@ -534,7 +532,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                     // ToDo receive and act accordingly in Achievements.java
                     // ZU SENDEN: speedLevelIndex, speedAchievementLevels[speedLevelIndex], speedAchievementLevels[speedLevelIndex + 1], speedAchievementLevels.length
-                    sendMsgString(GuideMessages.ACHIEVEMENT_SPEED, "text");
+                    sendMsgString(GuideMessages.ACHIEVEMENT_REACHED, "text");
 
                     Toast.makeText(this, "Speed record: " + speedAchievementLevels[speedLevelIndex] + "km/h", Toast.LENGTH_LONG).show();
                 }
@@ -553,8 +551,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             heightRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New height record:" + heightRecord);
             Log.i(TAG, "Date changed: " + heightRecordDate);
-
-            recordChanged = true;
 
             if (heightLevelIndex + 1 <= heightAchievementLevels.length) {
 
@@ -581,7 +577,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             Log.i(TAG, "New cadence record:" + cadenceRecord);
             Log.i(TAG, "Date changed: " + cadenceRecordDate);
 
-            recordChanged = true;
 
             if (cadenceLevelIndex + 1 <= cadenceAchievementLevels.length) {
 

@@ -71,8 +71,9 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Let's go!"
             android:id="@+id/summaryGuideText"
-            android:layout_below="@+id/liveCardHeight"
-            android:layout_toEndOf="@+id/distanceText" />
+            android:layout_alignTop="@+id/liveCardHeightText"
+            android:layout_toEndOf="@+id/liveCardHeightText" />
+            //android:layout_toEndOf="@+id/distanceText" />
 
         <ImageView
             android:id="@+id/liveCardDistance"
@@ -88,8 +89,8 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="110px"
             android:text="0 m"
-            android:layout_alignTop="@+id/summaryGuideText"
-            android:layout_alignParentStart="true" />
+            android:layout_alignTop="@+id/liveCardDistance"
+            android:layout_toStartOf="@+id/summaryGuideText" />
 
         <TextView
             android:id="@+id/timeText"

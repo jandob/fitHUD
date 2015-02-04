@@ -24,6 +24,7 @@ import com.google.android.glass.widget.CardScrollView;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.fithud.fithudlib.FHSensorManager;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.StorageService;
@@ -81,6 +82,8 @@ public class WorkoutMenu extends Activity implements MessengerClient{
             mCards.get(1).setText("Workout running");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Activating workout...");
+            FHSensorManager.distance = 0;
+            FHSensorManager.calories = 0;
             startService(new Intent(WorkoutMenu.this, StorageService.class));
         }
         else
@@ -148,7 +151,7 @@ public class WorkoutMenu extends Activity implements MessengerClient{
     @Override
     protected void onResume() {
         if(workoutActive) {
-            mCards.get(1).setText("Workout active");
+            mCards.get(1).setText("Workout running");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Workout is active...");
         }

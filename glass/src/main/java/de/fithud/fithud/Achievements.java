@@ -74,13 +74,10 @@ public class Achievements extends Activity implements MessengerClient {
 
     private static int totDistanceRecord = 0;
     private static int distanceRecord = 0;
-    private static int nextDistanceRecord = 0;
     private static int heightRecord = 0;
-    private static int nextHeightRecord = 0;
     private static int caloriesRecord = 0;
-    private static int nextCaloriesRecord = 0;
     private static int cadenceRecord = 0;
-    private static int nextCadenceRecord = 0;
+
 
     private static String speedRecordDate;
     private static String heightRecordDate;
@@ -89,28 +86,16 @@ public class Achievements extends Activity implements MessengerClient {
     private static String caloriesRecordDate;
     private static String cadenceRecordDate;
 
-    private static int speedLevelIndex = 0;
-    private static int heightLevelIndex = 0;
-    private static int cadenceLevelIndex = 0;
+    private boolean actCreated = false;
+
 
     @Override
     protected void onCreate(Bundle bundle) {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
-        conn.connect(GuideService.class);
+        conn.connect(FHSensorManager.class);
 
         super.onCreate(bundle);
-
-        // Load achievement history !!!
-
-        // Set record history
-        speedRecordReachedSpeed = 25;
-        distanceRecord = 50;
-        heightRecord = 0;
-        cadenceRecord = 120;
-        caloriesRecord = 50;
-        totDistanceRecord = 50;
-
 
         // Set date/time of records
         speedRecordDate = sdf.format(new Date(0));
@@ -132,7 +117,6 @@ public class Achievements extends Activity implements MessengerClient {
                 mAudioManager.playSoundEffect(Sounds.SUCCESS);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 3:                     //Guide
-                        resetTotDistance();
                         break;
                 }
                 return false;
@@ -144,47 +128,50 @@ public class Achievements extends Activity implements MessengerClient {
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
+
+        actCreated = true;
     }
 
-    private void resetTotDistance() {
-        totDistanceRecord = 0;
-        mCards.get(0).setText("Total Distance: " + totDistanceRecord + " km");
-        mAdapter.notifyDataSetChanged();
-    }
-
-    private void changeSpeedCard(int speedRecordReachedSpeed, int speedRecordNextSpeed, int speedRecordLevel, int speedRecordLevels) {
-        mCards.get(0).setText("Speed Record: " + speedRecordReachedSpeed + " km/h");
-        mCards.get(0).setTimestamp("Level " + speedRecordLevel + " / " + speedRecordLevels + " reached.");
-        mCards.get(0).setFootnote("CHALLENGE: " + speedRecordNextSpeed + " km/h");
-        //mAdapter.notifyDataSetChanged();
+    private void changeSpeedCard() {
+        mCards.get(0).setText("Speed Record: " + GuideService.speedRecord + " km/h");
+        mCards.get(0).setTimestamp("Level " + GuideService.speedLevelIndex + " / " + GuideService.speedAchievementLevels.length + " reached.");
+        if (GuideService.speedLevelIndex+1 <= GuideService.speedAchievementLevels.length) {
+            mCards.get(0).setFootnote("CHALLENGE: " + GuideService.speedAchievementLevels[GuideService.speedLevelIndex+1] + " km/h");
+        } else {
+            mCards.get(0).setFootnote("All challenges completed");
+        }
     }
 
     private void changeDistanceCard(int distanceRecordReachedDistance, int distanceRecordNextDistance, int distanceRecordLevel, int distanceRecordLevels) {
         mCards.get(1).setText("Distance Record: " + distanceRecordReachedDistance + " km");
         mCards.get(1).setTimestamp("Level " + distanceRecordLevel + " / " + distanceRecordLevels + " reached.");
         mCards.get(1).setFootnote("CHALLENGE: " + distanceRecordNextDistance + " km");
-        //mAdapter.notifyDataSetChanged();
     }
 
-    private void changeHeightCard(int heightRecordReachedHeight, int heightRecordNextHeight, int heightRecordLevel, int heightRecordLevels) {
-        mCards.get(2).setText("Height Record: " + heightRecordReachedHeight + " m");
-        mCards.get(2).setTimestamp("Level " + heightRecordLevel + " / " + heightRecordLevels + " reached.");
-        mCards.get(2).setFootnote("CHALLENGE: " + heightRecordNextHeight + " m");
-        //mAdapter.notifyDataSetChanged();
+    private void changeHeightCard() {
+        mCards.get(2).setText("Height Record: " + GuideService.heightRecord + " m");
+        mCards.get(2).setTimestamp("Level " + GuideService.speedLevelIndex + " / " + GuideService.heightAchievementLevels.length + " reached.");
+        if (GuideService.heightLevelIndex+1 <= GuideService.heightAchievementLevels.length){
+            mCards.get(2).setFootnote("CHALLENGE: " + GuideService.heightAchievementLevels[GuideService.heightLevelIndex+1] + " m");
+        } else {
+            mCards.get(2).setFootnote("All challenges completed");
+        }
     }
 
-    private void changeCadenceCard(int cadenceRecordReachedBPM, int cadenceRecordNextBPM, int cadenceRecordLevel, int cadenceRecordLevels) {
-        mCards.get(3).setText("Cadence Record: " + cadenceRecordReachedBPM + " bpm");
-        mCards.get(3).setTimestamp("Level " + cadenceRecordLevel + " / " + cadenceRecordLevels + " reached.");
-        mCards.get(3).setFootnote("CHALLENGE: " + cadenceRecordNextBPM + " bpm");
-        //mAdapter.notifyDataSetChanged();
+    private void changeCadenceCard() {
+        mCards.get(3).setText("Cadence Record: " + GuideService.cadenceRecord + " bpm");
+        mCards.get(3).setTimestamp("Level " + GuideService.cadenceLevelIndex + " / " + GuideService.cadenceAchievementLevels.length + " reached.");
+        if(GuideService.cadenceLevelIndex+1 <= GuideService.cadenceAchievementLevels.length) {
+            mCards.get(3).setFootnote("CHALLENGE: " + GuideService.cadenceAchievementLevels[GuideService.cadenceLevelIndex] + " bpm");
+        } else {
+            mCards.get(3).setFootnote("All challenges completed");
+        }
     }
 
     private void changeCaloriesCard(int caloriesRecordReachedBurnedCals, int caloriesRecordNextBurnedCals, int caloriesRecordLevel, int caloriesRecordLevels) {
         mCards.get(4).setText("Calories Record: " + caloriesRecordReachedBurnedCals + " kCal");
         mCards.get(4).setTimestamp("Level " + caloriesRecordLevel + " / " + caloriesRecordLevels + " reached.");
         mCards.get(4).setFootnote("CHALLENGE: " + caloriesRecordNextBurnedCals + " kCal");
-        //mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -202,7 +189,6 @@ public class Achievements extends Activity implements MessengerClient {
     private void createCards() {
 
         mCards = new ArrayList<CardBuilder>();
-
         String speedString = Integer.toString(speedRecordReachedSpeed);
 
         // 0: Achievement card for speed
@@ -240,74 +226,33 @@ public class Achievements extends Activity implements MessengerClient {
                 .setTimestamp(caloriesRecordDate)
                 .addImage(R.drawable.achievement_calories));
 
-        // ToDo: Port to Handle messages...
-        // Speed data from msg service
-        speedRecordReachedSpeed = 20;
-        speedRecordNextSpeed = 30;
-        speedRecordLevel = 1;
-        speedRecordLevels = 7;
-        changeSpeedCard(speedRecordReachedSpeed, speedRecordNextSpeed, speedRecordLevel, speedRecordLevels);
-
-        // Distance data from msg service
-        distanceRecordReachedDistance = 1;
-        distanceRecordNextDistance = 2;
-        distanceRecordLevel = 1;
-        distanceRecordLevels = 5;
-        changeDistanceCard(distanceRecordReachedDistance, distanceRecordNextDistance, distanceRecordLevel, distanceRecordLevels);
-
-        // Height data from msg service
-        heightRecordReachedHeight = 100;
-        heightRecordNextHeight = 500;
-        heightRecordLevel = 1;
-        heightRecordLevels = 4;
-        changeHeightCard(heightRecordReachedHeight, heightRecordNextHeight, heightRecordLevel, heightRecordLevels);
-
-        // Cadence data from msg service
-        cadenceRecordReachedBPM = 70;
-        cadenceRecordNextBPM = 80;
-        cadenceRecordLevel = 1;
-        cadenceRecordLevels = 4;
-        changeCadenceCard(cadenceRecordReachedBPM, cadenceRecordNextBPM, cadenceRecordLevel, cadenceRecordLevels);
-
-        // Calories data from msg service
-        caloriesRecordReachedBurnedCals = 500;
-        caloriesRecordNextBurnedCals= 100;
-        caloriesRecordLevel = 1;
-        caloriesRecordLevels = 3;
-        changeCaloriesCard(caloriesRecordReachedBurnedCals, caloriesRecordNextBurnedCals, caloriesRecordLevel, caloriesRecordLevels);
+        changeSpeedCard();
+        changeHeightCard();
+        changeCadenceCard();
+        //changeCaloriesCard(caloriesRecordReachedBurnedCals, caloriesRecordNextBurnedCals, caloriesRecordLevel, caloriesRecordLevels);
+        //changeDistanceCard(distanceRecordReachedDistance, distanceRecordNextDistance, distanceRecordLevel, distanceRecordLevels);
     }
 
     @Override
     public void handleMessage(Message msg) {
         Log.i(TAG, "handling Msg");
-/*
-        switch (msg.what) {
-            case FHSensorManager.Messages.CADENCE_MESSAGE:
-                //checkCadence(msg.getData().getIntArray("value")[0]);
-                //Log.i(TAG, "Current cadence");
-                break;
-            case FHSensorManager.Messages.HEIGTH_MESSAGE:
-                //checkHeight(msg.getData().getIntArray("value")[0]);
-                //Log.i(TAG, "Current height");
-                break;
-            case FHSensorManager.Messages.SPEED_MESSAGE:
-                //checkSpeed(msg.getData().getIntArray("value")[0]);
-                //Log.i(TAG, "Current speed");
-                break;
-        }
-*/
 
-        switch (msg.what) {
-            case GuideService.GuideMessages.ACHIEVEMENT_SPEED:
-                String test = msg.getData().getString("text");
-                Log.i("achMsg", "X: "+test);
-                break;
-            case GuideService.GuideMessages.ACHIEVEMENT_HEIGHT:
-                String test2 = msg.getData().getString("text");
-                Log.i("achMsg", "Y: "+test2);
-                break;
+        if (actCreated) {
+            switch (msg.what) {
+                case FHSensorManager.Messages.CADENCE_MESSAGE:
+                    changeCadenceCard();
+                    mAdapter.notifyDataSetChanged();
+                    break;
+                case FHSensorManager.Messages.HEIGTH_MESSAGE:
+                    changeHeightCard();
+                    mAdapter.notifyDataSetChanged();
+                    break;
+                case FHSensorManager.Messages.SPEED_MESSAGE:
+                    changeSpeedCard();
+                    mAdapter.notifyDataSetChanged();
+                    break;
+            }
         }
-
     }
 
     @Override

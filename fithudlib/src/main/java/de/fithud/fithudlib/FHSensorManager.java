@@ -43,6 +43,7 @@ public class FHSensorManager extends MessengerService {
         public static final int DISTANCE_MESSAGE = 9;
         public static final int CALORIES_MESSAGE = 10;
         public static final int BREATH_MESSAGE = 8;
+        public static final int UNDERGROUND_MESSAGE = 11;
     }
 
     public final class Commands extends MessengerService.Commands {
@@ -144,7 +145,7 @@ public class FHSensorManager extends MessengerService {
     // Devices:
     private final String H7 = "00:22:D0:3D:30:31";
     private final String CAD = "C7:9E:DF:E6:F8:D5"; //D9:6A:83:DA:82:7C
-    private final String SPD = "C3:B0:19:D8:64:A2"; //"EB:03:59:83:C8:34";
+    private final String SPD = "EB:03:59:83:C8:34"; //""; C3:B0:19:D8:64:A2
     // Not added yet
     private final String SPD_ACC_WAKE = "02:80:E1:00:00:AA";
     private final String BAROMETER = "D4:BD:70:0E:E9:EE";
@@ -175,7 +176,7 @@ public class FHSensorManager extends MessengerService {
     // Variables for speed calculations
     public static float last_speed = 0;
     public static int last_revolutions = 0;
-    private static final double wheel_type = 4.4686;
+    private static final double wheel_type = 2.2; //4.4686;
     private static final double wheel_circumference = 2.2;
 
     // Variables for cadence calculations
@@ -184,11 +185,15 @@ public class FHSensorManager extends MessengerService {
     private static float lastSpeedCrank = 0;
     public static int firstWheelRevolution = 0;
     public static int totalWheelRevolution = 0;
-    private static float distance = 0;
+    private static int previous_revolutions = 0;
+    public static float distance = 0;
     private final int age = 24;
     private final double vo2max = 44.60;    // for 2500m
     private final int weight = 70;
-    private double calories = 0.0;
+    public static double calories = 0.0;
+
+    private static int offroad_counter = 0;
+    private static int onroad_counter = 0;
 
     private boolean wheelLightActive = false;
     private boolean wheelSpeedActive = false;
@@ -202,7 +207,7 @@ public class FHSensorManager extends MessengerService {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            //Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
             //Log.i(TAG, mConnectableBtDevices.toString());
             if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
                 if (!mBtDevicesReadyToConnect.contains(device)) {
@@ -354,6 +359,7 @@ public class FHSensorManager extends MessengerService {
                     int first_wheel = ((int)characteristicData[1]) & 0xff;
                     int wheel_revolutions = (fourth_wheel << 24) | (third_wheel << 16) | (second_wheel << 8) | (first_wheel);
 
+
                     int high_time = ((int)characteristicData[6]) & 0xff;
                     int low_time = ((int)characteristicData[5]) & 0xff;
                     int time_speed = (high_time << 8) | low_time;
@@ -381,17 +387,32 @@ public class FHSensorManager extends MessengerService {
                     }
                     Log.v(TAG, "Speed: " + speed);
 
-                    if(speed < 100) {                                  // if speed value valid
+                    if(speed < 100 && speed > 0) {                                  // if speed value valid
                         sendMsgFloat(Messages.SPEED_MESSAGE, speed);
                     }
 
                     if (firstWheelRevolution == 0){
                         firstWheelRevolution = wheel_revolutions;
+                        previous_revolutions = wheel_revolutions;
                     }
                     totalWheelRevolution = wheel_revolutions - firstWheelRevolution;
                     distance = totalWheelRevolution * (float)wheel_circumference;
 
                     sendMsgFloat(Messages.DISTANCE_MESSAGE, distance);
+
+                    int acc_data = ((int)characteristicData[7]) & 0xff;
+
+                    if(acc_data >= 60) {
+                        offroad_counter += wheel_revolutions - previous_revolutions;
+                    } else {
+                        onroad_counter += wheel_revolutions - previous_revolutions;
+                    }
+                    previous_revolutions = wheel_revolutions;
+
+                    int[] message = new int[2];
+                    message[1] = offroad_counter;
+                    message[2] = onroad_counter;
+                    sendMsg(Messages.UNDERGROUND_MESSAGE, message);
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
@@ -585,7 +606,7 @@ public class FHSensorManager extends MessengerService {
         // T: Insert device UUID's to connect to.
         mConnectableBtDevices.add(H7);
         mConnectableBtDevices.add(CAD);
-        mConnectableBtDevices.add(SPD);
+        //mConnectableBtDevices.add(SPD);
         mConnectableBtDevices.add(BAROMETER);
         mConnectableBtDevices.add(SPD_ACC_WAKE);
         startScan();
