@@ -1,13 +1,8 @@
 package de.fithud.fithud;
 
 import android.app.Activity;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Binder;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
@@ -17,13 +12,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import de.fithud.fithudlib.MainService;
-import de.fithud.fithudlib.MessengerService;
-import de.fithud.fithudlib.MessengerServiceActivity;
-import de.fithud.fithudlib.TestService;
+import de.fithud.fithudlib.MessengerClient;
 
 
-public class MainActivity extends MessengerServiceActivity {
+public class MainActivity extends Activity implements MessengerClient {
 
     Button btnStart, btnStop, btnBind, btnUnbind;
     TextView textStatus, textData;
@@ -59,15 +51,6 @@ public class MainActivity extends MessengerServiceActivity {
         btnStart.setOnClickListener(
             new View.OnClickListener() {
                 public void onClick(View v){
-                    Message msg = Message.obtain(null,
-                            TestService.Messages.CLIENT_MESSAGE);
-                    msg.replyTo = mMessenger;
-                    try {
-                        mService.send(msg);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                    //startService(new Intent(MainActivity.this, MainService.class));
                 }
             }
         );
@@ -81,21 +64,16 @@ public class MainActivity extends MessengerServiceActivity {
         btnBind.setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v){
-                        // Bind to Service
-                       doBindService(TestService.class);
                     }
                 }
         );
         btnUnbind.setOnClickListener(
                 new View.OnClickListener() {
                     public void onClick(View v){
-
-                        doUnbindService();
                     }
                 }
         );
         Log.i(TAG, "onCreate()");
-        //startService(new Intent(this, MainService.class));
     }
 
 

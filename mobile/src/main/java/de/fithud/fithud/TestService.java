@@ -1,4 +1,4 @@
-package de.fithud.fithudlib;
+package de.fithud.fithud;
 
 import android.app.Service;
 import android.content.Intent;
@@ -7,6 +7,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
+
+import de.fithud.fithudlib.MessengerService;
 
 /**
  * Created by jandob on 12/16/14.
