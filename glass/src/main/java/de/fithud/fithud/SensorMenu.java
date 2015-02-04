@@ -29,7 +29,6 @@ import java.util.List;
 import de.fithud.fithudlib.FHSensorManager;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
-import de.fithud.fithudlib.MessengerServiceActivity;
 
 
 /**
