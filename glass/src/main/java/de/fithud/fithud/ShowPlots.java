@@ -81,9 +81,9 @@ public class ShowPlots extends Activity implements MessengerClient {
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 input = msg.getData().getFloat("value");
-                addHeartData((int) input);
-                heart_sensor = (int) input;
-                Log.i(TAG, "Heartrate " + input);
+                //addHeartData((int) input);
+                //heart_sensor = (int) input;
+                //Log.i(TAG, "Heartrate " + input);
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 input = msg.getData().getFloat("value");
@@ -118,6 +118,14 @@ public class ShowPlots extends Activity implements MessengerClient {
                 barometer_sensor = (int)input;
                 addHeightData((int) barometer_sensor);
                 break;
+
+            case FHSensorManager.Messages.BREATH_MESSAGE:
+                int[] breathMsg = msg.getData().getIntArray("value");
+                respiration_sensor = (float)breathMsg[0]/(float)1000.0;
+                heart_sensor = (int) breathMsg[1];
+                addHeartData(heart_sensor);
+                addRespirationData(respiration_sensor);
+                break;
         }
     }
 
@@ -130,15 +138,18 @@ public class ShowPlots extends Activity implements MessengerClient {
 
     // Plotting Variables
     private SimpleXYSeries speedSeries = null;
+    private SimpleXYSeries respirationSeries = null;
     private SimpleXYSeries heartSeries = null;
     private SimpleXYSeries heightSeries = null;
     private TextView speedText;
     private TextView heartText;
+    private TextView respirationText;
     private TextView heightText;
     private TextView terrainRoadText;
     private TextView terrainOffroadText;
     private TextView terrainAsphaltText;
     private XYPlot speedPlot = null;
+    private XYPlot respirationPlot = null;
     private XYPlot heartPlot = null;
     private XYPlot heightPlot = null;
 
@@ -152,14 +163,19 @@ public class ShowPlots extends Activity implements MessengerClient {
     private TextView heartTopLabel;
     private TextView heartBottomLabel;
 
+    private TextView respirationTopLabel;
+    private TextView respirationBottomLabel;
+
     private static final int HISTORY_SIZE = 50;
     private static double sin_counter = 0.0;
     private static boolean plot_speed = false;
     private static boolean plot_heart = false;
     private static boolean plot_height = false;
     private static boolean plot_terrain = false;
+    private static boolean plot_respiration = false;
 
     private static boolean init_speed = false;
+    private static boolean init_respiration = false;
     private static boolean init_heart = false;
     private static boolean init_height = false;
     private static boolean init_terrain = false;
@@ -172,6 +188,7 @@ public class ShowPlots extends Activity implements MessengerClient {
     private Segment s3;
 
     private int speed_sensor = 0;
+    private float respiration_sensor = 0;
     private int heart_sensor = 0;
     private int barometer_sensor = 0;
 
@@ -198,11 +215,14 @@ public class ShowPlots extends Activity implements MessengerClient {
                 case R.id.heartRatePlotMenu:
                     mCardScrollView.setSelection(1);
                     break;
-                case R.id.showHeightPlotMenu:
+                case R.id.showRespirationPlotMenu:
                     mCardScrollView.setSelection(2);
                     break;
-                case R.id.showTerrainPlotMenu:
+                case R.id.showHeightPlotMenu:
                     mCardScrollView.setSelection(3);
+                    break;
+                case R.id.showTerrainPlotMenu:
+                    mCardScrollView.setSelection(4);
                     break;
             }
             return true;
@@ -261,6 +281,16 @@ public class ShowPlots extends Activity implements MessengerClient {
             speedBottomLabel.setText("10");
         }
 
+        if (choice.equalsIgnoreCase("respiration")) {
+
+            plot.addSeries(respirationSeries,
+                    new LineAndPointFormatter(
+                            Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
+            plot.setRangeBoundaries(0.1, 0.8, BoundaryMode.FIXED);
+            respirationTopLabel.setText("0.8");
+            respirationBottomLabel.setText("0.1");
+        }
+
         if (choice.equalsIgnoreCase("heart")) {
 
             plot.addSeries(heartSeries,
@@ -280,10 +310,7 @@ public class ShowPlots extends Activity implements MessengerClient {
             heightTopLabel.setText("50");
             heightBottomLabel.setText("-50");
         }
-
-
         plot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
-
 
         plot.setDomainStepMode(XYStepMode.INCREMENT_BY_VAL);
         plot.setDomainStepValue(1);
@@ -294,6 +321,11 @@ public class ShowPlots extends Activity implements MessengerClient {
             plot.setRangeLabel("Speed [m/s]");
             final PlotStatistics histStatsSpeed = new PlotStatistics(1000, false);
             plot.addListener(histStatsSpeed);
+        }else if (choice.equalsIgnoreCase("respiration")) {
+            plot.setDomainLabel("Time [s]");
+            plot.setRangeLabel("Respiration Rate [Hz]");
+            final PlotStatistics histStatsRespiration = new PlotStatistics(1000, false);
+            plot.addListener(histStatsRespiration);
         } else if (choice.equalsIgnoreCase("heart")) {
             plot.setDomainLabel("Time [s]");
             plot.setRangeLabel("Heartrate [bpm]");
@@ -321,6 +353,9 @@ public class ShowPlots extends Activity implements MessengerClient {
 
         heightSeries = new SimpleXYSeries("height");
         heightSeries.useImplicitXVals();
+
+        respirationSeries = new SimpleXYSeries("respiration");
+        respirationSeries.useImplicitXVals();
     }
 
     @Override
@@ -331,6 +366,7 @@ public class ShowPlots extends Activity implements MessengerClient {
         init_height = false;
         init_speed = false;
         init_terrain = false;
+        init_respiration = false;
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
@@ -375,6 +411,26 @@ public class ShowPlots extends Activity implements MessengerClient {
             if (plot_speed) {
                 speedPlot.redraw();
                 speedText.setText("Your current speed: " + speed + " km/h");
+            }
+        }
+    }
+
+    public void addRespirationData(float respiration) {
+        //if (init_speed) {
+        Log.d("FitHUD", "add respiration now");
+        if (respirationSeries.size() > HISTORY_SIZE) {
+            respirationSeries.removeFirst();
+        }
+        respirationSeries.addLast(null, respiration);
+        //}
+    }
+
+    public void plotRespirationData(float respiration) {
+        if (init_respiration) {
+            Log.d("FitHUD", "plot respiration now");
+            if (plot_respiration) {
+                respirationPlot.redraw();
+                respirationText.setText("Your current respiration: " + respiration + " Hz");
             }
         }
     }
@@ -514,6 +570,7 @@ public class ShowPlots extends Activity implements MessengerClient {
                                 plot_heart = false;
                                 plot_height = false;
                                 plot_terrain = false;
+                                plot_respiration = false;
                                 /*
                                 if (init_heart) {
                                     while (heartSeries.size() > 0) {
@@ -543,10 +600,29 @@ public class ShowPlots extends Activity implements MessengerClient {
                                 plot_heart = true;
                                 plot_height = false;
                                 plot_terrain = false;
-
+                                plot_respiration = false;
                                 break;
 
                             case 2:
+                                respirationPlot = (XYPlot) (mCardScrollView.findViewById(R.id.respirationRatePlot));
+                                respirationText = (TextView) mCardScrollView.findViewById(R.id.respirationRateText);
+                                respirationTopLabel = (TextView) mCardScrollView.findViewById(R.id.labelTopRespiration);
+                                respirationBottomLabel = (TextView) mCardScrollView.findViewById(R.id.labelBottomRespiration);
+                                if (!init_respiration) {
+                                    initializePlot(respirationPlot, "respiration");
+                                    init_respiration = true;
+                                    respirationPlot.setVisibility(View.VISIBLE);
+                                } else {
+                                    respirationPlot.setVisibility(View.VISIBLE);
+                                }
+                                plot_speed = false;
+                                plot_heart = false;
+                                plot_height = false;
+                                plot_terrain = false;
+                                plot_respiration = true;
+                                break;
+
+                            case 3:
                                 heightPlot = (XYPlot) (mCardScrollView.findViewById(R.id.heightPlot));
                                 heightText = (TextView) mCardScrollView.findViewById(R.id.heightText);
                                 heightTopLabel = (TextView) mCardScrollView.findViewById(R.id.labelTopHeight);
@@ -562,28 +638,33 @@ public class ShowPlots extends Activity implements MessengerClient {
                                 plot_heart = false;
                                 plot_height = true;
                                 plot_terrain = false;
-
+                                plot_respiration = false;
                                 break;
 
-                            case 3:
+                            case 4:
                                 plot_speed = false;
                                 plot_heart = false;
                                 plot_height = false;
                                 plot_terrain = true;
+                                plot_respiration = false;
 
                                 terrainPie = (PieChart) mCardScrollView.getSelectedView().findViewById(R.id.terrainPie);
                                 terrainRoadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainRoadText);
                                 terrainAsphaltText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainAsphaltText);
                                 terrainOffroadText = (TextView) mCardScrollView.getSelectedView().findViewById(R.id.terrainOffroadText);
-                                Log.i(TAG, "ID pie: " + terrainPie);
-                                Log.i(TAG, "ID roadtex: " + terrainRoadText);
-                                Log.i(TAG, "ID asphalt: " + terrainAsphaltText);
-                                Log.i(TAG, "ID offroadtext: " + terrainOffroadText);
+                                //Log.i(TAG, "ID pie: " + terrainPie);
+                                //Log.i(TAG, "ID roadtex: " + terrainRoadText);
+                                // Log.i(TAG, "ID asphalt: " + terrainAsphaltText);
+                                // Log.i(TAG, "ID offroadtext: " + terrainOffroadText);
                                 break;
                         }
 
                         if (plot_speed) {
                             plotSpeedData((int) speed_sensor);
+                        }
+
+                        if (plot_respiration) {
+                            plotRespirationData( respiration_sensor);
                         }
 
                         if (plot_heart) {
@@ -638,6 +719,11 @@ public class ShowPlots extends Activity implements MessengerClient {
                 .setFootnote("You are dead");
         //heartview = heartcard.getView();
         mCards.add(heartcard);
+
+        CardBuilder respirationcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
+                .setEmbeddedLayout(R.layout.respirationrate)
+                .setFootnote("ABBA-14");
+        mCards.add(respirationcard);
 
         CardBuilder heightcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
                 .setEmbeddedLayout(R.layout.height)

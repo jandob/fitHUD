@@ -29,7 +29,7 @@ import java.util.ArrayList;
  */
 public abstract class MessengerService extends Service {
     /** Keeps track of all current registered clients. */
-    ArrayList<Messenger> mClients = new ArrayList<Messenger>();
+    ArrayList<Messenger> mClients = new ArrayList<>();
 
     /**
      * To be overriden.

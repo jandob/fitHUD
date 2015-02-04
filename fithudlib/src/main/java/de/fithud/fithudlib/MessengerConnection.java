@@ -23,7 +23,7 @@ import android.util.Log;
 
 public class MessengerConnection {
     private Context mClient; // TODO how to define mClient implements MessengerClient(see constructor)
-    private static final String TAG = FHSensorManager.class.getSimpleName();
+    private static final String TAG = MessengerConnection.class.getSimpleName();
     /** Messenger for communicating with service. */
     public  Messenger mService;
     /** Flag indicating whether we have called bind on the service. */
@@ -89,6 +89,7 @@ public class MessengerConnection {
         mClient.bindService(new Intent(mClient,
                 serviceClass), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
+        Log.d(TAG, "connecting to service: " + serviceClass + "from: " + mClient);
     }
 
     public void disconnect() {

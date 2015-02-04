@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 /**
  * Created by jandob on 11/17/14.
  */
@@ -38,11 +39,17 @@ public class FHSensorManager extends MessengerService {
         public static final int ACC_RAW_MESSAGE = 5;
         public static final int HEIGTH_MESSAGE = 6;
         public static final int SEARCH_READY = 7;
+        public static final int GUIDE_MESSAGE = 8;
+        public static final int DISTANCE_MESSAGE = 9;
+        public static final int CALORIES_MESSAGE = 10;
+        public static final int BREATH_MESSAGE = 8;
     }
 
     public final class Commands extends MessengerService.Commands {
         public static final int SEARCH_COMMAND = 1;
         public static final int WAKEUP_COMMAND = 2;
+        public static final int WHEEL_LIGHT = 3;
+        public static final int WHEEL_SPEED = 4;
     }
 
     @Override
@@ -62,6 +69,27 @@ public class FHSensorManager extends MessengerService {
                 else{
                     Log.i(TAG,"Wakeup not connected");
                 }
+                break;
+
+            case Commands.WHEEL_LIGHT:
+                if (wheelLightActive) {
+                    wheelLightActive = false;
+                    startStopLight(wheelLightActive);
+                } else {
+                    wheelLightActive = true;
+                    startStopLight(true);
+                }
+                Log.d(TAG, "wheel light on: " + wheelLightActive);
+                break;
+            case Commands.WHEEL_SPEED:
+                if (wheelSpeedActive) {
+                    wheelSpeedActive = false;
+                    showSpeedOnWheel(wheelSpeedActive);
+                } else {
+                    wheelSpeedActive = true;
+                    showSpeedOnWheel(true);
+                }
+                Log.d(TAG, "wheel speed on: " + wheelSpeedActive);
                 break;
         }
     }
@@ -115,8 +143,8 @@ public class FHSensorManager extends MessengerService {
 
     // Devices:
     private final String H7 = "00:22:D0:3D:30:31";
-    private final String CAD = "C7:9E:DF:E6:F8:D5";
-    private final String SPD = "EB:03:59:83:C8:34";
+    private final String CAD = "C7:9E:DF:E6:F8:D5"; //D9:6A:83:DA:82:7C
+    private final String SPD = "C3:B0:19:D8:64:A2"; //"EB:03:59:83:C8:34";
     // Not added yet
     private final String SPD_ACC_WAKE = "02:80:E1:00:00:AA";
     private final String BAROMETER = "D4:BD:70:0E:E9:EE";
@@ -127,9 +155,10 @@ public class FHSensorManager extends MessengerService {
     private final String ACCService =    "02366e80-cf3a-11e1-9ab4-0002a5d5c51b";
     private final String WakeupService = "42821a40-e477-11e2-82d0-0002a5d5c51b";
     private final String BarometerService = "00001110-0000-1000-8000-00805f9b34fb";
-
+    private final String BreathService = "20306e80-ab3a-11e1-9ab4-0002a5d5c51b";
     // Characteristics
     private final String WakeupCharacteristicUUID = "a32e5520-e477-11e2-a9e3-0002a5d5c51b";
+    private final String BreathCharUUID = "34aa1bb8-cf4b-c0e1-ac36-0002a5d5c51b";
 
     private boolean connectionInProgress = false;
     private int nrOfremainingDevices = 0;
@@ -141,17 +170,29 @@ public class FHSensorManager extends MessengerService {
     public int barometer_connected = 0;
 
     private boolean barometer_calibrated = false;
-    private int barometer_offset = 0;
+    private short barometer_offset = 0;
 
     // Variables for speed calculations
     public static float last_speed = 0;
     public static int last_revolutions = 0;
     private static final double wheel_type = 4.4686;
+    private static final double wheel_circumference = 2.2;
 
     // Variables for cadence calculations
 
     private static int lastRevolutionsCrank = 0;
     private static float lastSpeedCrank = 0;
+    public static int firstWheelRevolution = 0;
+    public static int totalWheelRevolution = 0;
+    private static float distance = 0;
+    private final int age = 24;
+    private final double vo2max = 44.60;    // for 2500m
+    private final int weight = 70;
+    private double calories = 0.0;
+
+    private boolean wheelLightActive = false;
+    private boolean wheelSpeedActive = false;
+
 
     Timer timer;
     TimerTask timerTask;
@@ -161,7 +202,7 @@ public class FHSensorManager extends MessengerService {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            //Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
             //Log.i(TAG, mConnectableBtDevices.toString());
             if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
                 if (!mBtDevicesReadyToConnect.contains(device)) {
@@ -192,34 +233,40 @@ public class FHSensorManager extends MessengerService {
     }
 
     public void showSpeedOnWheel(boolean speedWheelSwitch){
-        byte[] signal = new byte[1];
-        if(speedWheelSwitch) {
-            signal[0] = (byte)0xFC;
+        if (spdAccWake_connected == 1) {
+            byte[] signal = new byte[1];
+            if(speedWheelSwitch) {
+                signal[0] = (byte)0xFC;
+            }
+            else
+            {
+                signal[0] = (byte)0xFB;
+            }
+            // Save local in characterstic
+            wakeupCharacteristic.setValue(signal);
+            // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+            wakeupGATT.writeCharacteristic(wakeupCharacteristic);
         }
-        else
-        {
-            signal[0] = (byte)0xFB;
-        }
-        // Save local in characterstic
-        wakeupCharacteristic.setValue(signal);
-        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
-        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+
     }
 
     public void startStopLight(boolean lightSwitch)
     {
-        byte[] signal = new byte[1];
-        if(lightSwitch) {
-            signal[0] = (byte)0xFE;
+        if (spdAccWake_connected == 1) {
+            byte[] signal = new byte[1];
+            if(lightSwitch) {
+                signal[0] = (byte)0xFE;
+            }
+            else
+            {
+                signal[0] = (byte)0xFD;
+            }
+            // Save local in characterstic
+            wakeupCharacteristic.setValue(signal);
+            // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+            wakeupGATT.writeCharacteristic(wakeupCharacteristic);
         }
-        else
-        {
-            signal[0] = (byte)0xFD;
-        }
-        // Save local in characterstic
-        wakeupCharacteristic.setValue(signal);
-        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
-        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+
     }
 
     public void sendWakeupMessage(){
@@ -278,7 +325,6 @@ public class FHSensorManager extends MessengerService {
                     int high_time = ((int)characteristicData[4]) & 0xff;
                     int low_time = ((int)characteristicData[3]) & 0xff;
                     int time_cadence = (high_time << 8) | low_time;
-
                     float timeDifference = 0;
                     int revolutions_difference = crank_revolutions - lastRevolutionsCrank;
                     if (time_cadence < lastSpeedCrank) {
@@ -293,11 +339,12 @@ public class FHSensorManager extends MessengerService {
                     float cadenceRpm = 0;
                     if (timeDifference > 0) {
                         cadenceRpm = ((float)(revolutions_difference) / timeDifference) * (float)60;
-                        Log.i(TAG, "Cadence : " + cadenceRpm);
+                        Log.v(TAG, "Cadence : " + cadenceRpm);
                         sendMsgFloat(Messages.CADENCE_MESSAGE, cadenceRpm);
                     } else {
                         cadenceRpm = 0;
                     }
+
 
                     // Speed indicator is set
                 }  else if ((characteristicData[0] & (1L << 0)) != 0) {
@@ -314,7 +361,6 @@ public class FHSensorManager extends MessengerService {
                     int speed_dataset[] = new int[2];
                     speed_dataset[0] = wheel_revolutions;
                     speed_dataset[1] = time_speed;
-
                     // Convert data in real speed float
                     float time_difference = 0;
                     int revolutions_difference = speed_dataset[0] - last_revolutions;
@@ -333,14 +379,36 @@ public class FHSensorManager extends MessengerService {
                     } else {
                         speed = 0;
                     }
-                    Log.i(TAG, "Speed: " + speed);
+                    Log.v(TAG, "Speed: " + speed);
 
-                    sendMsgFloat(Messages.SPEED_MESSAGE, speed);
+                    if(speed < 100) {                                  // if speed value valid
+                        sendMsgFloat(Messages.SPEED_MESSAGE, speed);
+                    }
+
+                    if (firstWheelRevolution == 0){
+                        firstWheelRevolution = wheel_revolutions;
+                    }
+                    totalWheelRevolution = wheel_revolutions - firstWheelRevolution;
+                    distance = totalWheelRevolution * (float)wheel_circumference;
+
+                    sendMsgFloat(Messages.DISTANCE_MESSAGE, distance);
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
                 int heartrate = (int) characteristicData[1];
                 sendMsgFloat(Messages.HEARTRATE_MESSAGE, (float)heartrate);
+
+                //double calories = ((0.380 * vo2max)+(0.450 * heartrate)+(0.274 * age)+(0.0468 * weight) - 59.3954) * time / 4.184;
+                calories = calories + (((0.380 * vo2max) + (0.450 * heartrate) + (0.274 * age) + (0.0468 * weight) - 59.3954) / 4.184);
+                /*
+                * Source: Paper - Accurate Caloric Expenditure of Bicyclists using Cellphones
+                * Calories =[(0.380 * VO2_max)+(0.450 * BPM)
+                * +(0.274 * age)+(0.0468 * weight) - 59.3954] * time / 4.184
+                * (for male biker) - in kJ ???
+                * with: VO2_max = (D - 504.9) / 44.73
+                */
+                sendMsgFloat(Messages.CALORIES_MESSAGE, (float)calories);
+
             }
 
             if(characteristic.getService().getUuid().toString().equals(ACCService)){
@@ -369,12 +437,25 @@ public class FHSensorManager extends MessengerService {
                 short barometer_value = twoBytesToShort(characteristicData[0],characteristicData[1]);
 
                 if(!barometer_calibrated){
-                    barometer_offset = (int)barometer_value;
+                    barometer_offset = barometer_value;
                     barometer_calibrated = true;
                 }
 
+                // TODO: Check int to short cast
+                barometer_value = (short) (barometer_value - barometer_offset);
+
                 int barometerFinal = (int)barometer_value-(int)barometer_offset;
-                sendMsgFloat(Messages.HEIGTH_MESSAGE,(float)barometerFinal);
+                sendMsgFloat(Messages.HEIGTH_MESSAGE, (float) barometerFinal);
+            }
+
+            if(characteristic.getService().getUuid().toString().equals(BreathService)){
+                short breathRate = twoBytesToShort(characteristicData[0],characteristicData[1]);
+                short heartRate = twoBytesToShort(characteristicData[2],characteristicData[3]);
+                int breathData[] = new int[2];
+                breathData[0] = breathRate;
+                breathData[1] = heartRate;
+                sendMsg(Messages.BREATH_MESSAGE, breathData);
+                Log.i(TAG,"BreathRate: "+breathRate);
             }
         }
 
@@ -410,8 +491,6 @@ public class FHSensorManager extends MessengerService {
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 // Since it is not connected any more remove it out of the list
                 mConnectedBtDevicesGattServices.remove(gatt);
-
-
                 mConnectedBtDevices.remove(gatt.getDevice().getAddress());
                 gatt.close();
                 Log.i(TAG, "disconnected from " + gatt.getDevice().getAddress());
@@ -432,7 +511,7 @@ public class FHSensorManager extends MessengerService {
             Log.i(TAG, gatt.getDevice().getName() + " discovered " + services.size() + " services:");
             for (BluetoothGattService service : services) {
                 Log.i(TAG, service.getUuid().toString());
-                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService) || service.getUuid().toString().equals(ACCService) || service.getUuid().toString().equals(WakeupService) ||service.getUuid().toString().equals(BarometerService))) {
+                if (!(service.getUuid().toString().equals(HRService) || service.getUuid().toString().equals(SPDCADService) || service.getUuid().toString().equals(ACCService) || service.getUuid().toString().equals(WakeupService) ||service.getUuid().toString().equals(BarometerService) || service.getUuid().toString().equals(BreathService))) {
                     continue;
                 }
 
@@ -536,6 +615,7 @@ public class FHSensorManager extends MessengerService {
             mHandler.postDelayed(mTickRunnable, 1000);
         }
     };
+
 
     @Override
     public void onDestroy() {

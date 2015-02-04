@@ -3,6 +3,9 @@ package de.fithud.fithud;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,26 +18,43 @@ import android.content.Intent;
 import android.media.AudioManager;
 
 import com.google.android.glass.media.Sounds;
+import com.google.android.glass.touchpad.GestureDetector;
 import com.google.android.glass.view.WindowUtils;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollView;
+import java.util.Locale;
+import android.speech.tts.TextToSpeech;
+
+import org.apache.http.auth.MalformedChallengeException;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import de.fithud.fithudlib.FHSensorManager;
+import de.fithud.fithudlib.GuideService;
+import de.fithud.fithudlib.MessengerClient;
+import de.fithud.fithudlib.MessengerConnection;
 
 
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class GuideSettings extends Activity {
+public class GuideSettings extends Activity implements MessengerClient {
+
+    MessengerConnection sensorConn = new MessengerConnection(this);
+    MessengerConnection guideConn = new MessengerConnection(this);
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
 
-    private static boolean guideOnOff = false;
-    private static boolean fatBurn = false;
+    private final String TAG = GuideSettings.class.getSimpleName();
+
+    private static boolean speechEnabled = false;
+    private static int speech_enabled = 0;
+    private static boolean guide_active = false;
+
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -61,47 +81,49 @@ public class GuideSettings extends Activity {
         return super.onMenuItemSelected(featureId, item);
     }
 
+    public void sendBoolToGuide(int messageType, boolean guideActive) {
+        Message msg = Message.obtain(null, messageType);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("guideActive", guideActive);
+        //bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        Log.d(TAG, "Data has been sent to guide.");
+        try {
+            guideConn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
+    }
+
+
     // This function is called with clicking on the first card in GuideSettings
     public void startStopGuide(){
-        // Communicate with live card here !!
-        if(!guideOnOff) {
+
+        if(!guide_active) {
 
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD","Guide activating...");
-            guideOnOff = true;
+            Log.v(TAG,"Guide activated");
+            guide_active = true;
         }
         else {
             mCards.get(0).setText("Guide is deactivated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD","Guide deactivating...");
-            guideOnOff = false;
-        }
-    }
-
-    // This function is called with clicking on the second card in GuideSettings
-    public void fatCardioSwitch(){
-        // Change here the style of the guide!!
-        if(!fatBurn) {
-            Log.d("FitHUD","Selecting fat-burn...");
-            mCards.get(1).setText("Fat-Burn");
-            mAdapter.notifyDataSetChanged();
-            fatBurn = true;
-        }
-        else{
-            Log.d("FitHUD","Selecting cardio...");
-            mCards.get(1).setText("Cardio");
-            mAdapter.notifyDataSetChanged();
-            fatBurn = false;
+            Log.v(TAG, "Guide deactivated");
+            guide_active = false;
         }
 
+        sendBoolToGuide(GuideService.GuideMessages.GUIDE_COMMAND, guide_active);
     }
+
 
     @Override
     protected void onCreate(Bundle bundle) {
+
+        guideConn.connect(GuideService.class);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
-
         super.onCreate(bundle);
         createCards();
 
@@ -113,45 +135,44 @@ public class GuideSettings extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
-                    case 0:
+                    case 0:                     //Guide
                         startStopGuide();
                         break;
-
-                    case 1:
-                        fatCardioSwitch();
+                    case 1:                     // Start training mode
+                        startActivity(new Intent(GuideSettings.this, TrainingMode.class));
+                        break;
+                    case 2:                     // Start challenge
+                        startActivity(new Intent(GuideSettings.this, ChallengeMode.class));
                         break;
                 }
-            }
+        }
         });
 
         mAdapter = new CardScrollAdapter();
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        sensorConn.disconnect();
+        //guideConn.disconnect();
+        super.onDestroy();
     }
 
     @Override
     protected void onResume() {
-        if(guideOnOff) {
+        if(guide_active) {
             mCards.get(0).setText("Guide is activated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Guide is activated...");
+            Log.d(TAG, "Guide is activated...");
         }
         else {
             mCards.get(0).setText("Guide is deactivated");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Guide is deactivated...");
-        }
-
-        if(fatBurn){
-            mCards.get(1).setText("Fat-Burn");
-            mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Fatburn is activated...");
-        }
-        else{
-            mCards.get(1).setText("Cardio");
-            mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Cardio is activated...");
+            Log.d(TAG, "Guide is deactivated...");
         }
 
         super.onResume();
@@ -168,13 +189,25 @@ public class GuideSettings extends Activity {
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Start/Stop Guide!")
-                .setFootnote("Start or stop the guide"));
+                .setText("Start Guide!")
+                .setFootnote("Tap to start or stop the guide"));
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Fat-Burn")
-                .setFootnote("Guide setting for biking"));
+                .setText("Training mode")
+                .setFootnote("Tap to choose your training mode"));
+
+        //TODO: Implement challenges.
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Challenge yourself!")
+                .setFootnote("Tap to select your challenge"));
+
     }
+
+    @Override
+    public void handleMessage(Message msg) {
+
+    }
+
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
 

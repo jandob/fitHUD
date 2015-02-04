@@ -3,6 +3,8 @@ package de.fithud.fithud;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,16 +27,21 @@ import java.util.List;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
 import de.fithud.fithudlib.StorageService;
+import de.fithud.fithudlib.GuideService;
 
 /**
  * Created by JohanV on 04.01.2015.
  */
-public class WorkoutMenu extends Activity {
+public class WorkoutMenu extends Activity implements MessengerClient{
+
+    private static final String TAG = WorkoutMenu.class.getSimpleName();
 
     private CardScrollView mCardScrollView;
     private List<CardBuilder> mCards;
     private CardScrollAdapter mAdapter;
     private AudioManager mAudioManager;
+    MessengerConnection guideConn = new MessengerConnection(this);
+
     private static boolean workoutActive = false;
 
     @Override
@@ -57,6 +64,10 @@ public class WorkoutMenu extends Activity {
                     //mCardScrollView.setSelection(1);
                     startActivity(new Intent(WorkoutMenu.this, GuideSettings.class));
                     break;
+                case R.id.showSummary:
+                    startActivity(new Intent(WorkoutMenu.this, SummaryView.class));
+                    //startService(new Intent(this, FHLiveCardService.class));
+                    break;
             }
             return true;
         }
@@ -67,14 +78,14 @@ public class WorkoutMenu extends Activity {
         // Start workout here ! Therefore communicate with livecard
         if(!workoutActive) {
             workoutActive = true;
-            mCards.get(0).setText("Workout active");
+            mCards.get(1).setText("Workout running");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Activating workout...");
             startService(new Intent(WorkoutMenu.this, StorageService.class));
         }
         else
         {
-            mCards.get(0).setText("Workout inactive");
+            mCards.get(1).setText("Workout inactive");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Deactivating workout...");
             workoutActive = false;
@@ -84,6 +95,8 @@ public class WorkoutMenu extends Activity {
 
     @Override
     protected void onCreate(Bundle bundle) {
+
+        guideConn.connect(GuideService.class);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().requestFeature(WindowUtils.FEATURE_VOICE_COMMANDS);
 
@@ -99,13 +112,29 @@ public class WorkoutMenu extends Activity {
                 mAudioManager.playSoundEffect(Sounds.TAP);
                 switch (mCardScrollView.getSelectedItemPosition()) {
                     case 0:
-                        startStopWorkout();
+                        startActivity(new Intent(WorkoutMenu.this, GuideSettings.class));
                         break;
 
                     case 1:
-                        startActivity(new Intent(WorkoutMenu.this, GuideSettings.class));
+                        startStopWorkout();
+                        sendBoolToGuide(GuideService.GuideMessages.WORKOUT_COMMAND, workoutActive);
+                        break;
+
+                }
+            }
+        });
+
+        mCardScrollView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                mAudioManager.playSoundEffect(Sounds.DISMISSED);
+                switch (mCardScrollView.getSelectedItemPosition()) {
+                    case 1:                     //Guide
+                        startActivity(new Intent(WorkoutMenu.this, SummaryView.class));
                         break;
                 }
+                return true;
             }
         });
 
@@ -113,19 +142,20 @@ public class WorkoutMenu extends Activity {
         mCardScrollView.setAdapter(mAdapter);
         mCardScrollView.activate();
         setContentView(mCardScrollView);
+        mCardScrollView.setSelection(1);
     }
 
     @Override
     protected void onResume() {
         if(workoutActive) {
-            mCards.get(0).setText("Workout active");
+            mCards.get(1).setText("Workout active");
             mAdapter.notifyDataSetChanged();
             Log.d("FitHUD", "Workout is active...");
         }
         else{
-            mCards.get(0).setText("Workout inactive");
+            mCards.get(1).setText("Workout inactive");
             mAdapter.notifyDataSetChanged();
-            Log.d("FitHUD", "Workzt is inactive...");
+            Log.d("FitHUD", "Workout is inactive...");
         }
 
         super.onResume();
@@ -147,12 +177,31 @@ public class WorkoutMenu extends Activity {
         mCards = new ArrayList<CardBuilder>();
 
         mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
-                .setText("Start/Stop!")
-                .setFootnote("Start or stop the workout"));
-
-        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
                 .setText("Guide Settings")
                 .setFootnote("Start or set the guide"));
+
+        mCards.add(new CardBuilder(this, CardBuilder.Layout.MENU)
+                .setText("Start/Stop!")
+                .setFootnote("Start or stop the workout"));
+    }
+
+    @Override
+    public void handleMessage(Message msg) {
+
+    }
+
+    public void sendBoolToGuide(int messageType, boolean guideActive) {
+        Message msg = Message.obtain(null, messageType);
+        Bundle bundle = new Bundle();
+        bundle.putBoolean("workoutActive", guideActive);
+        msg.setData(bundle);
+        Log.d(TAG, "Data has been sent to guide.");
+        try {
+            guideConn.send(msg);
+        }
+        catch (RemoteException e){
+
+        }
     }
 
     private class CardScrollAdapter extends com.google.android.glass.widget.CardScrollAdapter {
