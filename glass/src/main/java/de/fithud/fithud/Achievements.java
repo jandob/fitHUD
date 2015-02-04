@@ -2,13 +2,11 @@ package de.fithud.fithud;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewDebug;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -18,16 +16,12 @@ import com.google.android.glass.media.Sounds;
 import com.google.android.glass.widget.CardBuilder;
 import com.google.android.glass.widget.CardScrollView;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import de.fithud.fithudlib.FHSensorManager;
-import de.fithud.fithudlib.GuideClass;
 import de.fithud.fithudlib.GuideService;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;

@@ -401,18 +401,24 @@ public class FHSensorManager extends MessengerService {
                     sendMsgFloat(Messages.DISTANCE_MESSAGE, distance);
 
                     int acc_data = ((int)characteristicData[7]) & 0xff;
-
-                    if(acc_data >= 60) {
+                    Log.d(TAG, "ACC: " + acc_data);
+                    if(acc_data >= 50) {
                         offroad_counter += wheel_revolutions - previous_revolutions;
                     } else {
                         onroad_counter += wheel_revolutions - previous_revolutions;
                     }
                     previous_revolutions = wheel_revolutions;
 
+
                     int[] message = new int[2];
-                    message[1] = offroad_counter;
-                    message[2] = onroad_counter;
-                    sendMsg(Messages.UNDERGROUND_MESSAGE, message);
+                    message[0] = offroad_counter;
+                    message[1] = onroad_counter;
+                    Log.d(TAG, "offroad: " + offroad_counter);
+                    Log.d(TAG, "onroad: " + onroad_counter);
+                    if (offroad_counter != 0 || onroad_counter != 0) {
+                        sendMsg(Messages.UNDERGROUND_MESSAGE, message);
+                    }
+
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {

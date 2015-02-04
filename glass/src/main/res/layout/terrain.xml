@@ -18,10 +18,10 @@
         android:layout_alignParentLeft="true" />
 
     <TextView
-        android:layout_width="260px"
+        android:layout_width="300px"
         android:layout_height="70px"
         android:layout_marginTop="60px"
-        android:layout_marginLeft="400px"
+        android:layout_marginLeft="380px"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Offroad: 10%"
         android:textSize="18dp"
