@@ -49,7 +49,7 @@ public class SummaryView extends Activity implements MessengerClient {
     private  TextView liveCardBikeText = null;
     private  TextView liveCardHeartText = null;
     private  TextView liveCardHeightText = null;
-    private  TextView liveCardStatus = null;
+    public  TextView liveCardStatus = null;
     private TextView summaryGuideText = null;
     private TextView distanceText = null;
     private TextView timeText = null;
@@ -81,11 +81,11 @@ public class SummaryView extends Activity implements MessengerClient {
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 speed = msg.getData().getFloat("value");
-                liveCardBikeText.setText(round(speed*100)/100 + " km/h");
+                liveCardBikeText.setText((float) (((int)(speed*100))/100.0) + " km/h");
                 break;
             case FHSensorManager.Messages.DISTANCE_MESSAGE:
                 distance = msg.getData().getFloat("value");
-                distanceText.setText("distance: " + round(distance*100)/100 + " m");
+                distanceText.setText((float) (((int)(distance*1000))/1000.0) + " km");
 
             case GuideService.GuideMessages.GUIDE_TEXT:
                 Log.d(TAG, "Summary got guide text: " + msg.getData().getString("text"));
@@ -138,13 +138,19 @@ public class SummaryView extends Activity implements MessengerClient {
         timeText = (TextView) findViewById(R.id.timeText);
         caloriesText = (TextView) findViewById(R.id.caloriesText);
 
+        if(WorkoutMenu.workoutActive) {
+            liveCardStatus.setBackgroundColor(Color.GREEN);
+        } else {
+            liveCardStatus.setBackgroundColor(Color.RED);
+        }
+
         //int speed = 5;
         //int heartrate = heartRate;
         //int height = 5;
         liveCardBikeText.setText(speed + " km/h");
         liveCardHeartText.setText(heartRate + " bpm");
         liveCardHeightText.setText(height + " m");
-        liveCardStatus.setBackgroundColor(Color.RED);
+        //liveCardStatus.setBackgroundColor(Color.RED);
         GuideService.summaryBoundToGuide = true;
         Log.d(TAG, "Summary on create");
     }
@@ -154,6 +160,12 @@ public class SummaryView extends Activity implements MessengerClient {
         GuideService.summaryBoundToGuide = true;
         //sendBoolToGuide(GuideService.GuideMessages.SPEECH_COMMAND, true);
         super.onResume();
+
+        if(WorkoutMenu.workoutActive) {
+            liveCardStatus.setBackgroundColor(Color.GREEN);
+        } else {
+            liveCardStatus.setBackgroundColor(Color.RED);
+        }
     }
 
     @Override

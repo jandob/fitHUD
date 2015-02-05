@@ -13,7 +13,7 @@
             android:id="@+id/liveCardStatus"
             android:layout_width="match_parent"
             android:layout_height="2px"
-            android:background="#00FF00"
+            android:background="#f7ff0005"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"/>
 
@@ -73,7 +73,6 @@
             android:id="@+id/summaryGuideText"
             android:layout_alignTop="@+id/liveCardHeightText"
             android:layout_toEndOf="@+id/liveCardHeightText" />
-            //android:layout_toEndOf="@+id/distanceText" />
 
         <ImageView
             android:id="@+id/liveCardDistance"
@@ -96,20 +95,27 @@
             android:id="@+id/timeText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="300px"
+            android:layout_marginLeft="400px"
             android:text="00:00:00"
-            android:layout_alignTop="@+id/liveCardBikeText"
-            android:layout_alignEnd="@+id/timeText" />
+            android:layout_alignTop="@+id/liveCardBikeText" />
 
 
         <TextView
             android:id="@+id/caloriesText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="250px"
-            android:text="0 kJ"
-            android:layout_alignTop="@+id/liveCardHeart"
-            android:layout_alignEnd="@+id/timeText" />
+            android:layout_marginLeft="400px"
+            android:text="0 kCal"
+            android:layout_alignTop="@+id/liveCardHeart" />
+
+        <ImageView
+            android:id="@+id/caloriesImage"
+            android:layout_width="100px"
+            android:layout_height="100px"
+            android:layout_marginLeft="300px"
+            android:src="@drawable/calories_bw"
+            android:layout_below="@+id/liveCardBike" />
+            <!--android:layout_alignEnd="@+id/liveCardHeartText" /> -->
 
     </RelativeLayout>
 

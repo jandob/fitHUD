@@ -129,43 +129,52 @@ public class Achievements extends Activity implements MessengerClient {
     private void changeSpeedCard() {
         mCards.get(0).setText("Speed Record: " + GuideService.speedRecord + " km/h");
         mCards.get(0).setTimestamp("Level " + GuideService.speedLevelIndex + " / " + GuideService.speedAchievementLevels.length + " reached.");
-        if (GuideService.speedLevelIndex+1 <= GuideService.speedAchievementLevels.length) {
-            mCards.get(0).setFootnote("CHALLENGE: " + GuideService.speedAchievementLevels[GuideService.speedLevelIndex+1] + " km/h");
+        if (GuideService.speedLevelIndex+2 <= GuideService.speedAchievementLevels.length) {
+            mCards.get(0).setFootnote("Next level: " + GuideService.speedAchievementLevels[GuideService.speedLevelIndex+1] + " km/h");
         } else {
-            mCards.get(0).setFootnote("All challenges completed");
+            mCards.get(0).setFootnote("All levels completed");
         }
     }
 
-    private void changeDistanceCard(int distanceRecordReachedDistance, int distanceRecordNextDistance, int distanceRecordLevel, int distanceRecordLevels) {
-        mCards.get(1).setText("Distance Record: " + distanceRecordReachedDistance + " km");
-        mCards.get(1).setTimestamp("Level " + distanceRecordLevel + " / " + distanceRecordLevels + " reached.");
-        mCards.get(1).setFootnote("CHALLENGE: " + distanceRecordNextDistance + " km");
+    private void changeDistanceCard() {
+        mCards.get(1).setText("Distance Record: " + GuideService.distanceRecord + " km");
+        mCards.get(1).setTimestamp("Level " + GuideService.distanceLevelIndex + " / " + GuideService.distanceAchievementLevels.length + " reached.");
+        if (GuideService.distanceLevelIndex+2 <= GuideService.distanceAchievementLevels.length){
+            mCards.get(1).setFootnote("Next level: " + GuideService.distanceAchievementLevels[GuideService.distanceLevelIndex+1] + " km");
+        } else {
+            mCards.get(1).setFootnote("All levels completed");
+        }
+
     }
 
     private void changeHeightCard() {
         mCards.get(2).setText("Height Record: " + GuideService.heightRecord + " m");
         mCards.get(2).setTimestamp("Level " + GuideService.speedLevelIndex + " / " + GuideService.heightAchievementLevels.length + " reached.");
-        if (GuideService.heightLevelIndex+1 <= GuideService.heightAchievementLevels.length){
-            mCards.get(2).setFootnote("CHALLENGE: " + GuideService.heightAchievementLevels[GuideService.heightLevelIndex+1] + " m");
+        if (GuideService.heightLevelIndex+2 <= GuideService.heightAchievementLevels.length){
+            mCards.get(2).setFootnote("Next level: " + GuideService.heightAchievementLevels[GuideService.heightLevelIndex+1] + " m");
         } else {
-            mCards.get(2).setFootnote("All challenges completed");
+            mCards.get(2).setFootnote("All levels completed");
         }
     }
 
     private void changeCadenceCard() {
         mCards.get(3).setText("Cadence Record: " + GuideService.cadenceRecord + " bpm");
         mCards.get(3).setTimestamp("Level " + GuideService.cadenceLevelIndex + " / " + GuideService.cadenceAchievementLevels.length + " reached.");
-        if(GuideService.cadenceLevelIndex+1 <= GuideService.cadenceAchievementLevels.length) {
-            mCards.get(3).setFootnote("CHALLENGE: " + GuideService.cadenceAchievementLevels[GuideService.cadenceLevelIndex] + " bpm");
+        if(GuideService.cadenceLevelIndex+2 <= GuideService.cadenceAchievementLevels.length) {
+            mCards.get(3).setFootnote("Next level: " + GuideService.cadenceAchievementLevels[GuideService.cadenceLevelIndex+1] + " bpm");
         } else {
-            mCards.get(3).setFootnote("All challenges completed");
+            mCards.get(3).setFootnote("All levels completed");
         }
     }
 
-    private void changeCaloriesCard(int caloriesRecordReachedBurnedCals, int caloriesRecordNextBurnedCals, int caloriesRecordLevel, int caloriesRecordLevels) {
-        mCards.get(4).setText("Calories Record: " + caloriesRecordReachedBurnedCals + " kCal");
-        mCards.get(4).setTimestamp("Level " + caloriesRecordLevel + " / " + caloriesRecordLevels + " reached.");
-        mCards.get(4).setFootnote("CHALLENGE: " + caloriesRecordNextBurnedCals + " kCal");
+    private void changeCaloriesCard() {
+        mCards.get(4).setText("Calories Record: " + GuideService.caloriesRecord + " kCal");
+        mCards.get(4).setTimestamp("Level " + GuideService.caloriesLevelIndex + " / " + GuideService.caloriesAchievementLevels.length + " reached.");
+        if(GuideService.caloriesLevelIndex+2 <= GuideService.caloriesAchievementLevels.length) {
+            mCards.get(4).setFootnote("Next level: " + GuideService.caloriesAchievementLevels[GuideService.caloriesLevelIndex+1] + " kCal");
+        } else {
+            mCards.get(4).setFootnote("All levels completed");
+        }
     }
 
     @Override
@@ -223,8 +232,8 @@ public class Achievements extends Activity implements MessengerClient {
         changeSpeedCard();
         changeHeightCard();
         changeCadenceCard();
-        //changeCaloriesCard(caloriesRecordReachedBurnedCals, caloriesRecordNextBurnedCals, caloriesRecordLevel, caloriesRecordLevels);
-        //changeDistanceCard(distanceRecordReachedDistance, distanceRecordNextDistance, distanceRecordLevel, distanceRecordLevels);
+        changeCaloriesCard();
+        changeDistanceCard();
     }
 
     @Override
@@ -243,6 +252,16 @@ public class Achievements extends Activity implements MessengerClient {
                     break;
                 case FHSensorManager.Messages.SPEED_MESSAGE:
                     changeSpeedCard();
+                    mAdapter.notifyDataSetChanged();
+                    break;
+
+                case FHSensorManager.Messages.CALORIES_MESSAGE:
+                    changeCaloriesCard();
+                    mAdapter.notifyDataSetChanged();
+                    break;
+
+                case FHSensorManager.Messages.DISTANCE_MESSAGE:
+                    changeDistanceCard();
                     mAdapter.notifyDataSetChanged();
                     break;
             }
