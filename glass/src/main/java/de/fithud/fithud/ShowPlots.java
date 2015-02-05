@@ -114,13 +114,13 @@ public class ShowPlots extends Activity implements MessengerClient {
 
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
                 input = msg.getData().getFloat("value");
-                barometer_sensor = (int)input;
+                barometer_sensor = (int) input;
                 addHeightData((int) barometer_sensor);
                 break;
 
             case FHSensorManager.Messages.BREATH_MESSAGE:
                 int[] breathMsg = msg.getData().getIntArray("value");
-                respiration_sensor = (float)breathMsg[0]/(float)1000.0;
+                respiration_sensor = (float) breathMsg[0] / (float) 1000.0;
                 heart_sensor = (int) breathMsg[1];
                 addHeartData(heart_sensor);
                 addRespirationData(respiration_sensor);
@@ -130,8 +130,8 @@ public class ShowPlots extends Activity implements MessengerClient {
                 int[] acc_data = msg.getData().getIntArray("value");
                 float offroadData = acc_data[0];
                 float onroadData = acc_data[1];
-                offroadCounter = (offroadData / (offroadData + onroadData)*(float)100.0);
-                onroadCounter = (onroadData / (offroadData + onroadData)*(float)100.0);
+                offroadCounter = (offroadData / (offroadData + onroadData) * (float) 100.0);
+                onroadCounter = (onroadData / (offroadData + onroadData) * (float) 100.0);
                 Log.d(TAG, "offroad: " + offroadCounter);
                 Log.d(TAG, "onroad: " + onroadCounter);
                 break;
@@ -204,6 +204,7 @@ public class ShowPlots extends Activity implements MessengerClient {
     private float offroadCounter = 0;
     private float onroadCounter = 0;
 
+    private static int heightCounter = 0;
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
@@ -330,7 +331,7 @@ public class ShowPlots extends Activity implements MessengerClient {
             plot.setRangeLabel("Speed [m/s]");
             final PlotStatistics histStatsSpeed = new PlotStatistics(1000, false);
             plot.addListener(histStatsSpeed);
-        }else if (choice.equalsIgnoreCase("respiration")) {
+        } else if (choice.equalsIgnoreCase("respiration")) {
             plot.setDomainLabel("Time [s]");
             plot.setRangeLabel("Respiration Rate [Hz]");
             final PlotStatistics histStatsRespiration = new PlotStatistics(1000, false);
@@ -370,11 +371,11 @@ public class ShowPlots extends Activity implements MessengerClient {
         cadenceSeries.useImplicitXVals();
 
         // Initialize with values from GuideService
-        for(int i = 0; i < HISTORY_SIZE; i++){
-            speedSeries.addLast(null,GuideService.speedHistory.get(i));
-            heartSeries.addLast(null,GuideService.heartHistory.get(i));
-            heightSeries.addLast(null,GuideService.heightHistory.get(i));
-            cadenceSeries.addLast(null,GuideService.cadenceHistory.get(i));
+        for (int i = 0; i < HISTORY_SIZE; i++) {
+            speedSeries.addLast(null, GuideService.speedHistory.get(i));
+            heartSeries.addLast(null, GuideService.heartHistory.get(i));
+            heightSeries.addLast(null, GuideService.heightHistory.get(i));
+            cadenceSeries.addLast(null, GuideService.cadenceHistory.get(i));
         }
     }
 
@@ -477,12 +478,17 @@ public class ShowPlots extends Activity implements MessengerClient {
     }
 
     public void addHeightData(int height) {
-        if (init_height) {
-            Log.d("FitHUD", "add height now");
-            if (heightSeries.size() > HISTORY_SIZE) {
-                heightSeries.removeFirst();
+        heightCounter = heightCounter + 1;
+        if (heightCounter == GuideService.HEIGHT_DIVIDER) {
+            Log.i(TAG,"Added one dataset for height now");
+            if (init_height) {
+                Log.d("FitHUD", "add height now");
+                if (heightSeries.size() > HISTORY_SIZE) {
+                    heightSeries.removeFirst();
+                }
+                heightSeries.addLast(null, height);
             }
-            heightSeries.addLast(null, height);
+            heightCounter = 0;
         }
     }
 
@@ -502,8 +508,8 @@ public class ShowPlots extends Activity implements MessengerClient {
         s2 = new Segment("road", s2_val);
 
 
-        terrainOffroadText.setText("Offroad: " + (float)(((int)(s1_val*10))/10.0) + "%");
-        terrainRoadText.setText("Road: " + (float)(((int)(s2_val*10))/10.0) + "%");
+        terrainOffroadText.setText("Offroad: " + (float) (((int) (s1_val * 10)) / 10.0) + "%");
+        terrainRoadText.setText("Road: " + (float) (((int) (s2_val * 10)) / 10.0) + "%");
         terrainAsphaltText.setText("");
 
         work_pie.clear();
@@ -685,12 +691,12 @@ public class ShowPlots extends Activity implements MessengerClient {
                         }
 
                         if (plot_respiration) {
-                            plotRespirationData( respiration_sensor);
+                            plotRespirationData(respiration_sensor);
                         }
 
                         if (plot_heart) {
 
-                            plotHeartData((int) heart_sensor );
+                            plotHeartData((int) heart_sensor);
                         }
 
                         if (plot_height) {
@@ -703,7 +709,7 @@ public class ShowPlots extends Activity implements MessengerClient {
                                 initializeTerrainPie(terrainPie);
                                 terrainPie.setVisibility(View.VISIBLE);
                             }
-                            plotTerrainPie(offroadCounter,onroadCounter , terrainPie);
+                            plotTerrainPie(offroadCounter, onroadCounter, terrainPie);
                         }
                     }
                 });
@@ -765,39 +771,39 @@ public class ShowPlots extends Activity implements MessengerClient {
     protected void onDestroy() {
         super.onDestroy();
         conn.disconnect();
-        Log.i(TAG,"Showplots destroyed");
+        Log.i(TAG, "Showplots destroyed");
     }
 
-    private class ExampleCardScrollAdapter extends CardScrollAdapter {
+private class ExampleCardScrollAdapter extends CardScrollAdapter {
 
-        @Override
-        public int getPosition(Object item) {
-            return mCards.indexOf(item);
-        }
-
-        @Override
-        public int getCount() {
-            return mCards.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return mCards.get(position);
-        }
-
-        @Override
-        public int getViewTypeCount() {
-            return CardBuilder.getViewTypeCount();
-        }
-
-        @Override
-        public int getItemViewType(int position) {
-            return mCards.get(position).getItemViewType();
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            return mCards.get(position).getView(convertView, parent);
-        }
+    @Override
+    public int getPosition(Object item) {
+        return mCards.indexOf(item);
     }
+
+    @Override
+    public int getCount() {
+        return mCards.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return mCards.get(position);
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return CardBuilder.getViewTypeCount();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return mCards.get(position).getItemViewType();
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        return mCards.get(position).getView(convertView, parent);
+    }
+}
 }

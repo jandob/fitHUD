@@ -38,9 +38,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 
-
 /**
- *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
  */
 
@@ -99,11 +97,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private long workoutStartTime;
     private long workoutCurrentTime;
 
-    public static int[] speedAchievementLevels = new int[] {0, 20, 30, 40, 50, 60, 70, 80};
-    public static int[] distanceAchievementLevels = new int[] {0, 1, 2, 5, 10, 50};
-    public static int[] heightAchievementLevels = new int[] {0, 100, 500, 1000, 1500};
-    public static int[] cadenceAchievementLevels = new int[] {0, 70, 80, 120, 130};
-    public static int[] caloriesAchievementLevel = new int[] {0, 50, 100, 150};
+    public static int[] speedAchievementLevels = new int[]{0, 20, 30, 40, 50, 60, 70, 80};
+    public static int[] distanceAchievementLevels = new int[]{0, 1, 2, 5, 10, 50};
+    public static int[] heightAchievementLevels = new int[]{0, 100, 500, 1000, 1500};
+    public static int[] cadenceAchievementLevels = new int[]{0, 70, 80, 120, 130};
+    public static int[] caloriesAchievementLevel = new int[]{0, 50, 100, 150};
 
     // Memory for plotting values (They are readout in onCreate of "showPlots")
     private static final int History_Size = 50;
@@ -112,6 +110,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static List<Float> respirationHistory = new ArrayList<Float>();
     public static List<Float> speedHistory = new ArrayList<Float>();
     public static List<Float> heartHistory = new ArrayList<Float>();
+    private static  int heightCounter = 0;
+    // This defines which values are added to the height history
+    // Example: HEIGHT_DIVIDER = 20 --> 3samples/min because sampling rate is 1Hz
+    // If History == 50 --> History holds 50/3 min of data = 16.6 min
+    public static final int HEIGHT_DIVIDER = 20;
 
     public static int speedLevelIndex = 0;
     public static int heightLevelIndex = 0;
@@ -148,9 +151,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             case GuideService.GuideMessages.GUIDE_COMMAND:
                 //updateTrainingMode(training_mode);
                 guide_active = msg.getData().getBoolean("guideActive");
-                Log.i(TAG,"Guide active: " + msg.getData().getBoolean("guideActive"));
-                if (speech_active){
-                    if (guide_active){
+                Log.i(TAG, "Guide active: " + msg.getData().getBoolean("guideActive"));
+                if (speech_active) {
+                    if (guide_active) {
                         tts.speak("Guide is now activated", TextToSpeech.QUEUE_FLUSH, null);
                     } else {
                         tts.speak("Guide is not activated anymore", TextToSpeech.QUEUE_FLUSH, null);
@@ -168,8 +171,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                     stopTimer();
                 }
 
-                if(speech_active){
-                    if (workout_started){
+                if (speech_active) {
+                    if (workout_started) {
                         tts.speak("Workout started.", TextToSpeech.QUEUE_FLUSH, null);
                     } else {
                         tts.speak("Workout finished.", TextToSpeech.QUEUE_FLUSH, null);
@@ -182,8 +185,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 updateTrainingMode(training_mode);
                 challenge_mode = DISABLED;
                 progressIndex = 0;
-                Log.i(TAG,"Training mode changed." + training_mode);
-                if (speech_active){
+                Log.i(TAG, "Training mode changed." + training_mode);
+                if (speech_active) {
                     switch (training_mode) {
                         case 0:
                             tts.speak("Cardio training selected", TextToSpeech.QUEUE_FLUSH, null);
@@ -202,8 +205,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 challenge_mode = (msg.getData().getInt("challengeMode"));
                 training_mode = DISABLED;
                 progressIndex = 0;
-                Log.i(TAG,"Challenge mode changed." + challenge_mode);
-                if (speech_active){
+                Log.i(TAG, "Challenge mode changed." + challenge_mode);
+                if (speech_active) {
                     switch (challenge_mode) {
                         case 0:
                             tts.speak("Height challenge selected", TextToSpeech.QUEUE_FLUSH, null);
@@ -221,7 +224,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             case GuideService.GuideMessages.SPEECH_COMMAND:
                 speech_active = msg.getData().getBoolean("speechActive");
-                Log.i(TAG,"Speech active: " + speech_active);
+                Log.i(TAG, "Speech active: " + speech_active);
                 if (speech_active) {
                     tts.speak("Speech enabled", TextToSpeech.QUEUE_FLUSH, null);
                 }
@@ -231,24 +234,23 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "HR received" + value);
 
-                if(workout_started && guide_active && training_mode < 2) {  // Cardio & Fatburn training
-                    heartRateCheck((int)value);
+                if (workout_started && guide_active && training_mode < 2) {  // Cardio & Fatburn training
+                    heartRateCheck((int) value);
                 }
 
                 // Adding to plotting history
-                if(heartHistory.size() > History_Size)
-                {
+                if (heartHistory.size() > History_Size) {
                     heartHistory.remove(0);
                 }
-                    heartHistory.add(value);
+                heartHistory.add(value);
                 break;
 
             case FHSensorManager.Messages.CALORIES_MESSAGE:
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "Calories received" + value);
 
-                if(workout_started && guide_active && challenge_mode == 2) {    // Calories challenge
-                    caloriesCheck((int)value);
+                if (workout_started && guide_active && challenge_mode == 2) {    // Calories challenge
+                    caloriesCheck((int) value);
                 }
                 break;
 
@@ -256,13 +258,12 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "cadence received" + value);
 
-                if(workout_started && guide_active && (challenge_mode == 1)) {  // Cadence challenge
+                if (workout_started && guide_active && (challenge_mode == 1)) {  // Cadence challenge
                     cadenceCheck(value);
                 }
 
                 // Adding to plotting history
-                if(cadenceHistory.size() > History_Size)
-                {
+                if (cadenceHistory.size() > History_Size) {
                     cadenceHistory.remove(0);
                 }
                 cadenceHistory.add(value);
@@ -272,7 +273,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "speed received" + value);
 
-                if(workout_started) {
+                if (workout_started) {
                     if (guide_active && (training_mode == 2)) {          // Interval training mode
                         speedCheck(value);
                     }
@@ -280,8 +281,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 }
 
                 // Adding to plotting history
-                if(speedHistory.size() > History_Size)
-                {
+                if (speedHistory.size() > History_Size) {
                     speedHistory.remove(0);
                 }
                 speedHistory.add(value);
@@ -291,7 +291,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "height received" + value);
 
-                if(workout_started) {
+                if (workout_started) {
 
                     if (guide_active && (challenge_mode == 0)) {         // Height challenge
                         heightCheck((int) value);
@@ -300,36 +300,39 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                     achievementHeightCheck((int) value);
                 }
 
-                // Adding to plotting history
-                if(heightHistory.size() > History_Size)
-                {
-                    heightHistory.remove(0);
+                heightCounter = heightCounter + 1;
+                if (heightCounter == HEIGHT_DIVIDER) {
+                    // Adding to plotting history
+                    if (heightHistory.size() > History_Size) {
+                        heightHistory.remove(0);
+                    }
+                    heightHistory.add(value);
+                    heightCounter = 0;
                 }
-                heightHistory.add(value);
                 break;
         }
     }
 
-    public void updateTrainingMode(int training_mode){
+    public void updateTrainingMode(int training_mode) {
         // TODO: Set min/max heart rate for cardio training
-        if(training_mode == cardio){
+        if (training_mode == cardio) {
             hr_min = 80;
             hr_max = 90;
         }
         // TODO: Set min/max heart rate for fatburn training
-        if(training_mode == fatburn){
+        if (training_mode == fatburn) {
             hr_min = 90;
             hr_max = 100;
         }
 
-        if(training_mode == interval){
+        if (training_mode == interval) {
             startTime = System.currentTimeMillis();
         }
     }
 
     private void heartRateCheck(int heartRate) {
         GuideTextPrev = GuideText;
-        if(heartRate < hr_min){
+        if (heartRate < hr_min) {
             GuideText = "Your heart rate is too low!";
         } else if (heartRate < hr_max) {
             GuideText = "Perfect pace, keep going!";
@@ -337,9 +340,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Slow down, your heart rate is too high!";
         }
 
-        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+        if (summaryBoundToGuide && GuideTextPrev != GuideText) {
             sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-            if(speech_active) {
+            if (speech_active) {
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
@@ -348,17 +351,19 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             speechCounter = 0;
         }
         speechCounter++;*/
-    };
+    }
+
+    ;
 
     private void speedCheck(float current_speed) {
         GuideTextPrev = GuideText;
         long currentTime = System.currentTimeMillis();
-        if((currentTime - startTime) >= intervalTime) {
+        if ((currentTime - startTime) >= intervalTime) {
             interval_state = !interval_state;
             startTime = System.currentTimeMillis();
         }
-        if (interval_state){
-            if(current_speed < speed_high_min) {
+        if (interval_state) {
+            if (current_speed < speed_high_min) {
                 GuideText = "Go faster, you are too slow";
             } else if (current_speed < speed_high_max) {
                 GuideText = "Perfect pace!";
@@ -366,7 +371,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 GuideText = "Slow down, you are too slow";
             }
         } else {
-            if(current_speed < speed_low_min) {
+            if (current_speed < speed_low_min) {
                 GuideText = "Go faster, you are too slow";
             } else if (current_speed < speed_low_max) {
                 GuideText = "Perfect pace!";
@@ -375,9 +380,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             }
         }
 
-        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+        if (summaryBoundToGuide && GuideTextPrev != GuideText) {
             sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-            if(speech_active) {
+            if (speech_active) {
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
@@ -386,34 +391,36 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             speechCounter = 0;
         }
         speechCounter++;*/
-    };
+    }
+
+    ;
 
 
     // Need to reset all flags if new challenge started.
     private void cadenceCheck(float current_cadence) {
         GuideTextPrev = GuideText;
-        if(current_cadence > 0 && progressIndex == 0){
+        if (current_cadence > 0 && progressIndex == 0) {
             GuideText = "Let's get started.";
             progressIndex++;
-        } else if(current_cadence >= (0.5 * cadenceAim) && progressIndex == 1) {
+        } else if (current_cadence >= (0.5 * cadenceAim) && progressIndex == 1) {
             GuideText = "You are half way there.";
             progressIndex++;
-        } else if(current_cadence >= (0.8 * cadenceAim) && progressIndex == 2) {
+        } else if (current_cadence >= (0.8 * cadenceAim) && progressIndex == 2) {
             GuideText = "Your are almost there";
             progressIndex++;
-        } else if(current_cadence >= (0.9 * cadenceAim) && progressIndex == 3) {
+        } else if (current_cadence >= (0.9 * cadenceAim) && progressIndex == 3) {
             GuideText = "Only a few meters left";
             progressIndex++;
-        } else if(current_cadence >= cadenceAim && progressIndex == 4){
+        } else if (current_cadence >= cadenceAim && progressIndex == 4) {
             GuideText = "Congratulations! You have completed your challenge";
             progressIndex++;
         } else {
             GuideText = "Keep going.";
         }
         Log.v(TAG, "Guide: " + GuideText);
-        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+        if (summaryBoundToGuide && GuideTextPrev != GuideText) {
             sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-            if(speech_active) {
+            if (speech_active) {
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
@@ -422,30 +429,32 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             speechCounter = 0;
         }
         speechCounter++;*/
-    };
+    }
+
+    ;
 
     public void heightCheck(int current_height) {
         GuideTextPrev = GuideText;
-        if(current_height > 0 && progressIndex == 0){
+        if (current_height > 0 && progressIndex == 0) {
             GuideText = "Let's get started.";
             progressIndex++;
-        } else if(current_height >= (0.5 * heightAim) && progressIndex == 1) {
+        } else if (current_height >= (0.5 * heightAim) && progressIndex == 1) {
             GuideText = "You are half way there.";
             progressIndex++;
-        } else if(current_height >= (0.8 * heightAim) && progressIndex == 2) {
+        } else if (current_height >= (0.8 * heightAim) && progressIndex == 2) {
             GuideText = "Your are almost there";
             progressIndex++;
-        } else if(current_height >= (0.9 * heightAim) && progressIndex == 3) {
+        } else if (current_height >= (0.9 * heightAim) && progressIndex == 3) {
             GuideText = "Only a few meters left";
             progressIndex++;
-        } else if(current_height >= heightAim && progressIndex == 4){
+        } else if (current_height >= heightAim && progressIndex == 4) {
             GuideText = "Congratulations! You have completed your challenge successfully";
             progressIndex++;
         }
 
-        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+        if (summaryBoundToGuide && GuideTextPrev != GuideText) {
             sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-            if(speech_active) {
+            if (speech_active) {
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
@@ -454,30 +463,32 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             speechCounter = 0;
         }
         speechCounter++;*/
-    };
+    }
+
+    ;
 
     public void caloriesCheck(int current_calories) {
         GuideTextPrev = GuideText;
-        if(current_calories > 0 && progressIndex == 0){
+        if (current_calories > 0 && progressIndex == 0) {
             GuideText = "Let's get started.";
             progressIndex++;
-        } else if(current_calories >= (0.5 * caloriesAim) && progressIndex == 1) {
+        } else if (current_calories >= (0.5 * caloriesAim) && progressIndex == 1) {
             GuideText = "You are half way there.";
             progressIndex++;
-        } else if(current_calories >= (0.8 * caloriesAim) && progressIndex == 2) {
+        } else if (current_calories >= (0.8 * caloriesAim) && progressIndex == 2) {
             GuideText = "Your are almost there";
             progressIndex++;
-        } else if(current_calories >= (0.9 * caloriesAim) && progressIndex == 3) {
+        } else if (current_calories >= (0.9 * caloriesAim) && progressIndex == 3) {
             GuideText = "Only a few more calories";
             progressIndex++;
-        } else if(current_calories >= caloriesAim && progressIndex == 4){
+        } else if (current_calories >= caloriesAim && progressIndex == 4) {
             GuideText = "Congratulations! You have completed your challenge successfully";
             progressIndex++;
         }
 
-        if(summaryBoundToGuide && GuideTextPrev != GuideText) {
+        if (summaryBoundToGuide && GuideTextPrev != GuideText) {
             sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
-            if(speech_active) {
+            if (speech_active) {
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
@@ -486,14 +497,16 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             speechCounter = 0;
         }
         speechCounter++;*/
-    };
+    }
+
+    ;
 
     @Override
     public void onCreate() {
         super.onCreate();
         conn = new MessengerConnection(this);
         conn.connect(FHSensorManager.class);
-        tts = new TextToSpeech(this,this);
+        tts = new TextToSpeech(this, this);
 
     }
 
@@ -517,7 +530,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         conn.disconnect();
 
         // Close the Text to Speech Library
-        if(tts != null) {
+        if (tts != null) {
 
             tts.stop();
             tts.shutdown();
@@ -527,9 +540,10 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         super.onDestroy();
     }
 
-    void sendMsgString(int messageType, String content){
+    void sendMsgString(int messageType, String content) {
         for (int i = mClients.size() - 1; i >= 0; i--) {
-            try {Message msg = Message.obtain(null, messageType);
+            try {
+                Message msg = Message.obtain(null, messageType);
                 Bundle bundle = new Bundle();
                 // bundle.putFloat("value", val);
                 // bundle.putFloat("value", val);
@@ -545,9 +559,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         }
     }
 
-    private void achievementSpeedCheck(int current_speed){
+    private void achievementSpeedCheck(int current_speed) {
 
-        if(current_speed > speedRecord){                            // Set new record values
+        if (current_speed > speedRecord) {                            // Set new record values
             speedRecord = current_speed;
             speedRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New speed record:" + speedRecord);
@@ -555,9 +569,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             if (speedLevelIndex + 2 <= speedAchievementLevels.length) {
 
-                if(speedRecord >= speedAchievementLevels[speedLevelIndex+1]){
+                if (speedRecord >= speedAchievementLevels[speedLevelIndex + 1]) {
                     speedLevelIndex++;
-                    Log.d(TAG,"Speed level: " + speedAchievementLevels[speedLevelIndex]);
+                    Log.d(TAG, "Speed level: " + speedAchievementLevels[speedLevelIndex]);
 
                     if (speechOutputEnabled) {
                         tts.speak("New speed achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
@@ -579,7 +593,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     //TODO: Height or max elevation?
     private void achievementHeightCheck(int current_height) {
 
-        if(current_height > heightRecord){                            // Set new record values
+        if (current_height > heightRecord) {                            // Set new record values
             heightRecord = current_height;
             heightRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New height record:" + heightRecord);
@@ -587,24 +601,24 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             if (heightLevelIndex + 1 <= heightAchievementLevels.length) {
 
-                if(heightRecord >= heightAchievementLevels[heightLevelIndex+1]){
+                if (heightRecord >= heightAchievementLevels[heightLevelIndex + 1]) {
                     heightLevelIndex++;
-                    Log.d(TAG,"Height level: " + heightAchievementLevels[heightLevelIndex]);
+                    Log.d(TAG, "Height level: " + heightAchievementLevels[heightLevelIndex]);
 
                     if (speechOutputEnabled) {
                         tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
-                    Toast.makeText(this, "Height record: " + heightAchievementLevels[heightLevelIndex+1] + "m", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Height record: " + heightAchievementLevels[heightLevelIndex + 1] + "m", Toast.LENGTH_LONG).show();
                 }
                 heightDiff = heightAchievementLevels[heightLevelIndex + 1] - heightRecord;
-                Log.d(TAG,"Height diff: " + heightDiff);
+                Log.d(TAG, "Height diff: " + heightDiff);
             }
         }
     }
 
     private void checkCadence(int current_cadence) {
 
-        if(current_cadence > cadenceRecord){                          // Set new record values
+        if (current_cadence > cadenceRecord) {                          // Set new record values
             cadenceRecord = current_cadence;
             cadenceRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New cadence record:" + cadenceRecord);
@@ -613,16 +627,16 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
             if (cadenceLevelIndex + 1 <= cadenceAchievementLevels.length) {
 
-                if(cadenceRecord >= cadenceAchievementLevels[cadenceLevelIndex+1]){
+                if (cadenceRecord >= cadenceAchievementLevels[cadenceLevelIndex + 1]) {
                     cadenceLevelIndex++;
-                    Log.d(TAG,"cadence level: " + cadenceAchievementLevels[cadenceLevelIndex]);
+                    Log.d(TAG, "cadence level: " + cadenceAchievementLevels[cadenceLevelIndex]);
 
                     if (speechOutputEnabled) {
                         tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
                 }
                 cadenceDiff = cadenceAchievementLevels[cadenceLevelIndex + 1] - cadenceRecord;
-                Log.d(TAG,"cadence diff: " + cadenceDiff);
+                Log.d(TAG, "cadence diff: " + cadenceDiff);
             }
         }
     }
@@ -667,9 +681,9 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                         //hh:mm:ss
                         workoutRunningTime = String.format("%02d:%02d:%02d",
-                        TimeUnit.MILLISECONDS.toHours(time_diff),
-                        TimeUnit.MILLISECONDS.toMinutes(time_diff) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time_diff)),
-                        TimeUnit.MILLISECONDS.toSeconds(time_diff) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time_diff)));
+                                TimeUnit.MILLISECONDS.toHours(time_diff),
+                                TimeUnit.MILLISECONDS.toMinutes(time_diff) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time_diff)),
+                                TimeUnit.MILLISECONDS.toSeconds(time_diff) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time_diff)));
 
                         sendMsgString(GuideMessages.GUIDE_TIME, workoutRunningTime);
 
