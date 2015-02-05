@@ -625,6 +625,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                     sendMsgString(GuideMessages.ACHIEVEMENT_REACHED, "text");
                     Toast.makeText(this, "Calories record: " + caloriesAchievementLevels[caloriesLevelIndex] + "kCal", Toast.LENGTH_LONG).show();
+                    showThumb();
                 }
             }
         }
@@ -647,6 +648,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                     sendMsgString(GuideMessages.ACHIEVEMENT_REACHED, "text");
                     Toast.makeText(this, "Distance record: " + distanceAchievementLevels[distanceLevelIndex] + " km", Toast.LENGTH_LONG).show();
+                    showThumb();
                 }
             }
         }
@@ -690,6 +692,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                     if (speechOutputEnabled) {
                         tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
+                    Toast.makeText(this, "Cadence record: " + cadenceAchievementLevels[cadenceLevelIndex + 1] + "rpm", Toast.LENGTH_LONG).show();
+                    showThumb();
                 }
             }
         }

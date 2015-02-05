@@ -286,9 +286,9 @@ public class ShowPlots extends Activity implements MessengerClient {
             plot.addSeries(speedSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.BLUE, null));
-            plot.setRangeBoundaries(10, 30, BoundaryMode.FIXED);
-            speedTopLabel.setText("30");
-            speedBottomLabel.setText("10");
+            plot.setRangeBoundaries(0, 40, BoundaryMode.FIXED);
+            speedTopLabel.setText("40");
+            speedBottomLabel.setText("0");
         }
 
         if (choice.equalsIgnoreCase("respiration")) {
@@ -372,10 +372,18 @@ public class ShowPlots extends Activity implements MessengerClient {
 
         // Initialize with values from GuideService
         for (int i = 0; i < HISTORY_SIZE; i++) {
-            speedSeries.addLast(null, GuideService.speedHistory.get(i));
-            heartSeries.addLast(null, GuideService.heartHistory.get(i));
-            heightSeries.addLast(null, GuideService.heightHistory.get(i));
-            cadenceSeries.addLast(null, GuideService.cadenceHistory.get(i));
+            if(i < GuideService.speedHistory.size()) {
+                speedSeries.addLast(null, GuideService.speedHistory.get(i));
+            }
+            if(i < GuideService.heartHistory.size()){
+                heartSeries.addLast(null, GuideService.heartHistory.get(i));
+            }
+            if(i < GuideService.heightHistory.size()){
+                heightSeries.addLast(null, GuideService.heightHistory.get(i));
+            }
+            if(i< GuideService.cadenceHistory.size()){
+                cadenceSeries.addLast(null, GuideService.cadenceHistory.get(i));
+            }
         }
     }
 
