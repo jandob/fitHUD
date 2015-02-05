@@ -353,7 +353,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         speechCounter++;*/
     }
 
-    ;
 
     private void speedCheck(float current_speed) {
         GuideTextPrev = GuideText;
@@ -431,7 +430,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         speechCounter++;*/
     }
 
-    ;
+
 
     public void heightCheck(int current_height) {
         GuideTextPrev = GuideText;
@@ -582,6 +581,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                     sendMsgString(GuideMessages.ACHIEVEMENT_REACHED, "text");
 
                     Toast.makeText(this, "Speed record: " + speedAchievementLevels[speedLevelIndex] + "km/h", Toast.LENGTH_LONG).show();
+                    showThumb();
                 }
                 //speedDiff = speedAchievementLevels[speedLevelIndex + 1] - speedRecord;
                 //Log.d(TAG,"Speed diff: " + speedDiff);
@@ -609,6 +609,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                         tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
                     Toast.makeText(this, "Height record: " + heightAchievementLevels[heightLevelIndex + 1] + "m", Toast.LENGTH_LONG).show();
+                    showThumb();
                 }
                 heightDiff = heightAchievementLevels[heightLevelIndex + 1] - heightRecord;
                 Log.d(TAG, "Height diff: " + heightDiff);
@@ -645,6 +646,24 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     Timer timer;
     TimerTask timerTask;
     final Handler handler = new Handler();
+
+    public void sendDataToSensormanager(int[] data) {
+        Message msg = Message.obtain(null, 4);
+        Bundle bundle = new Bundle();
+        bundle.putIntArray("command", data);
+        msg.setData(bundle);
+        try {
+            conn.send(msg);
+        } catch (RemoteException e) {
+        }
+    }
+
+    public void showThumb() {
+        int[] test = new int[2];
+        test[0] = FHSensorManager.Commands.SHOW_THUMB;
+        test[1] = 0;
+        sendDataToSensormanager(test);
+    }
 
     private void stopTimer() {
         //stop the timer, if it's not already null

@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class FHSensorManager extends MessengerService {
         public static final int WAKEUP_COMMAND = 2;
         public static final int WHEEL_LIGHT = 3;
         public static final int WHEEL_SPEED = 4;
+        public static final int SHOW_THUMB = 5;
     }
 
     @Override
@@ -91,6 +93,14 @@ public class FHSensorManager extends MessengerService {
                     showSpeedOnWheel(true);
                 }
                 Log.d(TAG, "wheel speed on: " + wheelSpeedActive);
+                break;
+
+            case Commands.SHOW_THUMB:
+                if(spdAccWake_connected == 1) {
+                    sendThumbMessage();
+                }else{
+                    Toast.makeText(this, "Smartwheel is not connected", Toast.LENGTH_LONG).show();
+                }
                 break;
         }
     }
@@ -283,6 +293,15 @@ public class FHSensorManager extends MessengerService {
         wakeupGATT.writeCharacteristic(wakeupCharacteristic);
     }
 
+    public void sendThumbMessage(){
+        byte[] thumb_signal = new byte[1];
+        thumb_signal[0] = (byte)0x03;
+        // Save local in characterstic
+        wakeupCharacteristic.setValue(thumb_signal);
+        // Send characteristic to remote device , afterwards onCharacteristicWrite is called
+        wakeupGATT.writeCharacteristic(wakeupCharacteristic);
+    }
+
     public void sendReadySearch(){
         int searchReady[] = new int[1];
         searchReady[0] = 1;
@@ -403,9 +422,13 @@ public class FHSensorManager extends MessengerService {
                     int acc_data = ((int)characteristicData[7]) & 0xff;
                     Log.d(TAG, "ACC: " + acc_data);
                     if(acc_data >= 50) {
-                        offroad_counter += wheel_revolutions - previous_revolutions;
+                        if(wheel_revolutions - previous_revolutions >0) {
+                            offroad_counter += wheel_revolutions - previous_revolutions;
+                        }
                     } else {
-                        onroad_counter += wheel_revolutions - previous_revolutions;
+                        if(wheel_revolutions - previous_revolutions >0) {
+                            onroad_counter += wheel_revolutions - previous_revolutions;
+                        }
                     }
                     previous_revolutions = wheel_revolutions;
 
