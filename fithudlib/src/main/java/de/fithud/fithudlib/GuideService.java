@@ -88,6 +88,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int speedRecord = 0;
     public static int heightRecord = 0;
     public static int cadenceRecord = 0;
+    public static int distanceRecord = 0;
+    public static int caloriesRecord = 0;
 
     public static String speedRecordDate;
     public static String heightRecordDate;
@@ -98,10 +100,10 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private long workoutCurrentTime;
 
     public static int[] speedAchievementLevels = new int[]{0, 20, 30, 40, 50, 60, 70, 80};
-    public static int[] distanceAchievementLevels = new int[]{0, 1, 2, 5, 10, 50};
+    public static int[] distanceAchievementLevels = new int[]{0, 10, 50, 100, 150, 200};
     public static int[] heightAchievementLevels = new int[]{0, 100, 500, 1000, 1500};
     public static int[] cadenceAchievementLevels = new int[]{0, 70, 80, 120, 130};
-    public static int[] caloriesAchievementLevel = new int[]{0, 50, 100, 150};
+    public static int[] caloriesAchievementLevels = new int[]{0, 50, 100, 150};
 
     // Memory for plotting values (They are readout in onCreate of "showPlots")
     private static final int History_Size = 50;
@@ -119,6 +121,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int speedLevelIndex = 0;
     public static int heightLevelIndex = 0;
     public static int cadenceLevelIndex = 0;
+    public static int distanceLevelIndex = 0;
+    public static int caloriesLevelIndex = 0;
 
     public static int speedDiff = 0;
     public static int heightDiff = 0;
@@ -249,17 +253,24 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "Calories received" + value);
 
-                if (workout_started && guide_active && challenge_mode == 2) {    // Calories challenge
-                    caloriesCheck((int) value);
+                if (workout_started) {
+                    if(guide_active && challenge_mode == 2){         // Calories challenge
+                        caloriesCheck((int) value);
+                    }
+                    achievementCaloriesCheck((int)value);
                 }
+
                 break;
 
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 value = msg.getData().getFloat("value");
                 Log.v(TAG, "cadence received" + value);
 
-                if (workout_started && guide_active && (challenge_mode == 1)) {  // Cadence challenge
-                    cadenceCheck(value);
+                if (workout_started) {
+                    if(guide_active && (challenge_mode == 1)){      // Cadence challenge
+                        cadenceCheck(value);
+                    }
+                    achievementCadenceCheck((int)value);
                 }
 
                 // Adding to plotting history
@@ -274,10 +285,12 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 Log.v(TAG, "speed received" + value);
 
                 if (workout_started) {
-                    if (guide_active && (training_mode == 2)) {          // Interval training mode
+
+                    // Interval training mode
+                    if (guide_active && (training_mode == 2)) {
                         speedCheck(value);
                     }
-                    achievementSpeedCheck((int) value);                 // Check speed achievements
+                    achievementSpeedCheck((int) value);
                 }
 
                 // Adding to plotting history
@@ -293,10 +306,10 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                 if (workout_started) {
 
-                    if (guide_active && (challenge_mode == 0)) {         // Height challenge
+                    // Height challenge
+                    if (guide_active && (challenge_mode == 0)) {
                         heightCheck((int) value);
                     }
-
                     achievementHeightCheck((int) value);
                 }
 
@@ -310,6 +323,14 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                     heightCounter = 0;
                 }
                 break;
+            case FHSensorManager.Messages.DISTANCE_MESSAGE:
+                value = msg.getData().getFloat("value");
+                Log.v(TAG, "Distance received" + value);
+
+                if (workout_started){
+                    achievementDistanceCheck((int)value);
+                }
+
         }
     }
 
@@ -583,49 +604,83 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                     Toast.makeText(this, "Speed record: " + speedAchievementLevels[speedLevelIndex] + "km/h", Toast.LENGTH_LONG).show();
                 }
-                //speedDiff = speedAchievementLevels[speedLevelIndex + 1] - speedRecord;
-                //Log.d(TAG,"Speed diff: " + speedDiff);
-
             }
         }
     }
 
-    //TODO: Height or max elevation?
+    private void achievementCaloriesCheck(int current_calories) {
+
+        if (current_calories > caloriesRecord) {                            // Set new record values
+            caloriesRecord = current_calories;
+            Log.i(TAG, "New calories record:" + caloriesRecord);
+
+            if (caloriesLevelIndex + 2 <= caloriesAchievementLevels.length) {
+
+                if (caloriesRecord >= caloriesAchievementLevels[caloriesLevelIndex + 1]) {
+                    caloriesLevelIndex++;
+
+                    if (speechOutputEnabled) {
+                        tts.speak("New calories achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+
+                    sendMsgString(GuideMessages.ACHIEVEMENT_REACHED, "text");
+                    Toast.makeText(this, "Calories record: " + caloriesAchievementLevels[caloriesLevelIndex] + "kCal", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    private void achievementDistanceCheck(int current_distance) {
+
+        if (current_distance > distanceRecord) {                    // Set new record values
+            distanceRecord = current_distance;
+            Log.i(TAG, "New distance record:" + speedRecord);
+
+            if (distanceLevelIndex + 2 <= distanceAchievementLevels.length) {
+
+                if (distanceRecord >= distanceAchievementLevels[distanceLevelIndex + 1]) {
+                    distanceLevelIndex++;
+
+                    if (speechOutputEnabled) {
+                        tts.speak("New distance achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+
+                    sendMsgString(GuideMessages.ACHIEVEMENT_REACHED, "text");
+                    Toast.makeText(this, "Distance record: " + distanceAchievementLevels[distanceLevelIndex] + " km", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
     private void achievementHeightCheck(int current_height) {
 
         if (current_height > heightRecord) {                            // Set new record values
             heightRecord = current_height;
-            heightRecordDate = sdf.format(new Date());               // Get date of record
             Log.i(TAG, "New height record:" + heightRecord);
-            Log.i(TAG, "Date changed: " + heightRecordDate);
 
-            if (heightLevelIndex + 1 <= heightAchievementLevels.length) {
+            if (heightLevelIndex + 2 <= heightAchievementLevels.length) {
 
                 if (heightRecord >= heightAchievementLevels[heightLevelIndex + 1]) {
                     heightLevelIndex++;
-                    Log.d(TAG, "Height level: " + heightAchievementLevels[heightLevelIndex]);
 
                     if (speechOutputEnabled) {
                         tts.speak("New height achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
                     Toast.makeText(this, "Height record: " + heightAchievementLevels[heightLevelIndex + 1] + "m", Toast.LENGTH_LONG).show();
                 }
-                heightDiff = heightAchievementLevels[heightLevelIndex + 1] - heightRecord;
-                Log.d(TAG, "Height diff: " + heightDiff);
             }
         }
     }
 
-    private void checkCadence(int current_cadence) {
+    private void achievementCadenceCheck(int current_cadence) {
 
         if (current_cadence > cadenceRecord) {                          // Set new record values
             cadenceRecord = current_cadence;
-            cadenceRecordDate = sdf.format(new Date());               // Get date of record
+            cadenceRecordDate = sdf.format(new Date());                 // Get date of record
             Log.i(TAG, "New cadence record:" + cadenceRecord);
             Log.i(TAG, "Date changed: " + cadenceRecordDate);
 
-
-            if (cadenceLevelIndex + 1 <= cadenceAchievementLevels.length) {
+            if (cadenceLevelIndex + 2 <= cadenceAchievementLevels.length) {
 
                 if (cadenceRecord >= cadenceAchievementLevels[cadenceLevelIndex + 1]) {
                     cadenceLevelIndex++;
@@ -635,8 +690,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                         tts.speak("New cadence achievement unlocked", TextToSpeech.QUEUE_FLUSH, null);
                     }
                 }
-                cadenceDiff = cadenceAchievementLevels[cadenceLevelIndex + 1] - cadenceRecord;
-                Log.d(TAG, "cadence diff: " + cadenceDiff);
             }
         }
     }

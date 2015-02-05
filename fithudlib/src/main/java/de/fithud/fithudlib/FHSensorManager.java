@@ -396,7 +396,7 @@ public class FHSensorManager extends MessengerService {
                         previous_revolutions = wheel_revolutions;
                     }
                     totalWheelRevolution = wheel_revolutions - firstWheelRevolution;
-                    distance = totalWheelRevolution * (float)wheel_circumference;
+                    distance = (totalWheelRevolution * (float)wheel_circumference)/ (float)1000.0;
 
                     sendMsgFloat(Messages.DISTANCE_MESSAGE, distance);
 

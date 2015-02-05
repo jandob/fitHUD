@@ -43,7 +43,7 @@ public class WorkoutMenu extends Activity implements MessengerClient{
     private AudioManager mAudioManager;
     MessengerConnection guideConn = new MessengerConnection(this);
 
-    private static boolean workoutActive = false;
+    public static boolean workoutActive = false;
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
