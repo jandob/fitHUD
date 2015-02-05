@@ -38,6 +38,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 
+
 /**
  *
  * @see <a href="https://developers.google.com/glass/develop/gdk/touch">GDK Developer Guide</a>
@@ -103,6 +104,14 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int[] heightAchievementLevels = new int[] {0, 100, 500, 1000, 1500};
     public static int[] cadenceAchievementLevels = new int[] {0, 70, 80, 120, 130};
     public static int[] caloriesAchievementLevel = new int[] {0, 50, 100, 150};
+
+    // Memory for plotting values (They are readout in onCreate of "showPlots")
+    private static final int History_Size = 50;
+    public static List<Float> cadenceHistory = new ArrayList<Float>();
+    public static List<Float> heightHistory = new ArrayList<Float>();
+    public static List<Float> respirationHistory = new ArrayList<Float>();
+    public static List<Float> speedHistory = new ArrayList<Float>();
+    public static List<Float> heartHistory = new ArrayList<Float>();
 
     public static int speedLevelIndex = 0;
     public static int heightLevelIndex = 0;
@@ -225,6 +234,13 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 if(workout_started && guide_active && training_mode < 2) {  // Cardio & Fatburn training
                     heartRateCheck((int)value);
                 }
+
+                // Adding to plotting history
+                if(heartHistory.size() > History_Size)
+                {
+                    heartHistory.remove(0);
+                }
+                    heartHistory.add(value);
                 break;
 
             case FHSensorManager.Messages.CALORIES_MESSAGE:
@@ -243,6 +259,13 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 if(workout_started && guide_active && (challenge_mode == 1)) {  // Cadence challenge
                     cadenceCheck(value);
                 }
+
+                // Adding to plotting history
+                if(cadenceHistory.size() > History_Size)
+                {
+                    cadenceHistory.remove(0);
+                }
+                cadenceHistory.add(value);
                 break;
 
             case FHSensorManager.Messages.SPEED_MESSAGE:
@@ -256,6 +279,12 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                     achievementSpeedCheck((int) value);                 // Check speed achievements
                 }
 
+                // Adding to plotting history
+                if(speedHistory.size() > History_Size)
+                {
+                    speedHistory.remove(0);
+                }
+                speedHistory.add(value);
                 break;
 
             case FHSensorManager.Messages.HEIGTH_MESSAGE:
@@ -270,10 +299,14 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
                     achievementHeightCheck((int) value);
                 }
+
+                // Adding to plotting history
+                if(heightHistory.size() > History_Size)
+                {
+                    heightHistory.remove(0);
+                }
+                heightHistory.add(value);
                 break;
-
-
-
         }
     }
 

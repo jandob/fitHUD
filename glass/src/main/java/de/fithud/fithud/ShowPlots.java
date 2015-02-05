@@ -50,6 +50,7 @@ import java.util.TimerTask;
 import de.fithud.fithudlib.FHSensorManager;
 import de.fithud.fithudlib.MessengerClient;
 import de.fithud.fithudlib.MessengerConnection;
+import de.fithud.fithudlib.GuideService;
 
 import static java.lang.Math.round;
 
@@ -61,9 +62,6 @@ public class ShowPlots extends Activity implements MessengerClient {
     //private View mView;
     private List<CardBuilder> mCards;
     private ExampleCardScrollAdapter mAdapter;
-    public static float last_speed = 0;
-    public static int last_revolutions = 0;
-    private static final double wheel_type = 4.4686;
 
     public boolean speedometer_connected = false;
     public boolean heartrate_conected = false;
@@ -152,6 +150,7 @@ public class ShowPlots extends Activity implements MessengerClient {
     private SimpleXYSeries respirationSeries = null;
     private SimpleXYSeries heartSeries = null;
     private SimpleXYSeries heightSeries = null;
+    private SimpleXYSeries cadenceSeries = null;
     private TextView speedText;
     private TextView heartText;
     private TextView respirationText;
@@ -177,7 +176,7 @@ public class ShowPlots extends Activity implements MessengerClient {
     private TextView respirationTopLabel;
     private TextView respirationBottomLabel;
 
-    private static final int HISTORY_SIZE = 50;
+    public static final int HISTORY_SIZE = 50;
     private static double sin_counter = 0.0;
     private static boolean plot_speed = false;
     private static boolean plot_heart = false;
@@ -196,7 +195,6 @@ public class ShowPlots extends Activity implements MessengerClient {
 
     private Segment s1;
     private Segment s2;
-    private Segment s3;
 
     private int speed_sensor = 0;
     private float respiration_sensor = 0;
@@ -367,6 +365,17 @@ public class ShowPlots extends Activity implements MessengerClient {
 
         respirationSeries = new SimpleXYSeries("respiration");
         respirationSeries.useImplicitXVals();
+
+        cadenceSeries = new SimpleXYSeries("respiration");
+        cadenceSeries.useImplicitXVals();
+
+        // Initialize with values from GuideService
+        for(int i = 0; i < HISTORY_SIZE; i++){
+            speedSeries.addLast(null,GuideService.speedHistory.get(i));
+            heartSeries.addLast(null,GuideService.heartHistory.get(i));
+            heightSeries.addLast(null,GuideService.heightHistory.get(i));
+            cadenceSeries.addLast(null,GuideService.cadenceHistory.get(i));
+        }
     }
 
     @Override
@@ -403,6 +412,7 @@ public class ShowPlots extends Activity implements MessengerClient {
         mCardScrollView.activate();
         setContentView(mCardScrollView);
         initSeries();
+
         //mCardScrollView.setSelection(1);
     }
 
