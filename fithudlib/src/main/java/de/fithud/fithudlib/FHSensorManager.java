@@ -154,7 +154,7 @@ public class FHSensorManager extends MessengerService {
 
     // Devices:
     private final String H7 = "00:22:D0:3D:30:31";
-    private final String CAD = "C7:9E:DF:E6:F8:D5"; //D9:6A:83:DA:82:7C
+    private final String CAD = "D9:6A:83:DA:82:7C"; //"C7:9E:DF:E6:F8:D5";
     private final String SPD = "EB:03:59:83:C8:34"; //""; C3:B0:19:D8:64:A2
     // Not added yet
     private final String SPD_ACC_WAKE = "02:80:E1:00:00:AA";
@@ -201,6 +201,11 @@ public class FHSensorManager extends MessengerService {
     private final double vo2max = 44.60;    // for 2500m
     private final int weight = 70;
     public static double calories = 0.0;
+    private static int prevPrevCadence = 0;
+    private static int prevCadence = 0;
+    private static int prevSpeed = 0;
+    private static int prevPrevSpeed = 0;
+
 
     private static int offroad_counter = 0;
     private static int onroad_counter = 0;
@@ -217,7 +222,7 @@ public class FHSensorManager extends MessengerService {
     private BluetoothAdapter.LeScanCallback leScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan(final BluetoothDevice device, final int rssi, final byte[] scanRecord) {
-            //Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
+            Log.d(TAG, "found ble device: " + device.getName() + ", UUID: "+ device.getAddress());
             //Log.i(TAG, mConnectableBtDevices.toString());
             if (mConnectableBtDevices.contains(device.getAddress()) && !connectionInProgress) {
                 if (!mBtDevicesReadyToConnect.contains(device)) {
@@ -363,10 +368,24 @@ public class FHSensorManager extends MessengerService {
                     float cadenceRpm = 0;
                     if (timeDifference > 0) {
                         cadenceRpm = ((float)(revolutions_difference) / timeDifference) * (float)60;
-                        Log.v(TAG, "Cadence : " + cadenceRpm);
-                        sendMsgFloat(Messages.CADENCE_MESSAGE, cadenceRpm);
+
+                        prevPrevCadence = prevCadence;
+                        prevCadence = (int)cadenceRpm;
+
+
+
                     } else {
+
+                        prevPrevCadence = prevCadence;
+                        prevCadence = (int)cadenceRpm;
                         cadenceRpm = 0;
+                    }
+                    Log.v(TAG, "Cadence : " + cadenceRpm);
+                    if(cadenceRpm != 0) {
+                        sendMsgFloat(Messages.CADENCE_MESSAGE, cadenceRpm);
+                    }
+                    if(prevCadence == 0&& prevPrevCadence == 0 && cadenceRpm == 0){
+                        sendMsgFloat(Messages.CADENCE_MESSAGE, cadenceRpm);
                     }
 
 
@@ -401,12 +420,19 @@ public class FHSensorManager extends MessengerService {
                     float speed = 0;
                     if (time_difference > 0) {
                         speed = ((revolutions_difference * (float)wheel_type) / time_difference) * (float)3.6;
+                        prevPrevSpeed = prevSpeed;
+                        prevSpeed = (int)speed;
                     } else {
+                        prevPrevSpeed = prevSpeed;
+                        prevSpeed = (int)speed;
                         speed = 0;
                     }
                     Log.v(TAG, "Speed: " + speed);
 
                     if(speed < 100 && speed > 0) {                                  // if speed value valid
+                        sendMsgFloat(Messages.SPEED_MESSAGE, speed);
+                    }
+                    if(prevPrevSpeed == 0 && prevSpeed == 0 && speed == 0){
                         sendMsgFloat(Messages.SPEED_MESSAGE, speed);
                     }
 

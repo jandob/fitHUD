@@ -158,10 +158,10 @@ public class Achievements extends Activity implements MessengerClient {
     }
 
     private void changeCadenceCard() {
-        mCards.get(3).setText("Cadence Record: " + GuideService.cadenceRecord + " bpm");
+        mCards.get(3).setText("Cadence Record: " + GuideService.cadenceRecord + " rpm");
         mCards.get(3).setTimestamp("Level " + GuideService.cadenceLevelIndex + " / " + GuideService.cadenceAchievementLevels.length + " reached.");
         if(GuideService.cadenceLevelIndex+2 <= GuideService.cadenceAchievementLevels.length) {
-            mCards.get(3).setFootnote("Next level: " + GuideService.cadenceAchievementLevels[GuideService.cadenceLevelIndex+1] + " bpm");
+            mCards.get(3).setFootnote("Next level: " + GuideService.cadenceAchievementLevels[GuideService.cadenceLevelIndex+1] + " rpm");
         } else {
             mCards.get(3).setFootnote("All levels completed");
         }

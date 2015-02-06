@@ -99,8 +99,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private long workoutStartTime;
     private long workoutCurrentTime;
 
-    public static int[] speedAchievementLevels = new int[]{0, 20, 30, 40, 50, 60, 70, 80};
-    public static int[] distanceAchievementLevels = new int[]{0, 10, 50, 100, 150, 200};
+    public static int[] speedAchievementLevels = new int[]{0, 20, 25, 30, 50, 60, 70, 80};
+    public static int[] distanceAchievementLevels = new int[]{0, 1, 2, 5, 10, 20};
     public static int[] heightAchievementLevels = new int[]{0, 100, 500, 1000, 1500};
     public static int[] cadenceAchievementLevels = new int[]{0, 70, 80, 120, 130};
     public static int[] caloriesAchievementLevels = new int[]{0, 50, 100, 150};
@@ -406,17 +406,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
-        /*if(speech_active && speechCounter == speechPeriod){
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
-            speechCounter = 0;
-        }
-        speechCounter++;*/
     }
 
     ;
 
 
-    // Need to reset all flags if new challenge started.
     private void cadenceCheck(float current_cadence) {
         GuideTextPrev = GuideText;
         if (current_cadence > 0 && progressIndex == 0) {
@@ -428,11 +422,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         } else if (current_cadence >= (0.8 * cadenceAim) && progressIndex == 2) {
             GuideText = "Your are almost there";
             progressIndex++;
-        } else if (current_cadence >= (0.9 * cadenceAim) && progressIndex == 3) {
-            GuideText = "Only a few meters left";
-            progressIndex++;
-        } else if (current_cadence >= cadenceAim && progressIndex == 4) {
-            GuideText = "Congratulations! You have completed your challenge";
+        } else if (current_cadence >= cadenceAim && progressIndex == 3) {
+            GuideText = "Congratulations! Challenge completed";
             progressIndex++;
         } else {
             GuideText = "Keep going.";
@@ -444,11 +435,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
-        /*if(speech_active && speechCounter == speechPeriod){
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
-            speechCounter = 0;
-        }
-        speechCounter++;*/
     }
 
 
@@ -468,7 +454,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Only a few meters left";
             progressIndex++;
         } else if (current_height >= heightAim && progressIndex == 4) {
-            GuideText = "Congratulations! You have completed your challenge successfully";
+            GuideText = "Congratulations! Challenge completed";
             progressIndex++;
         }
 
@@ -478,11 +464,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
-        /*if(speech_active && speechCounter == speechPeriod){
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
-            speechCounter = 0;
-        }
-        speechCounter++;*/
     }
 
     ;
@@ -502,7 +483,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
             GuideText = "Only a few more calories";
             progressIndex++;
         } else if (current_calories >= caloriesAim && progressIndex == 4) {
-            GuideText = "Congratulations! You have completed your challenge successfully";
+            GuideText = "Congratulations! Challenge completed";
             progressIndex++;
         }
 

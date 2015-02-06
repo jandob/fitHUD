@@ -37,7 +37,7 @@
             android:id="@+id/liveCardHeart"
             android:layout_width="80px"
             android:layout_height="80px"
-            android:layout_marginTop="120px"
+            android:layout_marginTop="110px"
             android:layout_marginLeft="0px"
             android:src="@drawable/heart"/>
 
@@ -45,7 +45,7 @@
             android:id="@+id/liveCardHeartText"
             android:layout_width="250px"
             android:layout_height="wrap_content"
-            android:layout_marginTop="130px"
+            android:layout_marginTop="120px"
             android:layout_marginLeft="110px"
             android:text="0 bpm"/>
 
@@ -53,7 +53,7 @@
             android:id="@+id/liveCardHeight"
             android:layout_width="80px"
             android:layout_height="80px"
-            android:layout_marginTop="210px"
+            android:layout_marginTop="200px"
             android:layout_marginLeft="0px"
             android:src="@drawable/height"/>
 
@@ -61,7 +61,7 @@
             android:id="@+id/liveCardHeightText"
             android:layout_width="250px"
             android:layout_height="wrap_content"
-            android:layout_marginTop="210px"
+            android:layout_marginTop="200px"
             android:layout_marginLeft="110px"
             android:text="0 m"/>
 
@@ -115,7 +115,24 @@
             android:layout_marginLeft="300px"
             android:src="@drawable/calories_bw"
             android:layout_below="@+id/liveCardBike" />
-            <!--android:layout_alignEnd="@+id/liveCardHeartText" /> -->
+
+        <TextView
+            android:id="@+id/cadenceText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="400px"
+            android:text="0 U/min"
+            android:layout_alignTop="@+id/distanceText" />
+
+        <ImageView
+            android:id="@+id/cadenceImage"
+            android:layout_width="100px"
+            android:layout_height="100px"
+            android:layout_marginLeft="300px"
+            android:src="@drawable/calories_bw"
+            android:layout_below="@+id/distanceText" />
+
+
 
     </RelativeLayout>
 

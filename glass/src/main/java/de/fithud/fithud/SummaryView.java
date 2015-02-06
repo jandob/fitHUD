@@ -54,6 +54,7 @@ public class SummaryView extends Activity implements MessengerClient {
     private TextView distanceText = null;
     private TextView timeText = null;
     private TextView caloriesText = null;
+    private TextView cadenceText = null;
 
     private String TAG = SummaryView.class.getSimpleName();
     int heartRate = 0;
@@ -75,9 +76,14 @@ public class SummaryView extends Activity implements MessengerClient {
                 heartRate = (int) msg.getData().getFloat("value");
                 liveCardHeartText.setText(heartRate + " bpm");
                 break;
+            case FHSensorManager.Messages.HEIGTH_MESSAGE:
+                height = (int) msg.getData().getFloat("value");
+                liveCardHeightText.setText(height + " m");
+                break;
+
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 cadence = (int) msg.getData().getFloat("value");
-                liveCardHeightText.setText(cadence + " U/min");
+                cadenceText.setText(cadence + " U/min");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 speed = msg.getData().getFloat("value");
@@ -102,6 +108,7 @@ public class SummaryView extends Activity implements MessengerClient {
                 calories = (int) msg.getData().getFloat("value");
                 caloriesText.setText(calories + " kJ");
                 break;
+
         }
     }
 
@@ -137,6 +144,7 @@ public class SummaryView extends Activity implements MessengerClient {
         distanceText = (TextView) findViewById(R.id.distanceText);
         timeText = (TextView) findViewById(R.id.timeText);
         caloriesText = (TextView) findViewById(R.id.caloriesText);
+        cadenceText = (TextView) findViewById(R.id.cadenceText);
 
         if(WorkoutMenu.workoutActive) {
             liveCardStatus.setBackgroundColor(Color.GREEN);

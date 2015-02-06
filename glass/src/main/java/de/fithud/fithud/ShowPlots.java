@@ -80,9 +80,9 @@ public class ShowPlots extends Activity implements MessengerClient {
         switch (msg.what) {
             case FHSensorManager.Messages.HEARTRATE_MESSAGE:
                 input = msg.getData().getFloat("value");
-                //addHeartData((int) input);
-                //heart_sensor = (int) input;
-                //Log.i(TAG, "Heartrate " + input);
+                addHeartData((int) input);
+                heart_sensor = (int) input;
+                Log.i(TAG, "Heartrate " + input);
                 break;
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 input = msg.getData().getFloat("value");
@@ -121,8 +121,8 @@ public class ShowPlots extends Activity implements MessengerClient {
             case FHSensorManager.Messages.BREATH_MESSAGE:
                 int[] breathMsg = msg.getData().getIntArray("value");
                 respiration_sensor = (float) breathMsg[0] / (float) 1000.0;
-                heart_sensor = (int) breathMsg[1];
-                addHeartData(heart_sensor);
+                //heart_sensor = (int) breathMsg[1];
+                //addHeartData(heart_sensor);
                 addRespirationData(respiration_sensor);
                 break;
             case FHSensorManager.Messages.UNDERGROUND_MESSAGE:
