@@ -220,7 +220,7 @@ public class Achievements extends Activity implements MessengerClient {
                 .setText("Cadence record: " + cadenceRecord + "m")
                 .setFootnote("You can do better")
                 .setTimestamp(cadenceRecordDate)
-                .addImage(R.drawable.achievement_heartrate));
+                .addImage(R.drawable.cadence_achievement));
 
         // 4: Achievement card for calories
         mCards.add(new CardBuilder(this, CardBuilder.Layout.CAPTION)

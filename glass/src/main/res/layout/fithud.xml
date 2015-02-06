@@ -71,7 +71,7 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="Let's go!"
             android:id="@+id/summaryGuideText"
-            android:layout_alignTop="@+id/liveCardHeightText"
+            android:layout_marginTop="290px"
             android:layout_toEndOf="@+id/liveCardHeightText" />
 
         <ImageView
@@ -122,15 +122,16 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="400px"
             android:text="0 U/min"
-            android:layout_alignTop="@+id/distanceText" />
+            android:layout_marginTop="220px"
+            />
 
         <ImageView
             android:id="@+id/cadenceImage"
             android:layout_width="100px"
             android:layout_height="100px"
             android:layout_marginLeft="300px"
-            android:src="@drawable/calories_bw"
-            android:layout_below="@+id/distanceText" />
+            android:layout_marginTop="190px"
+            android:src="@drawable/cadence_small"/>
 
 
 

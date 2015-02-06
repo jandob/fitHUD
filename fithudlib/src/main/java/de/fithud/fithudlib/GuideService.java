@@ -330,7 +330,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 if (workout_started){
                     achievementDistanceCheck((int)value);
                 }
-
+            break;
         }
     }
 
