@@ -471,7 +471,7 @@ public class FHSensorManager extends MessengerService {
                 }
             }
             if (characteristic.getService().getUuid().toString().equals(HRService)) {
-                int heartrate = (int) characteristicData[1];
+                short heartrate = (short) (characteristicData[1] & 0xFF);
                 sendMsgFloat(Messages.HEARTRATE_MESSAGE, (float)heartrate);
 
                 //double calories = ((0.380 * vo2max)+(0.450 * heartrate)+(0.274 * age)+(0.0468 * weight) - 59.3954) * time / 4.184;

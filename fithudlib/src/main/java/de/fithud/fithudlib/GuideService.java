@@ -102,8 +102,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int[] speedAchievementLevels = new int[]{0, 20, 25, 30, 50, 60, 70, 80};
     public static int[] distanceAchievementLevels = new int[]{0, 1, 2, 5, 10, 20};
     public static int[] heightAchievementLevels = new int[]{0, 100, 500, 1000, 1500};
-    public static int[] cadenceAchievementLevels = new int[]{0, 20, 40, 60, 80};
-    public static int[] caloriesAchievementLevels = new int[]{0, 50, 100, 150};
+    public static int[] cadenceAchievementLevels = new int[]{0, 70, 80, 120, 130};
+    public static int[] caloriesAchievementLevels = new int[]{0, 300, 600, 1000};
 
     // Memory for plotting values (They are readout in onCreate of "showPlots")
     private static final int History_Size = 50;
@@ -116,7 +116,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     // This defines which values are added to the height history
     // Example: HEIGHT_DIVIDER = 20 --> 3samples/min because sampling rate is 1Hz
     // If History == 50 --> History holds 50/3 min of data = 16.6 min
-    public static final int HEIGHT_DIVIDER = 20;
+    public static final int HEIGHT_DIVIDER = 10;
 
     public static int speedLevelIndex = 0;
     public static int heightLevelIndex = 0;
