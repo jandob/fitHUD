@@ -743,15 +743,12 @@ public class ShowPlots extends Activity implements MessengerClient {
         mCards = new ArrayList<CardBuilder>();
 
         CardBuilder speedcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
-                .setEmbeddedLayout(R.layout.currentspeed)
-                .setFootnote("Slower than a turtle")
-                .setTimestamp("right now");
+                .setEmbeddedLayout(R.layout.currentspeed);
 //        speedview = speedcard.getView();
         mCards.add(speedcard);
 
         CardBuilder heartcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
-                .setEmbeddedLayout(R.layout.heartrate)
-                .setFootnote("You are dead");
+                .setEmbeddedLayout(R.layout.heartrate);
         //heartview = heartcard.getView();
         mCards.add(heartcard);
 
@@ -761,14 +758,12 @@ public class ShowPlots extends Activity implements MessengerClient {
         mCards.add(respirationcard);
 
         CardBuilder heightcard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
-                .setEmbeddedLayout(R.layout.height)
-                .setFootnote("Very low");
+                .setEmbeddedLayout(R.layout.height);
         mCards.add(heightcard);
 
 
         CardBuilder terraincard = new CardBuilder(this, CardBuilder.Layout.EMBED_INSIDE)
-                .setEmbeddedLayout(R.layout.terrain)
-                .setFootnote("Equally weighted");
+                .setEmbeddedLayout(R.layout.terrain);
         //terrainview = terraincard.getView();
         mCards.add(terraincard);
 
