@@ -55,11 +55,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
 
     private static int hr_min = 0;
     private static int hr_max = 0;
-    private static int speed_low_min = 80;
-    private static int speed_low_max = 90;
-    private static int speed_high_min = 90;
-    private static int speed_high_max = 100;
-    private static long intervalTime = 5000;      // Duration of an interval in mSec
+    private static int speed_low_min = 10;
+    private static int speed_low_max = 15;
+    private static int speed_high_min = 15;
+    private static int speed_high_max = 20;
+    private static long intervalTime = 10000;      // Duration of an interval in mSec
 
     private static boolean interval_state = false;
     private static long startTime = 0;
@@ -330,7 +330,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 if (workout_started){
                     achievementDistanceCheck((int)value);
                 }
-            break;
+                break;
+
         }
     }
 
@@ -354,11 +355,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private void heartRateCheck(int heartRate) {
         GuideTextPrev = GuideText;
         if (heartRate < hr_min) {
-            GuideText = "Your heart rate is too low!";
+            GuideText = "HR low!";
         } else if (heartRate < hr_max) {
-            GuideText = "Perfect pace, keep going!";
+            GuideText = "HR ok!";
         } else {
-            GuideText = "Slow down, your heart rate is too high!";
+            GuideText = "HR high!";
         }
 
         if (summaryBoundToGuide && GuideTextPrev != GuideText) {
@@ -367,11 +368,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
                 tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH, null);
             }
         }
-        /*if(speech_active && speechCounter == speechPeriod){
-            tts.speak(GuideText, TextToSpeech.QUEUE_FLUSH,null);
-            speechCounter = 0;
-        }
-        speechCounter++;*/
     }
 
 
@@ -384,22 +380,22 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
         }
         if (interval_state) {
             if (current_speed < speed_high_min) {
-                GuideText = "Go faster, you are too slow";
+                GuideText = "Go faster!";
             } else if (current_speed < speed_high_max) {
                 GuideText = "Perfect pace!";
             } else {
-                GuideText = "Slow down, you are too slow";
+                GuideText = "Slow down!";
             }
         } else {
             if (current_speed < speed_low_min) {
-                GuideText = "Go faster, you are too slow";
+                GuideText = "Go faster!";
             } else if (current_speed < speed_low_max) {
                 GuideText = "Perfect pace!";
             } else {
-                GuideText = "Slow down, you are too slow";
+                GuideText = "Slow down!";
             }
         }
-
+        Log.d(TAG, "Current Guide Text: " + GuideText);
         if (summaryBoundToGuide && GuideTextPrev != GuideText) {
             sendMsgString(GuideMessages.GUIDE_TEXT, GuideText);
             if (speech_active) {
