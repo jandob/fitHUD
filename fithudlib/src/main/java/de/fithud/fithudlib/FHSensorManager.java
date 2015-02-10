@@ -26,6 +26,8 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static java.lang.Math.abs;
+
 
 /**
  * Created by jandob on 11/17/14.
@@ -475,7 +477,7 @@ public class FHSensorManager extends MessengerService {
                 sendMsgFloat(Messages.HEARTRATE_MESSAGE, (float)heartrate);
 
                 //double calories = ((0.380 * vo2max)+(0.450 * heartrate)+(0.274 * age)+(0.0468 * weight) - 59.3954) * time / 4.184;
-                calories = calories + (((0.380 * vo2max) + (0.450 * heartrate) + (0.274 * age) + (0.0468 * weight) - 59.3954) / 4.184);
+                calories = calories +  (abs(((0.380 * vo2max) + (0.450 * heartrate) + (0.274 * age) + (0.0468 * weight) - 59.3954) / 4.184))/10;
                 /*
                 * Source: Paper - Accurate Caloric Expenditure of Bicyclists using Cellphones
                 * Calories =[(0.380 * VO2_max)+(0.450 * BPM)

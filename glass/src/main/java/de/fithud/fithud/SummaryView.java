@@ -61,7 +61,7 @@ public class SummaryView extends Activity implements MessengerClient {
     float speed = (float) 0.0;
     int cadence = 0;
     float distance = (float) 0.0;
-    int calories = 10;
+    int calories = 0;
     int height = 0;
 
 
@@ -83,7 +83,7 @@ public class SummaryView extends Activity implements MessengerClient {
 
             case FHSensorManager.Messages.CADENCE_MESSAGE:
                 cadence = (int) msg.getData().getFloat("value");
-                cadenceText.setText(cadence + " U/min");
+                cadenceText.setText(cadence + " rpm");
                 break;
             case FHSensorManager.Messages.SPEED_MESSAGE:
                 speed = msg.getData().getFloat("value");
@@ -106,7 +106,7 @@ public class SummaryView extends Activity implements MessengerClient {
             case FHSensorManager.Messages.CALORIES_MESSAGE:
                 Log.d(TAG, "Calories: " + msg.getData().getFloat("value"));
                 calories = (int) msg.getData().getFloat("value");
-                caloriesText.setText(calories + " kJ");
+                caloriesText.setText(calories + " kCal");
                 break;
 
         }
@@ -152,15 +152,18 @@ public class SummaryView extends Activity implements MessengerClient {
             liveCardStatus.setBackgroundColor(Color.RED);
         }
 
-        //int speed = 5;
-        //int heartrate = heartRate;
-        //int height = 5;
+
+
         liveCardBikeText.setText(speed + " km/h");
         liveCardHeartText.setText(heartRate + " bpm");
         liveCardHeightText.setText(height + " m");
-        //liveCardStatus.setBackgroundColor(Color.RED);
+        caloriesText.setText(calories + " kCal");
+        cadenceText.setText(cadence + " rpm");
+        summaryGuideText.setText(GuideService.GuideText);
         GuideService.summaryBoundToGuide = true;
         Log.d(TAG, "Summary on create");
+
+
     }
 
     @Override

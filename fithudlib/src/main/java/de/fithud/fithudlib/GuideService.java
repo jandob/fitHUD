@@ -78,7 +78,7 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private static final int cadenceAim = 120;      // Cadence in rotations per minute
     private static final int caloriesAim = 100;
 
-    private static String GuideText = "";
+    public static String GuideText = "";
     private static String GuideTextPrev = "";
     private static int progressIndex = 0;
 
@@ -92,7 +92,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int caloriesRecord = 0;
 
     public static String speedRecordDate;
-    public static String heightRecordDate;
     public static String cadenceRecordDate;
 
     private static String workoutRunningTime;
@@ -123,10 +122,6 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public static int cadenceLevelIndex = 0;
     public static int distanceLevelIndex = 0;
     public static int caloriesLevelIndex = 0;
-
-    public static int speedDiff = 0;
-    public static int heightDiff = 0;
-    public static int cadenceDiff = 0;
 
     private static boolean speechOutputEnabled = true;
 
@@ -338,13 +333,13 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public void updateTrainingMode(int training_mode) {
         // TODO: Set min/max heart rate for cardio training
         if (training_mode == cardio) {
-            hr_min = 120;
-            hr_max = 130;
+            hr_min = 155;
+            hr_max = 180;
         }
         // TODO: Set min/max heart rate for fatburn training
         if (training_mode == fatburn) {
-            hr_min = 90;
-            hr_max = 100;
+            hr_min = 130;
+            hr_max = 150;
         }
 
         if (training_mode == interval) {
@@ -355,11 +350,11 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     private void heartRateCheck(int heartRate) {
         GuideTextPrev = GuideText;
         if (heartRate < hr_min) {
-            GuideText = "HR low!";
+            GuideText = "HR too low!";
         } else if (heartRate < hr_max) {
             GuideText = "HR ok!";
         } else {
-            GuideText = "HR high!";
+            GuideText = "HR too high!";
         }
 
         if (summaryBoundToGuide && GuideTextPrev != GuideText) {
