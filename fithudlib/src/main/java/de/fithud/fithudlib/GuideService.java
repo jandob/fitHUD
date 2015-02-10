@@ -337,8 +337,8 @@ public class GuideService extends MessengerService implements TextToSpeech.OnIni
     public void updateTrainingMode(int training_mode) {
         // TODO: Set min/max heart rate for cardio training
         if (training_mode == cardio) {
-            hr_min = 80;
-            hr_max = 90;
+            hr_min = 120;
+            hr_max = 130;
         }
         // TODO: Set min/max heart rate for fatburn training
         if (training_mode == fatburn) {

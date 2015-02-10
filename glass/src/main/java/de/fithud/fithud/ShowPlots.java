@@ -316,7 +316,7 @@ public class ShowPlots extends Activity implements MessengerClient {
             plot.addSeries(heightSeries,
                     new LineAndPointFormatter(
                             Color.rgb(100, 100, 200), Color.BLUE, Color.TRANSPARENT, null));
-            plot.setRangeBoundaries(-50, 50, BoundaryMode.FIXED);
+            plot.setRangeBoundaries(0, 50, BoundaryMode.FIXED);
             heightTopLabel.setText("50");
             heightBottomLabel.setText("-50");
         }

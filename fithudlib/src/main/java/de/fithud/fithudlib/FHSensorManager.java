@@ -154,7 +154,7 @@ public class FHSensorManager extends MessengerService {
 
     // Devices:
     private final String H7 = "00:22:D0:3D:30:31";
-    private final String CAD = "D9:6A:83:DA:82:7C"; //"C7:9E:DF:E6:F8:D5";
+    private final String CAD ="C7:9E:DF:E6:F8:D5";// "D9:6A:83:DA:82:7C"; //"C7:9E:DF:E6:F8:D5";
     private final String SPD = "EB:03:59:83:C8:34"; //""; C3:B0:19:D8:64:A2
     // Not added yet
     private final String SPD_ACC_WAKE = "02:80:E1:00:00:AA";
@@ -509,7 +509,7 @@ public class FHSensorManager extends MessengerService {
             }
 
             if(characteristic.getService().getUuid().toString().equals(BarometerService)){
-                Log.i(TAG,"GOT Pressure");
+
                 short barometer_value = twoBytesToShort(characteristicData[0],characteristicData[1]);
 
                 if(!barometer_calibrated){
@@ -519,9 +519,9 @@ public class FHSensorManager extends MessengerService {
 
                 // TODO: Check int to short cast
                 barometer_value = (short) (barometer_value - barometer_offset);
-
-                int barometerFinal = (int)barometer_value-(int)barometer_offset;
-                sendMsgFloat(Messages.HEIGTH_MESSAGE, (float) barometerFinal);
+                Log.i(TAG,"GOT Pressure"+barometer_value);
+                //int barometerFinal = (short)barometer_value-(short)barometer_offset;
+                sendMsgFloat(Messages.HEIGTH_MESSAGE, (float) barometer_value);
             }
 
             if(characteristic.getService().getUuid().toString().equals(BreathService)){
@@ -661,7 +661,7 @@ public class FHSensorManager extends MessengerService {
         // T: Insert device UUID's to connect to.
         mConnectableBtDevices.add(H7);
         mConnectableBtDevices.add(CAD);
-        //mConnectableBtDevices.add(SPD);
+        mConnectableBtDevices.add(SPD);
         mConnectableBtDevices.add(BAROMETER);
         mConnectableBtDevices.add(SPD_ACC_WAKE);
         startScan();
