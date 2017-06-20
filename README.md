@@ -8,6 +8,8 @@ Project Information
 ----------------
 Projekt für das wearables Praktikum WS14/15.
 
+[![demonstration video](http://img.youtube.com/vi/C_pJYfU6Wsc/0.jpg)](http://www.youtube.com/watch?v=C_pJYfU6Wsc)
+
 Developement Workflow
 ----------------
 - man macht sich einen branch um ein Feature zu entwickeln:
